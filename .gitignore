@@ -1,0 +1,9 @@
+specs/
+
+# Runtime and local environment files
+rad/config/
+rad/data/
+rad/log/
+public_html/php_error.log
+.env
+.DS_Store

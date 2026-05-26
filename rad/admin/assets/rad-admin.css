@@ -1,0 +1,586 @@
+:root {
+    --bs-primary: #0E68B0 !important;
+    --bs-primary-hover: #0E68B0 !important;
+    --bs-secondary: #00B696; /* Change secondary color */
+    --bs-secondary-hover: #00B696; /* Change secondary hover color */
+    --bs-info: #17a2b8; /* Change info color */
+    
+    /* Other colors */
+    --bs-success: #28a745; /* Change success color */
+    --bs-warning: #ffc107; /* Change warning color */
+    --bs-danger: #dc3545; /* Change danger color */
+    --bs-light: #f8f9fa; /* Change light color */
+    --bs-dark: #343a40; /* Change dark color */
+    --bs-white: #fff; /* Change white color */
+    --bs-black: #000; /* Change black color */
+    
+    /* Background color */
+    --bs-body-bg: #fff; /* Change body background color */
+    --bs-body-color: #212529; /* Change body text color */
+    
+    /* Fonts */
+    --bs-font-sans-serif: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* Change sans-serif font */
+    --bs-font-monospace: Monaco, Consolas, "Liberation Mono", "Courier New", monospace; /* Change monospace font */
+    --bs-font-size-base: 1rem; /* Change base font size */
+    --bs-line-height-base: 1.5; /* Change base line height */
+    
+    /* Spacing */
+    --bs-gutter-x: 1.5rem; /* Change horizontal gutter */
+    --bs-gutter-y: 0; /* Change vertical gutter */
+    
+    /* Borders */
+    --bs-border-width: 1px; /* Change border width */
+    --bs-border-color: #dee2e6; /* Change border color */
+    --bs-border-radius: .25rem; /* Change border radius */
+    --bs-border-radius-lg: .3rem; /* Change large border radius */
+    --bs-border-radius-sm: .2rem; /* Change small border radius */
+    
+    /* Grid Breakpoints */
+    --bs-grid-breakpoints-xs: 0; /* Change xs breakpoint */
+    --bs-grid-breakpoints-sm: 576px; /* Change sm breakpoint */
+    --bs-grid-breakpoints-md: 768px; /* Change md breakpoint */
+    --bs-grid-breakpoints-lg: 992px; /* Change lg breakpoint */
+    --bs-grid-breakpoints-xl: 1200px; /* Change xl breakpoint */
+    --bs-grid-breakpoints-xxl: 1400px; /* Change xxl breakpoint */
+}
+
+.text-primary {
+    color: var(--bs-primary) !important;
+}
+.text-primary:a{
+    color: var(--bs-primary) !important;
+    text-decoration: none !important;
+}
+.text-primary:hover {
+    color: var(--bs-primary-hover) !important;
+    text-decoration: none !important;
+}
+.text-primary:focus {
+    color: var(--bs-primary-hover) !important;
+    text-decoration: none !important;
+}
+.text-primary:active {
+    color: var(--bs-primary-hover) !important;
+    text-decoration: none !important;
+}
+.text-secondary {
+    color: var(--bs-secondary) !important;
+}
+.text-secondary:a{
+    color: var(--bs-secondary) !important;
+    text-decoration: none !important;
+}
+.text-secondary:hover {
+    color: var(--bs-secondary-hover) !important;
+}
+.text-secondary:focus {
+    color: var(--bs-secondary-hover) !important;
+}
+.text-secondary:active {
+    color: var(--bs-secondary-hover) !important;
+}
+.btn-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+.btn-primary:hover, 
+.btn-primary:focus, 
+.btn-primary:active {
+    background-color: var(--bs-primary-hover) !important;
+    border-color: var(--bs-primary-hover) !important;
+}
+
+.btn-outline-primary {
+    color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+.btn-outline-primary:hover, 
+.btn-outline-primary:focus, 
+.btn-outline-primary:active {
+    background-color: var(--bs-primary-hover) !important;
+    color: var(--bs-white) !important;
+    border-color: var(--bs-primary-hover) !important;
+}
+
+.bi-arrow-right-circle-fill.text-primary {
+    color: var(--bs-primary) !important;
+}
+
+.bi-arrow-right-circle-fill.text-primary:hover, 
+.bi-arrow-right-circle-fill.text-primary:focus, 
+.bi-arrow-right-circle-fill.text-primary:active {
+    color: var(--bs-white) !important;
+}
+
+
+.btn-secondary {
+    background-color: var(--bs-secondary) !important;
+    border-color: var(--bs-secondary) !important;
+}
+
+.btn-secondary:hover, 
+.btn-secondary:focus, 
+.btn-secondary:active {
+    background-color: var(--bs-secondary-hover) !important;
+    border-color: var(--bs-secondary-hover) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--bs-secondary) !important;
+    border-color: var(--bs-secondary) !important;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+    background-color: var(--bs-secondary-hover) !important;
+    color: var(--bs-white) !important;
+    border-color: var(--bs-secondary-hover) !important;
+}
+
+.btn-success {
+    background-color: var(--bs-success) !important;
+    border-color: var(--bs-success) !important;
+}
+
+.btn-success:hover, 
+.btn-success:focus, 
+.btn-success:active {
+    background-color: var(--bs-success-hover) !important;
+    border-color: var(--bs-success-hover) !important;
+}
+
+.btn-danger {
+    background-color: var(--bs-danger) !important;
+    border-color: var(--bs-danger) !important;
+}
+
+.btn-danger:hover, 
+.btn-danger:focus, 
+.btn-danger:active {
+    background-color: var(--bs-danger-hover) !important;
+    color: var(--bs-white) !important;
+    border-color: var(--bs-danger-hover) !important;
+}
+
+.btn-danger-outline {
+    color: var(--bs-danger) !important;
+    border-color: var(--bs-danger) !important;
+}
+.btn-danger-outline:hover,
+.btn-danger-outline:focus,
+.btn-danger-outline:active {
+    background-color: var(--bs-danger-hover) !important;
+    color: var(--bs-white) !important;
+    border-color: var(--bs-danger-hover) !important;
+}
+
+.btn-warning {
+    background-color: var(--bs-warning) !important;
+    border-color: var(--bs-warning) !important;
+}
+
+.btn-warning:hover, 
+.btn-warning:focus, 
+.btn-warning:active {
+    background-color: var(--bs-warning-hover) !important;
+    border-color: var(--bs-warning-hover) !important;
+}
+
+.btn-info {
+    background-color: var(--bs-info) !important;
+    border-color: var(--bs-info) !important;
+}
+
+.btn-info:hover, 
+.btn-info:focus, 
+.btn-info:active {
+    background-color: var(--bs-info-hover) !important;
+    border-color: var(--bs-info-hover) !important;
+}
+
+/* add custom styles for tabs for active, hover, etc. */
+.nav-tabs .nav-link {
+    color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+.nav-tabs .nav-link.active {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: var(--bs-white) !important;
+}
+.nav-tabs .nav-link.active:hover {
+    background-color: var(--bs-primary-hover) !important;
+    border-color: var(--bs-primary-hover) !important;
+    color: var(--bs-white) !important;
+}
+
+
+/* Specific Classes */
+.compact-navbar .dropdown-menu {
+    padding: 0.8rem 0.5; /* this makes the menu compact */
+}
+
+.compact-navbar .dropdown-menu .dropdown-item {
+    padding: 0.5rem 1.5rem; /* this makes the menu items compact */
+    font-size: 0.9rem; /* this makes the font smaller */
+}
+.menu-icon {
+    margin-right: 0.5rem;  /* Adjust this as needed */
+}
+.card {
+    transition: box-shadow 0.3s ease-in-out;
+    background-color: white;
+    border-radius: 0.15rem;
+    font-size: 0.9rem !important;
+}
+
+.card:hover {
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+}
+
+.card input[type="text"],
+.card input[type="password"],
+.card input[type="email"],
+.card input[type="number"],
+.card input[type="search"],
+.card input[type="tel"],
+.card input[type="url"],
+.card input[type="date"],
+.card textarea,
+.card select {
+    font-size: 0.9rem;  /* Adjust font size as needed */
+    font-family: var(--bs-font-sans-serif); /* Adjust font family as needed or use the default */
+    color: var(--bs-body-color);  /* Adjust font color if needed */
+}
+
+/* Default state */
+.list-group-item {
+    background-color: var(--bs-white);  /* Updated to white color */
+    color: var(--bs-body-color);  /* Updated to body text color */
+}
+.list-group-item a {
+    color: var(--bs-body-color);  /* Updated to body text color */
+    text-decoration: none;  /* Remove underline */
+}
+.list-group-item:hover {
+    background-color: var(--bs-secondary);  /* Updated to light color */
+    color: var(--bs-white);  /* Updated to white color for better contrast */
+}
+.list-group-item:hover a {
+    color: var(--bs-white);  /* Updated to white color for better contrast */
+    text-decoration: none;  /* Remove underline */
+}
+
+/* Active state */
+.list-group-item.active {
+    background-color: var(--bs-secondary);  /* Updated to secondary color */
+    color: var(--bs-white);  /* Updated to white color for better contrast */
+}
+
+/* Focused state */
+.list-group-item:focus {
+    background-color: var(--bs-secondary-hover);  /* Updated to secondary hover color */
+    color: var(--bs-white);  /* Keeping text color white */
+}
+
+.apex-bare-list .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    background-color: white; /* Make the background color white */
+    padding-left: 0; /* Remove left padding */
+    padding-right: 0; /* Remove right padding */
+}
+
+.apex-bare-list .list-group-item:first-child {
+    border-top: 0;
+}
+
+.apex-bare-list .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+a.apex-link {
+    color: var(--bs-primary);
+    text-decoration: none;
+}
+
+a.apex-link:hover {
+    color: var(--bs-primary-hover);
+    /*text-decoration: none;*/
+}
+a.apex-link i {
+    color: inherit;
+}
+
+#adobe-dc-view {
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite !important;
+}
+
+/* change selected pagination button color */
+.bootstrap-table .pagination .page-item.active .page-link {
+    background-color: var(--bs-primary) !important;  /* change to primary color */
+    border-color:  var(--bs-primary) !important;     /* change border to primary color */
+    color: var(--bs-white) !important;               /* change text color to white */
+}
+
+/* add border to selected page number */
+.bootstrap-table .pagination .page-item.active .page-link {
+    border: 1px solid var(--bs-primary) !important; /* add border to selected page */
+}
+
+/* change selected pagination button hover color */
+.bootstrap-table .pagination .page-item.active .page-link:hover {
+    background-color: var(--bs-white) !important;  /* change to white color */
+    border-color:  var(--bs-primary) !important;     /* keep border primary color */
+    color: var(--bs-primary) !important;             /* change text color to primary */
+}
+
+/* change other pagination buttons hover color */
+.bootstrap-table .pagination .page-item:not(.active) .page-link:hover {
+    color: var(--bs-primary) !important;  /* change text color to primary */
+}
+
+/* change pagination button regular color */
+.bootstrap-table .pagination .page-link {
+    color: var(--bs-primary) !important;              /* change text color to primary */
+}
+
+/* change search input box color */
+.bootstrap-table .search input {
+    border-color: var(--bs-primary) !important;     /* change to your desired color */
+}
+
+/* change filter, export icons and page-list button background color */
+.bootstrap-table .columns .btn,
+.bootstrap-table .export .btn,
+.bootstrap-table .page-list .btn,
+.bootstrap-table .pagination .btn {
+    background-color: var(--bs-primary) !important; /* change to your desired color */
+    border-color: var(--bs-primary) !important; /* change to your desired color */
+    color: var(--bs-white) !important; /* change to your desired color */
+}
+
+/* change filter, export icons and page-list button hover color */
+.bootstrap-table .columns .btn:hover,
+.bootstrap-table .export .btn:hover,
+.bootstrap-table .page-list .btn:hover,
+.bootstrap-table .pagination .btn:hover {
+    background-color: var(--bs-light) !important; /* change to your desired color */
+    border-color: var(--bs-primary) !important; /* change to your desired color */
+    color: var(--bs-primary) !important; /* change to your desired color */
+}
+
+/* change dropdown menu color */
+.bootstrap-table .page-list .dropdown-menu {
+    background-color: var(--bs-white) !important; /* change to your desired color */
+    color: var(--bs-primary) !important; /* change to your desired color */
+}
+
+/* change dropdown menu item hover color */
+.bootstrap-table .page-list .dropdown-menu .dropdown-item:hover {
+    background-color: var(--bs-light) !important; /* change to your desired color */
+    color: var(--bs-primary) !important; /* change to your desired color */
+}
+
+/* change dropdown menu selected item color */
+.bootstrap-table .page-list .dropdown-menu .dropdown-item.active {
+    background-color: var(--bs-primary) !important; /* change to your desired color */
+    color: var(--bs-white) !important; /* change to your desired color */
+}
+
+/* Reduce the height of the dropdown controls */
+.bootstrap-table .columns .btn,
+.bootstrap-table .export .btn,
+.bootstrap-table .page-list .btn,
+.bootstrap-table .pagination .btn {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+/* Adjust dropdown menu font size */
+.bootstrap-table .page-list .dropdown-menu {
+    font-size: 0.875rem !important;
+}
+
+/* Adjust the search input size */
+.bootstrap-table .search input {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+
+.archive-link:hover,
+.archive-link:hover .bi-archive {
+    color: inherit !important;
+}
+
+.rad-card-font {
+    font-size: 0.75rem;  /* adjust as needed */
+}
+
+.form-group {
+    margin-bottom: 1.2rem !important;
+}
+
+.required-asterisk {
+    color: red;
+    font-weight: bold;
+}
+
+.myLineDecoration {
+    background-color: #F00; /* or any other color */
+    opacity: 0.5;
+}
+
+/* The Modal (background) */
+.modal.compact-modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  /* Modal Dialog */
+  .modal-dialog.compact-dialog {
+    max-width: 400px;
+    margin: 4% auto;
+  }
+  
+  /* Modal Content */
+  .modal-content.compact-content {
+    background-color: #fefefe;
+    padding: 10px;
+    border: 1px solid #888;
+  }
+  
+  /* Modal Header */
+  .modal-header.compact-header {
+    padding: 8px;
+  }
+  
+  /* Modal Title */
+  .modal-title.compact-title {
+    font-size: 18px;
+  }
+  
+  /* Modal Close Button */
+  .btn-close.compact-close {
+    font-size: 16px;
+  }
+  
+  /* Modal Body */
+  .modal-body.compact-body {
+    padding: 8px;
+  }
+  
+  /* Modal Form Group */
+  .mb-2.compact-group {
+    margin-bottom: 8px !important;
+  }
+  
+  /* Modal Form Label */
+  .form-label.compact-label {
+    font-size: 14px;
+  }
+  
+  /* Modal Form Control */
+  .form-control.compact-control {
+    font-size: 14px;
+    height: auto;
+    padding: 6px 12px;
+  }
+  
+  /* Modal Footer */
+  .modal-footer.compact-footer {
+    padding: 8px;
+  }
+  
+  /* Modal Footer Button */
+.btn.compact-btn {
+    padding: 5px 10px;
+    font-size: 14px;
+  }
+
+body .modal.invite-members-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10750 !important;
+    pointer-events: auto;
+}
+
+body .modal.invite-members-modal .modal-dialog {
+    pointer-events: auto;
+}
+
+body .modal-backdrop.invite-members-backdrop {
+    z-index: 10740 !important;
+    pointer-events: none;
+}
+
+/* Ensure all RAD Admin modals appear above fixed headers/overlays */
+body .modal {
+    position: fixed;
+    z-index: 20050 !important;
+    pointer-events: auto;
+}
+
+body .modal .modal-dialog,
+body .modal .modal-content {
+    pointer-events: auto;
+}
+
+body .modal-backdrop {
+    z-index: 20040 !important;
+}
+
+/* Allow specific modals to opt out of the backdrop */
+body.no-backdrop .modal-backdrop {
+    display: none !important;
+}
+
+body.modal-open .rad-layout,
+body.modal-open .rad-layout main,
+body.modal-open .rad-layout .page-shell,
+body.modal-open .rad-layout .container-fluid {
+    filter: none !important;
+}
+  
+  
+
+/* Scoping CSS with class apex-[something] */
+[class^='apex-'] .menu-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    color: #00B696; /* Icon color */
+}
+
+[class^='apex-'] .card-body {
+    text-align: center;
+}
+
+[class^='apex-'] .card-body a {
+    font-size: 1.5rem;
+    color: #0E68B0; /* Linked text color */
+}
+
+[class^='apex-'] .card {
+    margin: 0.5rem;
+}
