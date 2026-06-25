@@ -300,8 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (modalEl && modalEl.parentElement !== document.body) {
         document.body.appendChild(modalEl);
     }
-    const bootstrapLib = window.bootstrap || null;
-    const modal = (modalEl && bootstrapLib && bootstrapLib.Modal) ? new bootstrapLib.Modal(modalEl) : null;
+    const modal = modalEl && window.RadAdminUI ? window.RadAdminUI.getModal(modalEl) : null;
     const form = document.getElementById('records-form');
     const formFields = document.getElementById('records-form-fields');
     const tableBody = document.getElementById('records-table-body');

@@ -115,6 +115,14 @@ class All {
             }
         }
 
+        if (!class_exists('\\RadAdmin\\RadAdminCommunity', false)) {
+            $communityClass = ($this->runData['config']['dir']['admin'] ?? dirname(__DIR__)) . '/classes/RadAdminCommunity.cls.php';
+            if (is_file($communityClass)) {
+                require_once $communityClass;
+            }
+        }
+        $sections = \RadAdmin\RadAdminCommunity::filterNavSections($sections, $this->runData['config'] ?? []);
+
         $this->runData['data']['sections'] = $sections;
         return $this->runData;
     }

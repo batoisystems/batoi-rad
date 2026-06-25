@@ -3,6 +3,10 @@ $radAdminAssetsClass = __DIR__ . '/classes/RadAdminAssets.cls.php';
 if (!class_exists('\\RadAdmin\\RadAdminAssets', false) && is_file($radAdminAssetsClass)) {
     require_once $radAdminAssetsClass;
 }
+$radAdminCommunityClass = __DIR__ . '/classes/RadAdminCommunity.cls.php';
+if (!class_exists('\\RadAdmin\\RadAdminCommunity', false) && is_file($radAdminCommunityClass)) {
+    require_once $radAdminCommunityClass;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -76,7 +80,7 @@ if ($radAdminUrl !== '') {
     echo '<link href="'.$radAssetsUrl.'/rad-admin.css" rel="stylesheet">';
     echo \RadAdmin\RadAdminAssets::renderUifHead($this->runData);
     echo \RadAdmin\RadAdminAssets::renderMonacoLoaderConfig($this->runData);
-    echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">';
+    echo '<link rel="stylesheet" href="'.$radAssetsUrl.'/bootstrap/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css">';
 
     $cssFile = $this->runData['config']['dir']['admin'].'/ui/'.$this->runData['route']['pathparts'][1].'-'.$this->runData['route']['pathparts'][2].'.css.php';
     if(file_exists($cssFile)){
@@ -213,6 +217,7 @@ if ($role !== 'system_admin') {
         return $item['path'] !== '/notifications/settings';
     }));
 }
+$navSections = \RadAdmin\RadAdminCommunity::filterNavSections($navSections, $this->runData['config'] ?? []);
 $currentPath = '/' . ($this->runData['route']['pathparts'][1] ?? 'home');
 if (!empty($this->runData['route']['pathparts'][2])) {
     $currentPath .= '/' . $this->runData['route']['pathparts'][2];
@@ -505,9 +510,11 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
         </footer>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="<?php echo htmlspecialchars($this->runData['route']['rad_assets_url'], ENT_QUOTES, 'UTF-8'); ?>/jquery/jquery-3.6.0.min.js"></script>
     <?php
-    echo '<script src="'.$this->runData['route']['rad_assets_url'].'/bootstrap/bootstrap-5.3.0/dist/js/bootstrap.bundle.min.js"></script>';
+    if (!\RadAdmin\RadAdminAssets::isUifEnabled($this->runData)) {
+        echo '<script src="'.$this->runData['route']['rad_assets_url'].'/bootstrap/bootstrap-5.3.0/dist/js/bootstrap.bundle.min.js"></script>';
+    }
     echo \RadAdmin\RadAdminAssets::renderUifBody($this->runData);
     $jsFile = $this->runData['config']['dir']['admin'].'/ui/'.$this->runData['route']['pathparts'][1].'-'.$this->runData['route']['pathparts'][2].'.js.php';
     if(file_exists($jsFile)){

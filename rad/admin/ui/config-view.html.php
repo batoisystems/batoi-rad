@@ -302,7 +302,7 @@ $statusMap = [
     });
 
     const historyModalEl = document.getElementById('configHistoryModal');
-    const historyModal = historyModalEl ? new bootstrap.Modal(historyModalEl) : null;
+    const historyModal = historyModalEl && window.RadAdminUI ? window.RadAdminUI.getModal(historyModalEl) : null;
     const historyList = historyModalEl ? historyModalEl.querySelector('[data-history-list]') : null;
     const historyPlaceholder = historyModalEl ? historyModalEl.querySelector('[data-history-placeholder]') : null;
     const historyContent = historyModalEl ? historyModalEl.querySelector('[data-history-content]') : null;

@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.css">
 <style>
 .appdata-hero {
     background: linear-gradient(135deg, #f2f4ff 0%, #ffffff 70%);
@@ -34,5 +33,8 @@
 }
 .appdata-hero .btn-group .btn {
     min-width: 140px;
+}
+.rad-table-tools {
+    max-width: 320px;
 }
 </style>

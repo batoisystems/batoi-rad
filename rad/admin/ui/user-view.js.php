@@ -7,9 +7,6 @@
 
     const rows = Array.from(table.querySelectorAll('tbody tr'));
     const visibleCountEl = document.getElementById('user-visible-count');
-    const toastEl = document.getElementById('user-toast');
-    const toast = toastEl && window.bootstrap ? bootstrap.Toast.getOrCreateInstance(toastEl) : null;
-
     if (visibleCountEl) {
         visibleCountEl.textContent = rows.length.toString();
     }
@@ -42,8 +39,8 @@
                 }
 
                 function showToast() {
-                    if (toast) {
-                        toast.show();
+                    if (window.RadAdminUI && window.RadAdminUI.showToast) {
+                        window.RadAdminUI.showToast('UID copied to clipboard.', 'success');
                     }
                 }
             });

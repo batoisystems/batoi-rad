@@ -24,9 +24,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
 </div>
 
 <?php
-$chartJsCdn = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
 ?>
-<script src="<?php echo htmlspecialchars($chartJsCdn); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const metricsUrl = <?php echo json_encode($radAdminUrl . '/sca/metrics'); ?>;
@@ -48,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => console.error('SCA metrics error', err));
 
     function renderCharts(data) {
-        charts.severity = new Chart(document.getElementById('sca-chart-severity'), {
+        charts.severity = window.RadAdminCharts.render(document.getElementById('sca-chart-severity'), {
             type: 'doughnut',
             data: {
                 labels: ['High', 'Medium', 'Low'],
@@ -66,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const ruleLabels = Object.keys(data.rules || {});
         const ruleCounts = Object.values(data.rules || {});
-        charts.rules = new Chart(document.getElementById('sca-chart-rules'), {
+        charts.rules = window.RadAdminCharts.render(document.getElementById('sca-chart-rules'), {
             type: 'bar',
             data: {
                 labels: ruleLabels,
@@ -81,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const moduleLabels = Object.keys(data.modules || {});
         const moduleCounts = Object.values(data.modules || {});
-        charts.modules = new Chart(document.getElementById('sca-chart-modules'), {
+        charts.modules = window.RadAdminCharts.render(document.getElementById('sca-chart-modules'), {
             type: 'bar',
             data: {
                 labels: moduleLabels,
@@ -94,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {display: false}}, scales: {x: {ticks: {autoSkip: false}}}}
         });
 
-        charts.files = new Chart(document.getElementById('sca-chart-files'), {
+        charts.files = window.RadAdminCharts.render(document.getElementById('sca-chart-files'), {
             type: 'bar',
             data: {
                 labels: ['Files Scanned', 'Total Findings'],

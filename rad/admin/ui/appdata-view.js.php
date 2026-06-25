@@ -1,1 +1,8 @@
-<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var table = document.getElementById('msTable');
+    if (table && window.BatoiUIF && window.BatoiUIF.initTable) {
+        window.BatoiUIF.initTable(table);
+    }
+});
+</script>

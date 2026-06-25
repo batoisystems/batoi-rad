@@ -267,12 +267,13 @@ class Content{
             if ( $this->runData['route']['alert'] != 'danger') {
                 // Add content to s_content table
                 // If meta_title or meta_description string length is more that 250, then truncate it
+                $sanitizedContent = $this->sanitizeContentHtml($this->runData['request']->post['s_content']);
                 $metaTitle = (strlen($this->runData['request']->post['s_meta_title']) > 250) ? substr($this->runData['request']->post['s_meta_title'], 0, 250) : $this->runData['request']->post['s_meta_title'];
                 $metaDescription = (strlen($this->runData['request']->post['s_meta_description']) > 250) ? substr($this->runData['request']->post['s_meta_description'], 0, 250) : $this->runData['request']->post['s_meta_description'];
                 $newContentId = $this->runData['db']->insert('s_content', [
                     's_ms_id' => $this->runData['request']->post['s_ms_id'],
                     's_title' => $this->runData['request']->post['s_title'],
-                    's_content' => $this->runData['request']->post['s_content'],
+                    's_content' => $sanitizedContent,
                     's_definition' => $json_str,
                     's_meta_title' => $metaTitle,
                     's_meta_description' => $metaDescription,
@@ -371,6 +372,7 @@ class Content{
             }
             // Update content to s_content table if there is no error from validation
             if ( $this->runData['route']['alert'] != 'danger') {
+                $sanitizedContent = $this->sanitizeContentHtml($this->runData['request']->post['s_content']);
                 $metaTitle = (strlen($this->runData['request']->post['s_meta_title']) > 250) ? substr($this->runData['request']->post['s_meta_title'], 0, 250) : $this->runData['request']->post['s_meta_title'];
                 $metaDescription = (strlen($this->runData['request']->post['s_meta_description']) > 250) ? substr($this->runData['request']->post['s_meta_description'], 0, 250) : $this->runData['request']->post['s_meta_description'];
                 $contentId = (int)$this->runData['request']->post['id'];
@@ -390,7 +392,7 @@ class Content{
                     $info['branch_beta'] = [
                         's_ms_id' => $this->runData['request']->post['s_ms_id'],
                         's_title' => $this->runData['request']->post['s_title'],
-                        's_content' => $this->runData['request']->post['s_content'],
+                        's_content' => $sanitizedContent,
                         's_definition' => $json_str,
                         's_meta_title' => $metaTitle,
                         's_meta_description' => $metaDescription,
@@ -411,7 +413,7 @@ class Content{
                 $this->runData['db']->update('s_content', [
                     's_ms_id' => $this->runData['request']->post['s_ms_id'],
                     's_title' => $this->runData['request']->post['s_title'],
-                    's_content' => $this->runData['request']->post['s_content'],
+                    's_content' => $sanitizedContent,
                     's_definition' => $json_str,
                     's_meta_title' => $metaTitle,
                     's_meta_description' => $metaDescription,
@@ -747,5 +749,106 @@ class Content{
             }
         }
         return $contentRow;
+    }
+
+    private function sanitizeContentHtml(string $html): string {
+        $html = trim($html);
+        if ($html === '') {
+            return '';
+        }
+        if (!class_exists('\DOMDocument')) {
+            return strip_tags($html, '<p><br><strong><b><em><i><u><s><sub><sup><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ul><ol><li><a><img><table><thead><tbody><tfoot><tr><th><td><hr><div><span>');
+        }
+
+        $allowedTags = [
+            'a', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'hr', 'i', 'img', 'li', 'ol', 'p', 'pre', 's', 'span', 'strong', 'sub', 'sup', 'table',
+            'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'u', 'ul',
+        ];
+        $allowedAttrs = [
+            'a' => ['href', 'target', 'rel', 'title', 'class', 'id'],
+            'img' => ['src', 'alt', 'title', 'class', 'id', 'width', 'height'],
+            'td' => ['colspan', 'rowspan', 'class', 'id'],
+            'th' => ['colspan', 'rowspan', 'scope', 'class', 'id'],
+            '*' => ['class', 'id'],
+        ];
+
+        $previous = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->loadHTML('<?xml encoding="UTF-8"><div id="rad-content-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $root = $dom->getElementById('rad-content-root');
+        if (!$root) {
+            return '';
+        }
+
+        $this->sanitizeContentNode($root, $allowedTags, $allowedAttrs);
+
+        $clean = '';
+        foreach ($root->childNodes as $child) {
+            $clean .= $dom->saveHTML($child);
+        }
+        return trim($clean);
+    }
+
+    private function sanitizeContentNode(\DOMNode $node, array $allowedTags, array $allowedAttrs): void {
+        if ($node instanceof \DOMElement) {
+            $tag = strtolower($node->tagName);
+            if ($node->getAttribute('id') !== 'rad-content-root' && !in_array($tag, $allowedTags, true)) {
+                $node->parentNode?->removeChild($node);
+                return;
+            }
+
+            $tagAttrs = array_merge($allowedAttrs['*'] ?? [], $allowedAttrs[$tag] ?? []);
+            foreach (iterator_to_array($node->attributes ?? []) as $attr) {
+                $name = strtolower($attr->name);
+                $value = trim($attr->value);
+                if (strpos($name, 'on') === 0 || !in_array($name, $tagAttrs, true) || !$this->isSafeContentAttribute($tag, $name, $value)) {
+                    $node->removeAttribute($attr->name);
+                }
+            }
+            if ($tag === 'a' && $node->hasAttribute('target') && !$node->hasAttribute('rel')) {
+                $node->setAttribute('rel', 'noopener noreferrer');
+            }
+        }
+
+        foreach (iterator_to_array($node->childNodes) as $child) {
+            $this->sanitizeContentNode($child, $allowedTags, $allowedAttrs);
+        }
+    }
+
+    private function isSafeContentAttribute(string $tag, string $name, string $value): bool {
+        if (in_array($name, ['class', 'id', 'title', 'alt', 'scope'], true)) {
+            return true;
+        }
+        if (in_array($name, ['width', 'height', 'colspan', 'rowspan'], true)) {
+            return preg_match('/^\d{1,4}$/', $value) === 1;
+        }
+        if ($name === 'target') {
+            return in_array($value, ['_blank', '_self', '_parent', '_top'], true);
+        }
+        if ($name === 'rel') {
+            return preg_match('/^[a-z\s-]+$/i', $value) === 1;
+        }
+        if ($name === 'href') {
+            return $this->isSafeContentUrl($value, ['http', 'https', 'mailto', 'tel']);
+        }
+        if ($name === 'src' && $tag === 'img') {
+            return $this->isSafeContentUrl($value, ['http', 'https']);
+        }
+        return false;
+    }
+
+    private function isSafeContentUrl(string $value, array $schemes): bool {
+        if ($value === '' || preg_match('/[\x00-\x1F\x7F]/', $value)) {
+            return false;
+        }
+        if (preg_match('/^(\/|#|\.\/|\.\.\/)/', $value) === 1) {
+            return true;
+        }
+        $scheme = parse_url($value, PHP_URL_SCHEME);
+        return is_string($scheme) && in_array(strtolower($scheme), $schemes, true);
     }
 }

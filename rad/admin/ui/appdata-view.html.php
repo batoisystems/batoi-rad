@@ -342,7 +342,11 @@ if (!function_exists('rad_appdata_badge')) {
             </h5>
             <small class="text-muted">Search, sort, and export the current catalogue.</small>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
+            <div class="rad-table-tools input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="search" class="form-control" placeholder="Search table" data-uif-table-filter="#msTable">
+            </div>
             <a href="<?php echo htmlspecialchars($this->runData['route']['rad_admin_url'] . '/appdata/add'); ?>" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-plus-lg me-1"></i>Table
             </a>
@@ -356,21 +360,15 @@ if (!function_exists('rad_appdata_badge')) {
             <table
                 class="table table-hover align-middle"
                 id="msTable"
-                data-toggle="table"
-                data-search="false"
-                data-pagination="false"
-                data-show-columns="true"
-                data-show-export="true"
-                data-export-types='["csv","excel"]'
-                data-buttons-class="btn btn-outline-secondary btn-sm"
+                data-uif="table"
             >
                 <thead class="table-light">
                     <tr>
-                        <th data-sortable="true">Data Model</th>
-                        <th data-sortable="true">Table</th>
-                        <th data-sortable="true">Status</th>
-                        <th data-sortable="true">Microservicelet</th>
-                        <th data-sortable="true">Description</th>
+                        <th data-uif-sort="asc">Data Model</th>
+                        <th data-uif-sort="asc">Table</th>
+                        <th data-uif-sort="asc">Status</th>
+                        <th data-uif-sort="asc">Microservicelet</th>
+                        <th data-uif-sort="asc">Description</th>
                         <th>Action</th>
                     </tr>
                 </thead>

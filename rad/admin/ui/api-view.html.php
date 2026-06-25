@@ -83,27 +83,26 @@ if ($numOfApis > 0) {
         </div>
     </div>
 
+    <div class="rad-table-tools input-group input-group-sm mt-3 mb-2 ms-auto">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="search" class="form-control" placeholder="Search API keys" data-uif-table-filter="#apiTable">
+    </div>
+
     <!-- API table -->
     <table 
         class="table table-hover table-bordered table-sm mt-2" 
         id="apiTable"
-        data-toggle="table"
-        data-search="true"
-        data-show-export="true"
-        data-pagination="true"
-        data-show-columns="true"
-        data-filter-control="true"
+        data-uif="table"
     >
         <thead>
             <tr>
-                <th data-sortable="true" data-field="id" data-filter-control="select">ID</th>
-                <th data-sortable="true" data-field="uid" data-filter-control="select">UID</th>
-                <th data-sortable="true" data-field="s_name" data-filter-control="select">Name</th>
-                <th data-sortable="true" data-field="s_identity" data-filter-control="select">Identity</th>
-                <th data-sortable="true" data-field="api_types" data-filter-control="select">API Types</th>
-                <th data-sortable="true" data-field="s_access_ips" data-filter-control="select">IPs</th>
-                <!-- <th data-sortable="true" data-field="s_access_ips" data-filter-control="select">Spaces</th> -->
-                <th data-sortable="false" data-field="buttonaction">&nbsp;</th>
+                <th data-uif-sort="asc">ID</th>
+                <th data-uif-sort="asc">API Types</th>
+                <th data-uif-sort="asc">UID</th>
+                <th data-uif-sort="asc">Name</th>
+                <th data-uif-sort="asc">Identity</th>
+                <th data-uif-sort="asc">IPs</th>
+                <th>&nbsp;</th>
             </tr>
         </thead>
         <tbody>
@@ -112,9 +111,7 @@ if ($numOfApis > 0) {
                 $authInfo = [
                     'access_ips' => $api['s_access_ips'] ?? '',
                     'api_types' => $api['api_types'] ?? null,
-                    'spaces' => '',
                 ];
-                $spaces = array_filter(array_map('trim', explode(',', $authInfo['spaces'] ?? '')));
             ?>
                 <tr>
                     <td><?php print $api['id']; ?></td>
@@ -140,18 +137,6 @@ if ($numOfApis > 0) {
                         <a href="#" class="copy-uid ms-1" data-uid="<?php print $api['s_identity']; ?>">
                             <i class="bi bi-clipboard"></i>
                         </a>
-                    </td>
-                    <td>
-                        <span class="badge <?php echo $roleType === 'saas' ? 'bg-info' : 'bg-secondary'; ?>">
-                            <?php echo $roleType === 'saas' ? 'SaaS' : 'Non-SaaS'; ?>
-                        </span>
-                        <?php if ($roleType === 'saas' && $spaces) { ?>
-                            <div class="mt-1 small text-muted">
-                                <?php foreach ($spaces as $spaceId) { ?>
-                                    <span class="badge text-bg-light me-1 mb-1">Space #<?php echo htmlspecialchars($spaceId); ?></span>
-                                <?php } ?>
-                            </div>
-                        <?php } ?>
                     </td>
                     <td>
                         <?php if (!empty($authInfo['access_ips'])) {

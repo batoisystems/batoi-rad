@@ -14,23 +14,23 @@
         </div>
     </div>
 
-    <!-- User table -->
+    <div class="rad-table-tools input-group input-group-sm mt-3 mb-2 ms-auto">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="search" class="form-control" placeholder="Search tenants" data-uif-table-filter="#dataTable">
+    </div>
+
+    <!-- Tenant table -->
     <table 
         class="table table-hover table-bordered table-sm mt-2" 
         id="dataTable"
-        data-toggle="table"
-        data-search="true"
-        data-show-export="true"
-        data-pagination="true"
-        data-show-columns="true"
-        data-filter-control="true"
+        data-uif="table"
     >
         <thead>
             <tr>
-                <th data-sortable="true" data-field="id" data-filter-control="select">ID</th>
-                <th data-sortable="true" data-field="uid" data-filter-control="select">UID</th>
-                <th data-sortable="true" data-field="s_name" data-filter-control="select">Name</th>
-                <th data-sortable="false" data-field="buttonaction">&nbsp;</th>
+                <th data-uif-sort="asc">ID</th>
+                <th data-uif-sort="asc">UID</th>
+                <th data-uif-sort="asc">Name</th>
+                <th>&nbsp;</th>
             </tr>
         </thead>
         <tbody>
@@ -62,5 +62,4 @@
 <?php
     }
 ?>
-
 

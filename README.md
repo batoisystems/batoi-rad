@@ -78,6 +78,26 @@ Installation SQL assets are available under `rad/admin/install/`.
 4. Rendering is handled through template and view helpers for public or administrative output.
 5. Access is evaluated through administrative privileges or runtime roles and permission bindings, depending on the request context.
 
+## Routing And API Model
+
+RAD applications are organized around microservice-style modules and route definitions.
+
+- A microservice definition identifies the application module being requested.
+- A route definition determines how the request is handled.
+- Route fragments can support pre-processing, page rendering, and post-processing.
+- Static pages, slug routes, UID-based lookups, and dynamic PHP route handlers are supported.
+- API requests follow the same broad routing model while using API-specific request validation and response handling.
+
+The API gateway accepts structured requests and routes them to application or system-level handlers based on payload type and configured allowlists. Public API documentation should describe the contract without exposing private keys, private endpoint inventories, or environment-specific service details.
+
+Expected API concepts include:
+
+- API keys associated with framework identities.
+- Application API calls routed to microservice routes.
+- System API calls restricted to configured tables, services, or named endpoints.
+- Server-side allowlists for sensitive operations.
+- Optional endpoint-level restrictions for API identities.
+
 ## Access Control
 
 RAD separates administrative privileges from application runtime permissions.
@@ -86,6 +106,10 @@ RAD separates administrative privileges from application runtime permissions.
 - Public/runtime access is controlled by roles, permission bindings, route scope, and application context.
 - Navigation rendering should be filtered by the roles available to the active principal.
 - Developer-facing helper classes should not implicitly expose RAD Admin privilege logic into runtime application code.
+
+The framework RBAC model is based on principals, memberships, roles, and permission bindings. A typical runtime permission check resolves the active principal, workspace or application membership, direct and inherited roles, matching permission bindings, and whether the requested object and action are allowed.
+
+Principals can represent users, teams, API identities, or organization-like entities. A membership links a principal to a workspace or tenant context. Roles can be assigned to memberships and may be scoped to a workspace, application module, or other supported context.
 
 ## Repository Hygiene
 
@@ -116,8 +140,6 @@ Detailed documentation is being organized. The following topics should be split 
 - API gateway.
 - Security and RBAC.
 - Upgrade process.
-
-For now, see `specs/old-reference.md` for a compact sanitized reference.
 
 ## License
 
