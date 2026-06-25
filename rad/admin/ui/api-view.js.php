@@ -1,19 +1,26 @@
-<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
 <script>
-// Create copy function for the clipboard for uid value
-$(document).ready(function() {
-    $('.copy-uid').click(function(event) {
-        event.preventDefault();
-        var uid = $(this).data('uid');
-        // Copy the uid to clipboard
-        navigator.clipboard.writeText(uid).then(function() {
-            // Show a toast
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.copy-uid').forEach(function(link) {
+        link.addEventListener('click', function(event) {
+            var uid = link.getAttribute('data-uid');
             var toastEl = document.querySelector('.toast');
-            var toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }).catch(function(error) {
-            console.error('Error copying text to clipboard: ', error);
+            event.preventDefault();
+            if (!uid) {
+                return;
+            }
+            navigator.clipboard.writeText(uid).then(function() {
+                if (window.RadAdminUI && window.RadAdminUI.showToast) {
+                    window.RadAdminUI.showToast('UID copied to clipboard.', 'success');
+                }
+            }).catch(function(error) {
+                console.error('Error copying text to clipboard: ', error);
+            });
         });
     });
+
+    var apiTable = document.getElementById('apiTable');
+    if (apiTable && window.BatoiUIF && window.BatoiUIF.initTable) {
+        window.BatoiUIF.initTable(apiTable);
+    }
 });
 </script>

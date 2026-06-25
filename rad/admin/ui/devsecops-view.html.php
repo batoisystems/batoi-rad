@@ -24,9 +24,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
 
 <?php
 $radAssetsUrl = $this->runData['route']['rad_assets_url'] ?? '';
-$chartJsCdn = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
 ?>
-<script src="<?php echo htmlspecialchars($chartJsCdn); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const assetsUrl = <?php echo json_encode($radAssetsUrl); ?>;
@@ -54,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
     function renderCharts(data) {
-        charts.severity = new Chart(document.getElementById('chart-severity'), {
+        charts.severity = window.RadAdminCharts.render(document.getElementById('chart-severity'), {
             type: 'doughnut',
             data: {
                 labels: ['High', 'Medium', 'Low'],
@@ -70,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {position: 'bottom'}}}
         });
 
-        charts.vendor = new Chart(document.getElementById('chart-vendor'), {
+        charts.vendor = window.RadAdminCharts.render(document.getElementById('chart-vendor'), {
             type: 'bar',
             data: {
                 labels: ['Up-to-date', 'Outdated', 'Missing'],
@@ -87,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {display: false}}}
         });
 
-        charts.access = new Chart(document.getElementById('chart-access'), {
+        charts.access = window.RadAdminCharts.render(document.getElementById('chart-access'), {
             type: 'bar',
             data: {
                 labels: ['Microservicelets', 'Routes'],
@@ -110,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {position: 'bottom'}}, scales: {x: {stacked: true}, y: {stacked: true}}}
         });
 
-        charts.jobs = new Chart(document.getElementById('chart-jobs'), {
+        charts.jobs = window.RadAdminCharts.render(document.getElementById('chart-jobs'), {
             type: 'doughnut',
             data: {
                 labels: ['Success', 'Failure', 'Unknown'],

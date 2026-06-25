@@ -2,8 +2,7 @@
 $clientIp = $this->runData['route']['client_ip'] ?? '';
 $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '/rad-admin';
 ?>
-<!-- Fallback styles to ensure the page renders even if local assets are blocked -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link href="<?php echo htmlspecialchars(($this->runData['route']['rad_assets_url'] ?? '') . '/bootstrap/bootstrap-5.3.0/dist/css/bootstrap.min.css', ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
 <style>
     body { background: #f8fafc; }
     .ip-card { max-width: 720px; }

@@ -25,7 +25,17 @@ $msOptions = $this->runData['data']['content_ms'] ?? [];
 
             <div class="mt-3">
                 <label for="s_content" class="form-label">Content Block Body <span class="text-danger">*</span></label>
-                <textarea class="form-control summernote" name="s_content" id="s_content" rows="8" required></textarea>
+                <textarea
+                    class="form-control"
+                    name="s_content"
+                    id="s_content"
+                    rows="12"
+                    required
+                    data-uif="editor"
+                    data-uif-mode="html"
+                    data-uif-toolbar="undo redo bold italic strike heading quote code ul ol link image table preview source"
+                    data-uif-editor-height="400px"
+                    data-uif-editor-status="true"></textarea>
                 <div class="invalid-feedback">Content block body cannot be empty.</div>
             </div>
         </div>

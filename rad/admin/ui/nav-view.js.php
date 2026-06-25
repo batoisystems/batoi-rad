@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     ensureModalInBody(navsetModalEl);
     ensureModalInBody(navitemModalEl);
-    const navsetModal = navsetModalEl ? new bootstrap.Modal(navsetModalEl) : null;
-    const navitemModal = navitemModalEl ? new bootstrap.Modal(navitemModalEl) : null;
+    const navsetModal = navsetModalEl && window.RadAdminUI ? window.RadAdminUI.getModal(navsetModalEl) : null;
+    const navitemModal = navitemModalEl && window.RadAdminUI ? window.RadAdminUI.getModal(navitemModalEl) : null;
     const navsetForm = document.getElementById('navset-form');
     const navitemForm = document.getElementById('navitem-form');
     const navsetRoleCheckboxes = document.querySelectorAll('.navset-role-check');

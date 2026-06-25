@@ -20,11 +20,17 @@ $deltaError = ($latestSeries && $prevSeries) ? ((int)$latestSeries['error'] - (i
 $deltaSql = ($latestSeries && $prevSeries) ? ((int)$latestSeries['sql'] - (int)$prevSeries['sql']) : null;
 $logStatusLabel = (!empty($logHealth['log_dir_exists']) && !empty($logHealth['latest_day_found'])) ? 'Logs OK' : 'Logs missing';
 $logStatusClass = (!empty($logHealth['log_dir_exists']) && !empty($logHealth['latest_day_found'])) ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
-$chartJsLocalPath = $this->runData['config']['dir']['admin'] . '/assets/vendor/chart.js/chart.umd.min.js';
-$chartJsLocalUrl = $this->runData['route']['rad_admin_url'] . '/assets/vendor/chart.js/chart.umd.min.js';
-$chartJsCdn = 'https://cdn.jsdelivr.net/npm/chart.js';
-$chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
-
+$sparkSeries = array_reverse($dailySeries);
+$sparkData = [
+    'access' => array_map(fn($point) => ['label' => (string)($point['date'] ?? ''), 'value' => (int)($point['access'] ?? 0)], $sparkSeries),
+    'error' => array_map(fn($point) => ['label' => (string)($point['date'] ?? ''), 'value' => (int)($point['error'] ?? 0)], $sparkSeries),
+    'sql' => array_map(fn($point) => ['label' => (string)($point['date'] ?? ''), 'value' => (int)($point['sql'] ?? 0)], $sparkSeries),
+];
+$sparkOptions = [
+    'access' => ['type' => 'sparkline', 'height' => 50, 'palette' => ['#0d6efd'], 'table' => 'none'],
+    'error' => ['type' => 'sparkline', 'height' => 50, 'palette' => ['#dc3545'], 'table' => 'none'],
+    'sql' => ['type' => 'sparkline', 'height' => 50, 'palette' => ['#198754'], 'table' => 'none'],
+];
 ?>
 
 <div class="card border-0 shadow-sm mb-3">
@@ -67,7 +73,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <div class="text-muted text-uppercase small mb-2 d-flex align-items-center gap-1">
-                        Requests Today <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Total access log entries for the latest day."></i>
+                        Requests Today <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Total access log entries for the latest day."></i>
                     </div>
                     <div class="display-6 fw-semibold"><?php echo number_format($metrics['access']); ?></div>
                     <div class="text-muted small">
@@ -78,7 +84,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <?php echo $deltaAccess >= 0 ? '+' : ''; ?><?php echo number_format($deltaAccess); ?> vs previous day
                         </div>
                     <?php } ?>
-                    <div class="sparkline"><canvas id="spark-access"></canvas></div>
+                    <div class="sparkline" data-uif="chart" data-uif-chart="sparkline" data-uif-data="<?php echo htmlspecialchars(json_encode($sparkData['access']), ENT_QUOTES, 'UTF-8'); ?>" data-uif-options="<?php echo htmlspecialchars(json_encode($sparkOptions['access']), ENT_QUOTES, 'UTF-8'); ?>"></div>
                 </div>
             </div>
         </div>
@@ -86,7 +92,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <div class="text-muted text-uppercase small mb-2 d-flex align-items-center gap-1">
-                        Errors Today <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Total error log entries for the latest day."></i>
+                        Errors Today <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Total error log entries for the latest day."></i>
                     </div>
                     <div class="display-6 fw-semibold text-danger"><?php echo number_format($metrics['error']); ?></div>
                     <div class="text-muted small">
@@ -97,7 +103,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <?php echo $deltaError >= 0 ? '+' : ''; ?><?php echo number_format($deltaError); ?> vs previous day
                         </div>
                     <?php } ?>
-                    <div class="sparkline"><canvas id="spark-error"></canvas></div>
+                    <div class="sparkline" data-uif="chart" data-uif-chart="sparkline" data-uif-data="<?php echo htmlspecialchars(json_encode($sparkData['error']), ENT_QUOTES, 'UTF-8'); ?>" data-uif-options="<?php echo htmlspecialchars(json_encode($sparkOptions['error']), ENT_QUOTES, 'UTF-8'); ?>"></div>
                 </div>
             </div>
         </div>
@@ -105,7 +111,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <div class="text-muted text-uppercase small mb-2 d-flex align-items-center gap-1">
-                        SQL Statements <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Total sql.log entries for the latest day."></i>
+                        SQL Statements <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Total sql.log entries for the latest day."></i>
                     </div>
                     <div class="display-6 fw-semibold text-primary"><?php echo number_format($metrics['sql']); ?></div>
                     <div class="text-muted small">
@@ -116,7 +122,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <?php echo $deltaSql >= 0 ? '+' : ''; ?><?php echo number_format($deltaSql); ?> vs previous day
                         </div>
                     <?php } ?>
-                    <div class="sparkline"><canvas id="spark-sql"></canvas></div>
+                    <div class="sparkline" data-uif="chart" data-uif-chart="sparkline" data-uif-data="<?php echo htmlspecialchars(json_encode($sparkData['sql']), ENT_QUOTES, 'UTF-8'); ?>" data-uif-options="<?php echo htmlspecialchars(json_encode($sparkOptions['sql']), ENT_QUOTES, 'UTF-8'); ?>"></div>
                 </div>
             </div>
         </div>
@@ -144,7 +150,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <div class="border rounded p-2 bg-body-tertiary h-100 small d-flex flex-column border-start border-3 <?php echo $acSummary['private_ms_unbound'] ? 'border-warning' : 'border-success'; ?>">
                                 <div class="text-muted small d-flex align-items-center gap-1">
                                     <span class="text-truncate" style="max-width: calc(100% - 1.25rem);">Private MS without binding</span>
-                                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Counts non-global microservicelets missing a permission binding."></i>
+                                    <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Counts non-global microservicelets missing a permission binding."></i>
                                 </div>
                                 <div class="fs-5 fw-semibold mb-0 <?php echo $acSummary['private_ms_unbound'] ? 'text-warning' : 'text-success'; ?>">
                                     <?php echo (int)$acSummary['private_ms_unbound']; ?>
@@ -158,7 +164,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <div class="border rounded p-2 bg-body-tertiary h-100 small d-flex flex-column border-start border-3 <?php echo $acSummary['private_route_unbound'] ? 'border-warning' : 'border-success'; ?>">
                                 <div class="text-muted small d-flex align-items-center gap-1">
                                     <span class="text-truncate" style="max-width: calc(100% - 1.25rem);">Private routes without binding</span>
-                                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Routes under non-global microservicelets without a binding."></i>
+                                    <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Routes under non-global microservicelets without a binding."></i>
                                 </div>
                                 <div class="fs-5 fw-semibold mb-0 <?php echo $acSummary['private_route_unbound'] ? 'text-warning' : 'text-success'; ?>">
                                     <?php echo (int)$acSummary['private_route_unbound']; ?>
@@ -210,7 +216,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <div class="border rounded p-2 bg-body-tertiary h-100 small d-flex flex-column border-start border-3 <?php echo $acSummary['memberships_missing_role'] ? 'border-danger' : 'border-success'; ?>">
                                 <div class="text-muted small d-flex align-items-center gap-1">
                                     <span class="text-truncate" style="max-width: calc(100% - 1.25rem);">Memberships missing role</span>
-                                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Active workspace memberships without a role assignment."></i>
+                                    <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Active workspace memberships without a role assignment."></i>
                                 </div>
                                 <div class="fs-5 fw-semibold mb-0 <?php echo $acSummary['memberships_missing_role'] ? 'text-danger' : 'text-success'; ?>">
                                     <?php echo (int)$acSummary['memberships_missing_role']; ?>
@@ -224,7 +230,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <div class="border rounded p-2 bg-body-tertiary h-100 small d-flex flex-column border-start border-3 <?php echo $acSummary['memberships_ms_missing_ms'] ? 'border-danger' : 'border-success'; ?>">
                                 <div class="text-muted small d-flex align-items-center gap-1">
                                     <span class="text-truncate" style="max-width: calc(100% - 1.25rem);">MS memberships missing MS</span>
-                                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Memberships with ms scope but missing microservicelet selection."></i>
+                                    <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Memberships with ms scope but missing microservicelet selection."></i>
                                 </div>
                                 <div class="fs-5 fw-semibold mb-0 <?php echo $acSummary['memberships_ms_missing_ms'] ? 'text-danger' : 'text-success'; ?>">
                                     <?php echo (int)$acSummary['memberships_ms_missing_ms']; ?>
@@ -243,7 +249,7 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
                             <div class="border rounded p-2 bg-body-tertiary h-100 small d-flex flex-column border-start border-3 <?php echo $acSummary['roles_missing_default_route'] ? 'border-warning' : 'border-success'; ?>">
                                 <div class="text-muted small d-flex align-items-center gap-1">
                                     <span class="text-truncate" style="max-width: calc(100% - 1.25rem);">Roles missing default route</span>
-                                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Roles without a default landing route configured."></i>
+                                    <i class="bi bi-info-circle text-muted" data-uif="tooltip" title="Roles without a default landing route configured."></i>
                                 </div>
                                 <div class="fs-5 fw-semibold mb-0 <?php echo $acSummary['roles_missing_default_route'] ? 'text-warning' : 'text-success'; ?>">
                                     <?php echo (int)$acSummary['roles_missing_default_route']; ?>
@@ -438,9 +444,9 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
     height: 50px;
     margin-top: 0.5rem;
 }
-.sparkline canvas {
+.sparkline .uif-chart-svg {
     width: 100% !important;
-    height: 100% !important;
+    height: 50px !important;
 }
 .dashboard-link {
     color: #0d6efd;
@@ -459,12 +465,11 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
     max-height: none;
 }
 </style>
-<script src="<?php echo htmlspecialchars($chartJsSrc); ?>"></script>
 <script>
 (function () {
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-        if (window.bootstrap && window.bootstrap.Tooltip) {
-            new window.bootstrap.Tooltip(el);
+    document.querySelectorAll('[data-uif="tooltip"]').forEach(function (el) {
+        if (window.RadAdminUI && window.RadAdminUI.initTooltips) {
+            window.RadAdminUI.initTooltips(el.parentNode || document);
         }
     });
     document.querySelectorAll('.recent-payload').forEach(function (el) {
@@ -473,43 +478,13 @@ $chartJsSrc = file_exists($chartJsLocalPath) ? $chartJsLocalUrl : $chartJsCdn;
         });
     });
 
-    const series = <?php echo json_encode(array_reverse($dailySeries)); ?>;
-    if (!series.length) {
-        return;
-    }
-    const labels = series.map(point => point.date);
-    const accessData = series.map(point => point.access);
-    const errorData = series.map(point => point.error);
-    const sqlData = series.map(point => point.sql);
-
-    const makeSpark = (ctxId, data, color) => {
-        const ctx = document.getElementById(ctxId);
-        if (!ctx) { return; }
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    data,
-                    borderColor: color,
-                    backgroundColor: 'transparent',
-                    tension: 0.3,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { x: { display: false }, y: { display: false } },
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    if (window.BatoiUIF && window.BatoiUIF.chart && typeof window.BatoiUIF.chart.init === 'function') {
+        document.querySelectorAll('[data-uif="chart"]').forEach(function (el) {
+            if (!el.querySelector('.uif-chart-svg')) {
+                window.BatoiUIF.chart.init(el);
             }
         });
-    };
-
-    makeSpark('spark-access', accessData, '#0d6efd');
-    makeSpark('spark-error', errorData, '#dc3545');
-    makeSpark('spark-sql', sqlData, '#198754');
+    }
 })();
 </script>
     

@@ -40,7 +40,7 @@
     const shell = document.querySelector('.codex-shell');
     const shellAdminUrl = shell ? (shell.getAttribute('data-admin-url') || '') : '';
     const adminBaseUrl = ((shellAdminUrl || window.__RAD_ADMIN_URL || '/rad-admin').replace(/\/$/, '')) || '/rad-admin';
-    const MONACO_BASE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs';
+    const MONACO_BASE_URL = '<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>';
     if (window.monaco && !window.__MONACO_READY) {
         window.__MONACO_READY = true;
     }

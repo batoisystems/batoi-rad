@@ -6,7 +6,7 @@
     }
 
     const modalEl = document.getElementById('schemaFieldModal');
-    const modal = new bootstrap.Modal(modalEl);
+    const modal = modalEl && window.RadAdminUI ? window.RadAdminUI.getModal(modalEl) : null;
     if (modalEl && modalEl.parentElement !== document.body) {
         document.body.appendChild(modalEl);
     }

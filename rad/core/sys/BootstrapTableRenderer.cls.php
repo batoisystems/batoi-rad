@@ -18,12 +18,12 @@ class BootstrapTableRenderer {
      * @return string The HTML for the table
      */
     private function renderTable($data) {
-        $html = '<table data-toggle="table">';
+        $html = '<table data-uif="table">';
 
         // Headers
         $html .= '<thead><tr>';
         foreach ($data[0] as $key => $value) {
-            $html .= "<th>{$key}</th>";
+            $html .= '<th data-uif-sort="asc">' . htmlspecialchars((string)$key) . '</th>';
         }
         $html .= '</tr></thead>';
 

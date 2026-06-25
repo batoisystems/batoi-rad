@@ -75,7 +75,9 @@ $ssoClientLabel = trim((string)($runData['config']['auth']['sso_client']['label'
         </div>
     </div>
 </div>
+<?php if (!\RadAdmin\RadAdminAssets::isUifEnabled($runData)) { ?>
 <script src="<?php echo $radAssets; ?>/bootstrap/bootstrap-5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php } ?>
 <?php echo \RadAdmin\RadAdminAssets::renderUifBody($runData); ?>
 </body>
 </html>

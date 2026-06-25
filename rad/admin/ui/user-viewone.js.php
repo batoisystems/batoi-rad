@@ -4,9 +4,6 @@
     if (!copyButton) {
         return;
     }
-    const toastEl = document.getElementById('user-detail-toast');
-    const toast = toastEl && window.bootstrap ? bootstrap.Toast.getOrCreateInstance(toastEl) : null;
-
     copyButton.addEventListener('click', function (event) {
         event.preventDefault();
         const uid = copyButton.getAttribute('data-uid');
@@ -15,8 +12,8 @@
         }
 
         const onSuccess = () => {
-            if (toast) {
-                toast.show();
+            if (window.RadAdminUI && window.RadAdminUI.showToast) {
+                window.RadAdminUI.showToast('UID copied to clipboard.', 'success');
             }
         };
 

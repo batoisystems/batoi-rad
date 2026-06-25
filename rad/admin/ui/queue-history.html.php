@@ -236,7 +236,6 @@ $successRate = ($summary['total'] ?? 0) ? round((($summary['success'] ?? 0) / ($
     </nav>
 <?php } ?>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
 (() => {
     const statusEl = document.getElementById('queue-history-status');
@@ -245,7 +244,7 @@ $successRate = ($summary['total'] ?? 0) ? round((($summary['success'] ?? 0) / ($
     const jobData = <?php echo json_encode($jobChart); ?>;
 
     if (statusEl && statusData.labels && statusData.labels.length) {
-        new Chart(statusEl, {
+        window.RadAdminCharts.render(statusEl, {
             type: 'doughnut',
             data: {
                 labels: statusData.labels,
@@ -264,7 +263,7 @@ $successRate = ($summary['total'] ?? 0) ? round((($summary['success'] ?? 0) / ($
     }
 
     if (jobEl && jobData.labels && jobData.labels.length) {
-        new Chart(jobEl, {
+        window.RadAdminCharts.render(jobEl, {
             type: 'bar',
             data: {
                 labels: jobData.labels,

@@ -50,9 +50,7 @@ $enabled = ($config['enabled'] ?? 'Y') === 'Y';
 </div>
 
 <?php
-$chartJsCdn = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
 ?>
-<script src="<?php echo htmlspecialchars($chartJsCdn); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const metricsUrl = <?php echo json_encode($radAdminUrl . '/telemetry/metrics'); ?>;
@@ -74,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => console.error('Telemetry metrics error', err));
 
     function renderCharts(data) {
-        charts.severity = new Chart(document.getElementById('telemetry-chart-severity'), {
+        charts.severity = window.RadAdminCharts.render(document.getElementById('telemetry-chart-severity'), {
             type: 'doughnut',
             data: {
                 labels: ['High', 'Medium', 'Low'],
@@ -92,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const compLabels = Object.keys(data.components || {});
         const compCounts = Object.values(data.components || {});
-        charts.components = new Chart(document.getElementById('telemetry-chart-components'), {
+        charts.components = window.RadAdminCharts.render(document.getElementById('telemetry-chart-components'), {
             type: 'bar',
             data: {
                 labels: compLabels,
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {display: false}}, scales: {x: {ticks: {autoSkip: false}}}}
         });
 
-        charts.events = new Chart(document.getElementById('telemetry-chart-events'), {
+        charts.events = window.RadAdminCharts.render(document.getElementById('telemetry-chart-events'), {
             type: 'bar',
             data: {
                 labels: ['Events'],

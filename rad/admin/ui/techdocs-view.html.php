@@ -74,9 +74,7 @@ $workspaceCount = count($workspaces);
 
 <?php
 $radAssetsUrl = $this->runData['route']['rad_assets_url'] ?? '';
-$chartJsCdn = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
 ?>
-<script src="<?php echo htmlspecialchars($chartJsCdn); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const metricsUrl = <?php echo json_encode($radAdminUrl . '/techdocs/metrics'); ?>;
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const msRoutes = (data.microservices || []).map(m => m.routes);
         const msControllers = (data.microservices || []).map(m => m.controllers);
 
-        charts.ms = new Chart(document.getElementById('td-chart-ms'), {
+        charts.ms = window.RadAdminCharts.render(document.getElementById('td-chart-ms'), {
             type: 'bar',
             data: {
                 labels: msLabels,
@@ -122,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {position: 'bottom'}}, scales: {x: {stacked: true}, y: {stacked: true}}}
         });
 
-        charts.vendor = new Chart(document.getElementById('td-chart-vendor'), {
+        charts.vendor = window.RadAdminCharts.render(document.getElementById('td-chart-vendor'), {
             type: 'doughnut',
             data: {
                 labels: ['Installed', 'Missing'],
@@ -134,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {position: 'bottom'}}}
         });
 
-        charts.routes = new Chart(document.getElementById('td-chart-routes'), {
+        charts.routes = window.RadAdminCharts.render(document.getElementById('td-chart-routes'), {
             type: 'pie',
             data: {
                 labels: ['UA', 'U', 'A'],
@@ -150,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {plugins: {legend: {position: 'bottom'}}}
         });
 
-        charts.roles = new Chart(document.getElementById('td-chart-roles'), {
+        charts.roles = window.RadAdminCharts.render(document.getElementById('td-chart-roles'), {
             type: 'bar',
             data: {
                 labels: ['Roles', 'Workspaces'],

@@ -396,7 +396,6 @@ $baseAssignmentsUrl = $radAdminUrl . '/role/viewone/' . $uid;
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
 (function() {
     const scopeChart = document.getElementById('role-chart-scope');
@@ -405,7 +404,7 @@ $baseAssignmentsUrl = $radAdminUrl . '/role/viewone/' . $uid;
     const spaceData = <?php echo json_encode($charts['spaces'] ?? ['labels' => [], 'values' => []]); ?>;
 
     if (scopeChart && scopeData.labels && scopeData.labels.length) {
-        new Chart(scopeChart, {
+        window.RadAdminCharts.render(scopeChart, {
             type: 'bar',
             data: {
                 labels: scopeData.labels,
@@ -424,7 +423,7 @@ $baseAssignmentsUrl = $radAdminUrl . '/role/viewone/' . $uid;
     }
 
     if (spaceChart && spaceData.labels && spaceData.labels.length) {
-        new Chart(spaceChart, {
+        window.RadAdminCharts.render(spaceChart, {
             type: 'bar',
             data: {
                 labels: spaceData.labels,

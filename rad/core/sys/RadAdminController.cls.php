@@ -70,6 +70,15 @@ class RadAdminController {
                 case 'gif':
                     header('Content-Type: image/gif');
                     break;
+                case 'ttf':
+                    header('Content-Type: font/ttf');
+                    break;
+                case 'woff':
+                    header('Content-Type: font/woff');
+                    break;
+                case 'woff2':
+                    header('Content-Type: font/woff2');
+                    break;
                 default:
                     header('Content-Type: application/octet-stream');
             }
@@ -97,6 +106,14 @@ class RadAdminController {
 
         $moduleClassName = ($moduleName === 'login') ? 'Adminlogin' : ucfirst($moduleName);
         $moduleClass = '\RadAdmin\\' . $moduleClassName;
+        $communityHelperPath = $this->runData['config']['dir']['admin'].'/classes/RadAdminCommunity.cls.php';
+        if (!class_exists('RadAdmin\\RadAdminCommunity', false) && file_exists($communityHelperPath)) {
+            require_once $communityHelperPath;
+        }
+        if (class_exists('RadAdmin\\RadAdminCommunity', false)
+            && !\RadAdmin\RadAdminCommunity::moduleAllowed($moduleName, $this->runData['config'] ?? [])) {
+            throw new \Exception('This RAD Admin module is not included in Community Edition.', 404);
+        }
         // Ensure shared admin traits are loaded once before module classes reference them
         $traitPath = $this->runData['config']['dir']['admin'].'/classes/AiAssistAware.cls.php';
         if (!trait_exists('RadAdmin\\AiAssistAware', false) && file_exists($traitPath)) {

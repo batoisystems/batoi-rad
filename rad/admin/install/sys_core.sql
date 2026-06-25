@@ -63,52 +63,10 @@ CREATE TABLE `s_config` (
   UNIQUE KEY `s_config_handle` (`s_config_handle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `s_config` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_config_handle`, `s_config_value`, `s_config_origin`, `s_description`) VALUES
-(1, '146d40e0-1530-11ee-9383-1a1105e56d75', '1', 2, 0, 0, 0, '2023-06-28 02:47:54', 1, '2024-08-18 09:33:02', 'project_title', 'ACME Co Application', 'S', ''),
-(2, '146d4482-1530-11ee-9383-1a1105e56d75', '1', 4, 0, 0, 0, '2023-06-28 02:47:54', 1, '2024-08-18 09:32:39', 'author', 'Ashwini Rath', 'S', ''),
-(3, '146d46bc-1530-11ee-9383-1a1105e56d75', '1', 2, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'encryption_key', 'encryptionkey', 'S', 'Encryption'),
-(4, '146d5986-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'encryption_salt', 'encryptionsalt', 'S', NULL),
-(5, '146d5a3a-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'base_url', 'https://localhost.radsandbox', 'S', NULL),
-(6, '146d5ac6-1530-11ee-9383-1a1105e56d75', '1', 9, 0, 0, 0, '2023-06-28 02:47:54', 1, '2024-09-16 03:32:19', 'allowed_ips', '115.246.160.19,103.199.183.3,182.72.107.186,127.0.0.1,::1', 'S', ''),
-(7, '146d5b52-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'timezone', 'America/New_York', 'S', NULL),
-(8, '146d5bd4-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'locale', 'en_US', 'S', NULL),
-(9, '146d5c56-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'currency', 'USD', 'S', NULL),
-(10, '146d5cd8-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'country', 'US', 'S', NULL),
-(11, '146d5d46-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'session_name', 'mysession', 'S', NULL),
-(12, '146d5db4-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'session_lifetime', '1800', 'S', NULL),
-(13, '146d5e40-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'session_path_default', 'N', 'S', NULL),
-(14, '146d5eae-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'session_domain', 'localhost.radsandbox', 'S', NULL),
-(15, '146d5f26-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'session_secure', '1', 'S', NULL),
-(16, '146d5f9e-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'session_httponly', '1', 'S', NULL),
-(17, '146d6016-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'sso_role_id_default', 'defaultrole', 'S', NULL),
-(18, '146d6098-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'mfa_settings', 'defaultmfa', 'S', NULL),
-(19, '146d6106-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'display_errors', 'true', 'S', NULL),
-(20, '146d6174-1530-11ee-9383-1a1105e56d75', '1', 3, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'site_status', 'L', 'S', ''),
-(21, '146d61e2-1530-11ee-9383-1a1105e56d75', '1', 6, 0, 0, 0, '2023-06-28 02:47:54', 1, '2024-09-16 03:31:27', 'ip_access_restrict', 'Y', 'S', ''),
-(22, '146d625a-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'site_update_pending', 'N', 'S', NULL),
-(23, '146d62c8-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:54', 0, '2023-06-27 21:17:54', 'update_items', 'value_update_items', 'S', NULL),
-(24, 'd159fc5e-1925-11ee-b672-682b9e9922e1', '1', 1, 0, 0, 0, '2023-07-03 03:44:31', 0, '2023-07-02 22:14:31', 'session_idle_timeout', '300', 'S', NULL),
-(25, '0d5c4f4a-5dae-11ef-b9ad-996d5461e764', '1', 1, 0, 0, 1, '2024-08-19 03:36:00', 1, '2024-08-18 22:06:00', 'default_saas_route_id', '48', 'S', NULL),
-(26, '88ff8cc8-1e82-11ee-876a-95b0b26afebb', '1', 11, 0, 0, 0, '2023-07-09 23:30:48', 0, '2023-07-09 18:00:48', 'mailgun_api_key', '738bc70cc9daadedd8de459998f9da44-6d8d428c-2aa32274', 'A', ''),
-(27, 'c09443fa-23fe-11ee-8bfb-b22cc24825de', '1', 1, 0, 0, 0, '2023-07-16 23:02:35', 0, '2023-07-16 17:32:35', 'enable_sql_log', 'true', 'S', NULL),
-(28, '366c6594-23ff-11ee-8bfb-b22cc24825de', '1', 1, 0, 0, 0, '2023-07-16 23:05:53', 0, '2023-07-16 17:35:53', 'encryption_method', 'AES-256-CBC', 'S', NULL),
-(29, '34301fc7-3a8a-46fd-bb7e-6824246e6d71', '1', 2, 0, 0, 1, '2023-10-08 16:46:39', 1, '2023-10-08 11:16:39', 'Email_From_Address', 'noreply@batoi.com', 'A', ''),
-(30, '4aac331b-4d41-4c95-adaf-792e35914675', '1', 6, 0, 0, 1, '2023-10-08 16:48:07', 1, '2023-10-08 11:18:07', 'Email_Server', 'mg.batoi.com', 'A', ''),
-(31, 'b03eecc9-8b54-439d-98f6-25f9f02a18cd', '1', 1, 0, 0, 1, '2023-10-08 16:48:26', 1, '2023-10-08 11:18:26', 'paramer_test', 'asdsada', 'A', NULL),
-(32, '9a6ae3d0-6884-11ee-aab2-29a0a663fbc3', '1', 3, 0, 0, NULL, NULL, NULL, '2023-10-11 22:22:03', 'home_page', 'content', 'S', ''),
-(33, 'f41d6cda-6885-11ee-aab2-29a0a663fbc3', '1', 2, 0, 0, 0, NULL, 1, '2024-08-13 06:52:40', 'home_page_redirect_url', '/adminpanel/1', 'S', ''),
-(34, 'aa01837c-6a13-11ee-a88c-b55279679ad0', '1', 0, 0, 0, 0, NULL, 0, '2023-10-13 21:58:38', 'home_page_content', 'web,1', 'S', NULL);
 
-INSERT INTO `s_config` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_config_handle`, `s_config_value`, `s_config_origin`, `s_description`) VALUES
-(NULL, NULL, '1', NULL, '0', '0', NULL, NULL, NULL, CURRENT_TIMESTAMP, 'home_dashboard_cache_ttl', '120', 'S', 'Home dashboard cache TTL in seconds.');
 
-INSERT INTO `s_config` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_config_handle`, `s_config_value`, `s_config_origin`, `s_description`) VALUES
-(NULL, NULL, '1', NULL, '0', '0', NULL, NULL, NULL, CURRENT_TIMESTAMP, 'rad_admin_uif_enabled', 'N', 'S', 'Enable experimental Batoi UIF assets in RAD Admin.');
 
-INSERT INTO `s_config` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_config_handle`, `s_config_value`, `s_config_origin`, `s_description`) VALUES
-(NULL, NULL, '1', NULL, '0', '0', NULL, NULL, NULL, CURRENT_TIMESTAMP, 'rad_admin_monaco_base_url', '', 'S', 'Self-hosted Monaco editor base URL for RAD Admin code editors.');
 
-INSERT INTO `s_config` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_config_handle`, `s_config_value`, `s_config_origin`, `s_description`) VALUES (NULL, NULL, '1', NULL, '0', '0', NULL, NULL, NULL, CURRENT_TIMESTAMP, 'dev_debug_flag', 'Y', 'S', 'This flag has two values Y and N. If Y, developers debug statements will display and if N, they will not.');
 
 CREATE TABLE `s_content` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -176,40 +134,6 @@ CREATE TABLE `s_data_field_type` (
   UNIQUE KEY `uid` (`uid`),
   UNIQUE KEY `s_name` (`s_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `s_data_field_type` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_name`, `s_description`, `s_definition`) VALUES
-(1, 'd7607636-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'TEXT_BOX', 'Single-line text box', '{\"input_type\": \"text\"}'),
-(2, 'd7610dc2-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'EMAIL', 'Email Field', '{\"input_type\": \"email\", \"options\": null}'),
-(3, 'd761ac53-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'URL', 'URL Field', '{\"input_type\": \"url\", \"options\": null}'),
-(4, 'd76239b7-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'PASSWORD', 'Password Field', '{\"input_type\": \"password\", \"options\": null}'),
-(5, 'd7632735-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'NUMBER', 'Number Field (Integer)', '{\"input_type\": \"number\", \"options\": null}'),
-(6, 'd763b231-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'DECIMAL', 'Number Field (Decimal)', '{\"input_type\": \"decimal\", \"options\": null}'),
-(7, 'd7643924-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'PHONE', 'Phone Number Field (with country code)', '{\"input_type\": \"phone\", \"options\": null}'),
-(8, 'd764c166-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'PHONE_NO_CC', 'Phone Number Field (without country code)', '{\"input_type\": \"phone_no_cc\", \"options\": null}'),
-(9, 'd7654cec-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'MONEY', 'Money Field (with currency code)', '{\"input_type\": \"money\", \"options\": null}'),
-(10, 'd765e915-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'MONEY_NO_CC', 'Money Field (without currency code)', '{\"input_type\": \"money_no_cc\", \"options\": null}'),
-(11, 'd7667565-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'PERCENTAGE', 'Percentage Field (with currency code)', '{\"input_type\": \"percentage\", \"options\": null}'),
-(12, 'd7670ac0-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'SINGLE_LINE_ENCRYPTED_TEXT', 'Single-Line Encrypted Textbox', '{\"input_type\": \"single_line_encrypted_text\", \"options\": null}'),
-(13, 'd76798e9-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'MULTI_LINE_ENCRYPTED_TEXT', 'Multi-Line Encrypted Textbox', '{\"input_type\": \"multi_line_encrypted_text\", \"options\": null}'),
-(14, 'd7682390-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'AUTO_SUGGEST', 'Auto-suggested Textbox', '{\"input_type\": \"auto_suggest\", \"source\": \"remote_or_local_data_source\"}'),
-(15, 'd768b137-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'TEXT_AREA', 'Multi-line text box', '{\"input_type\": \"textarea\"}'),
-(16, 'd76941ee-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'RICH_TEXT', 'Rich text box', '{\"input_type\": \"rich_text\"}'),
-(17, 'd769cdc1-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'DROPDOWN', 'Dropdown (ENUM)', '{\"input_type\": \"enum\", \"options\": [\"Option 1\", \"Option 2\"]}'),
-(18, 'd76a5cfc-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'SINGLE_CHECKBOX', 'Single-select Checkbox', '{\"input_type\": \"single_checkbox\"}'),
-(19, 'd76ae8a7-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'MULTI_CHECKBOX', 'Multi-select Checkboxes', '{\"input_type\": \"multi_checkbox\", \"options\": [\"Option 1\", \"Option 2\", \"Option 3\"]}'),
-(20, 'd76b7973-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'MULTI_SELECT', 'Multi-select Input Field (jQuery UI)', '{\"input_type\": \"multi_select\", \"options\": [\"Option 1\", \"Option 2\", \"Option 3\"], \"ui\": \"jquery_ui\"}'),
-(21, 'd76c0a7f-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'RADIO_BUTTON', 'Radio Buttons', '{\"input_type\": \"radio\", \"options\": [\"Option 1\", \"Option 2\"]}'),
-(22, 'd76c9722-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'RADIO_YES_NO', 'Radio Switcher for Yes and No', '{\"input_type\": \"radio\", \"options\": [\"Yes\", \"No\"]}'),
-(23, 'd76d36cc-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'DATE_PICKER', 'Date picker', '{\"input_type\": \"date\"}'),
-(24, 'd76dc351-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'TIME_PICKER', 'Time Picker Field', '{\"input_type\": \"time_picker\", \"options\": null}'),
-(25, 'd76e73cd-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'DATE_RANGE', 'Date Range Picker Field', '{\"input_type\": \"date_range_picker\", \"options\": null}'),
-(26, 'd76eface-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'COLOR_PICKER', 'Color Picker Field', '{\"input_type\": \"color_picker\", \"options\": null}'),
-(27, 'd76f8472-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'CREDIT_CARD_FIELD', 'Credit Card Field (with expiry date and CVV)', '{\"input_type\": \"credit_card_field\", \"options\": {\"include_expiry\": true, \"include_cvv\": true}}'),
-(28, 'd7700d74-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'FILE_UPLOAD', 'File Upload Field', '{\"input_type\": \"file\", \"options\": null}'),
-(29, 'd7709937-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'MULTI_FILE_UPLOAD', 'Multiple File Upload Field', '{\"input_type\": \"multi_file\", \"options\": null}'),
-(30, 'd771218d-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'FOREIGN_KEY', 'Foreign Key to another table', '{\"input_type\": \"foreign_key\", \"related_table\": \"related_table_here\", \"related_field\": \"related_field_here\"}'),
-(31, 'd771a8f1-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'CSV_FOREIGN_KEYS', 'Comma-separated Foreign Keys', '{\"input_type\": \"csv_foreign_keys\", \"related_table\": \"related_table_here\", \"related_field\": \"related_field_here\"}'),
-(32, 'd7722fd5-7597-11ee-9f7b-5254002886a4', '1', 1, 0, 0, NULL, NULL, NULL, '2023-10-28 13:55:04', 'CUSTOM_TYPE', 'Custom type where the developer can specify the details', '{\"input_type\": \"custom\", \"options\": {}}');
 
 
 CREATE TABLE `s_data_field` (
@@ -299,17 +223,6 @@ ALTER TABLE s_entity
   ADD KEY idx_entity_email (s_email),
   ADD KEY idx_entity_mobile (s_mobile);
 
-ALTER TABLE s_space_membership
-  ADD KEY idx_entity (s_entity_id),
-  ADD KEY idx_entity_live (s_entity_id, livestatus);
-
-
-INSERT INTO `s_entity` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_type`, `s_name`, `s_identity`, `s_identity_secret`, `s_nonsaas_role_id`, `s_email`, `s_mobile`, `s_login_mode`, `s_enable_mfa`, `s_access_ips`, `s_agreement_signed`, `s_api_types`, `s_api_allowed_endpoints`, `s_api_system_tables`, `s_api_system_services`, `s_mfa_secret`, `s_mfa_backup_codes`, `s_trusted_devices`, `s_definition`) VALUES
-(1, '142c2c40-1530-11ee-9383-1a1105e56d75', '1', 6, 0, 0, 0, '2023-06-28 02:47:53', 1, '2024-08-15 10:48:39', 'U', 'Administrator', 'admin', '$2y$10$vqMJxa2DF.ruAoNnsXJoe./WV3jCJpz3R90pmJdPulu3NeiWviyMG', 1, 'value_admin_email', 'value_admin_mobile', 'SE', 'N', '', 'N', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{}'),
-(2, '72b74478-19e7-11ee-986e-e647b09d0336', '1', 5, 0, 0, 1, '2023-07-04 02:50:34', 1, '2024-08-18 09:24:30', 'U', 'Ashwini Rath', 'rath.ashwini@gmail.com', '$2y$10$lLUF5EE6SsZqD/QwtKtbUeF3hbqaj6Fi7jMRlN.w7Rk5zMpfJdku6', 1, 'rath.ashwini@gmail.com', '00917381044100', 'SE', 'N', '', 'Y', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{}'),
-(3, 'bea8bcb8-19e7-11ee-986e-e647b09d0336', '1', 24, 0, 0, 1, '2023-07-04 02:52:42', 1, '2025-05-19 14:00:39', 'U', 'Joe Dale', 'joe.dale@gmail.com', '$2y$10$QjiK/HBAjRxbutjBMMef9uPSUPPRxZlxjxT5JHxNcJ8.q1ilne7lS', NULL, 'joe.dale@gmail.com', '00917381044101', 'SE', 'N', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{}'),
-(4, 'ee21f5f6-0e6c-4766-9acf-249b0382862c', '1', 6, 0, 0, 1, '2023-11-15 10:03:05', 1, '2024-08-15 10:47:54', 'U', 'Ashwini Rath', 'ashwini.rath@batoi.systems', '$2y$10$3uEU8GG22L8PkG9smsqETe9Lt6ul7YdZbtQtlMH5qqRHrbsZfmuSG', 1, 'ashwini.rath@batoi.systems', '0013025091617', 'SE', 'N', '', 'Y', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{}');
-
 CREATE TABLE `s_entity_session` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uid` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -358,7 +271,7 @@ CREATE TABLE `s_ms` (
   `s_tpl_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uid` (`uid`),
-  UNIQUE KEY `s_name` (`s_name`),
+  UNIQUE KEY `s_name` (`s_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `s_mscontroller` (
@@ -486,12 +399,6 @@ CREATE TABLE `s_role` (
   UNIQUE KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `s_role` (`id`, `uid`, `livestatus`, `versioncode`, `wf_status`, `space_id`, `createdby`, `createstamp`, `updatedby`, `updatestamp`, `s_role_name`, `s_default_route_id`, `s_scope`, `s_code`, `s_ms_id`, `s_description`) VALUES
-(1, '144cfc36-1530-11ee-9383-1a1105e56d75', '1', 1, 0, 0, 0, '2023-06-28 02:47:53', 0, '2023-06-27 21:17:53', 'Administrator', 1, 'platform', NULL, NULL, NULL),
-(2, '2cf34c8e-19e7-11ee-986e-e647b09d0336', '1', 4, 0, 0, 0, '2023-07-04 02:48:37', 1, '2024-08-16 13:55:14', 'Manager', 48, 'workspace', NULL, NULL, NULL),
-(3, '46748100-19e7-11ee-986e-e647b09d0336', '1', 5, 0, 0, 0, '2023-07-04 02:49:20', 1, '2024-08-16 13:54:39', 'Member', 48, 'workspace', NULL, NULL, NULL),
-(4, '07b4f20f-875a-4868-a0de-a2d04321eea0', '1', 1, 0, 0, 1, '2024-08-15 14:41:48', 1, '2024-08-15 09:11:48', 'Support Role', 34, 'platform', NULL, NULL, NULL);
-
 CREATE TABLE `s_space` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uid` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -534,7 +441,9 @@ CREATE TABLE `s_space_membership` (
   `s_meta` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uid` (`uid`),
-  KEY `idx_space_entity` (`space_id`,`s_entity_id`)
+  KEY `idx_space_entity` (`space_id`,`s_entity_id`),
+  KEY `idx_entity` (`s_entity_id`),
+  KEY `idx_entity_live` (`s_entity_id`,`livestatus`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `s_sso_provider` (
@@ -770,27 +679,6 @@ CREATE TABLE `s_navset` (
   `s_sort_order` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `s_api_endpoint` (
-  `id` bigint(20) NOT NULL,
-  `uid` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `livestatus` enum('0','1','2','3') COLLATE utf8mb4_unicode_ci DEFAULT '1',
-  `versioncode` int(11) DEFAULT NULL,
-  `wf_status` int(11) NOT NULL DEFAULT '0',
-  `space_id` bigint(20) NOT NULL DEFAULT '0',
-  `createdby` bigint(20) DEFAULT NULL,
-  `createstamp` datetime DEFAULT NULL,
-  `updatedby` bigint(20) DEFAULT NULL,
-  `updatestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `s_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `s_slug` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `s_type` enum('system_table','system_service','utility','vendor','ai') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `s_target` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `s_definition` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `s_description` text COLLATE utf8mb4_unicode_ci,
-  `s_access_role_ids` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `s_rate_limit` json DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `s_telemetry_event` (
@@ -1071,3 +959,75 @@ CREATE TABLE `s_branch` (
   KEY `idx_status` (`s_status`),
   KEY `idx_created` (`createstamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Community Edition seed data
+
+-- Safe Community Edition seed data.
+-- This file intentionally does not create users, password hashes, API keys, provider secrets, IP allowlists, or private URLs.
+
+INSERT INTO `s_config` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_config_handle`, `s_config_value`, `s_config_origin`, `s_description`) VALUES
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'project_title', 'Batoi RAD Application', 'S', 'Application title.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'author', 'Batoi', 'S', 'Application author or organization.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'base_url', 'http://localhost', 'S', 'Base URL for the application.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'allowed_ips', '127.0.0.1,::1', 'S', 'Comma-separated admin IP allowlist.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'timezone', 'UTC', 'S', 'Default timezone.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'locale', 'en_US', 'S', 'Default locale.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'currency', 'USD', 'S', 'Default currency.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'country', 'US', 'S', 'Default country.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_name', 'batoi_rad_session', 'S', 'PHP session name.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_lifetime', '1800', 'S', 'Session lifetime in seconds.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_path_default', 'N', 'S', 'Use PHP default session path.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_domain', '', 'S', 'Session cookie domain.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_secure', '0', 'S', 'Require secure session cookie.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_httponly', '1', 'S', 'Use HTTP-only session cookie.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'display_errors', 'false', 'S', 'Display PHP errors.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'site_status', 'L', 'S', 'Site status.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'ip_access_restrict', 'N', 'S', 'Restrict RAD Admin by IP allowlist.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'site_update_pending', 'N', 'S', 'Site update pending flag.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'enable_sql_log', 'false', 'S', 'Enable SQL logging.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'encryption_method', 'AES-256-CBC', 'S', 'Encryption method.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'home_dashboard_cache_ttl', '120', 'S', 'Home dashboard cache TTL in seconds.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_uif_enabled', 'Y', 'S', 'Enable Batoi UIF assets in RAD Admin.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'public_theme_uif_enabled', 'Y', 'S', 'Enable Batoi UIF assets in public runtime themes.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_monaco_base_url', '', 'S', 'Self-hosted Monaco editor base URL for RAD Admin code editors.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_community_edition', 'Y', 'S', 'Hide and block held-back RAD Admin modules in Community Edition.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'dev_debug_flag', 'N', 'S', 'Show developer debug output.');
+
+INSERT INTO `s_role` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_role_name`, `s_default_route_id`, `s_scope`, `s_code`, `s_ms_id`, `s_description`) VALUES
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Administrator', NULL, 'platform', 'system_admin', NULL, 'Default platform administrator role.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Manager', NULL, 'workspace', 'manager', NULL, 'Default workspace manager role.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Member', NULL, 'workspace', 'member', NULL, 'Default workspace member role.');
+
+INSERT INTO `s_data_field_type` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_name`, `s_description`, `s_definition`) VALUES
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'TEXT_BOX', 'Single-line text box', '{"input_type":"text"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'EMAIL', 'Email field', '{"input_type":"email","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'URL', 'URL field', '{"input_type":"url","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'PASSWORD', 'Password field', '{"input_type":"password","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'NUMBER', 'Number field', '{"input_type":"number","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'DECIMAL', 'Decimal number field', '{"input_type":"decimal","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'PHONE', 'Phone number field with country code', '{"input_type":"phone","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'PHONE_NO_CC', 'Phone number field without country code', '{"input_type":"phone_no_cc","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'MONEY', 'Money field with currency code', '{"input_type":"money","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'MONEY_NO_CC', 'Money field without currency code', '{"input_type":"money_no_cc","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'PERCENTAGE', 'Percentage field', '{"input_type":"percentage","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'SINGLE_LINE_ENCRYPTED_TEXT', 'Single-line encrypted text box', '{"input_type":"single_line_encrypted_text","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'MULTI_LINE_ENCRYPTED_TEXT', 'Multi-line encrypted text box', '{"input_type":"multi_line_encrypted_text","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'AUTO_SUGGEST', 'Auto-suggest text box', '{"input_type":"auto_suggest","source":"remote_or_local_data_source"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'TEXT_AREA', 'Multi-line text box', '{"input_type":"textarea"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'RICH_TEXT', 'Rich text box', '{"input_type":"rich_text"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'DROPDOWN', 'Dropdown field', '{"input_type":"enum","options":["Option 1","Option 2"]}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'SINGLE_CHECKBOX', 'Single checkbox field', '{"input_type":"single_checkbox"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'MULTI_CHECKBOX', 'Multi-checkbox field', '{"input_type":"multi_checkbox","options":["Option 1","Option 2","Option 3"]}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'MULTI_SELECT', 'Multi-select field', '{"input_type":"multi_select","options":["Option 1","Option 2","Option 3"]}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'RADIO_BUTTON', 'Radio button field', '{"input_type":"radio","options":["Option 1","Option 2"]}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'RADIO_YES_NO', 'Yes/no radio field', '{"input_type":"radio","options":["Yes","No"]}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'DATE_PICKER', 'Date picker field', '{"input_type":"date"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'TIME_PICKER', 'Time picker field', '{"input_type":"time_picker","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'DATE_RANGE', 'Date range field', '{"input_type":"date_range_picker","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'COLOR_PICKER', 'Color picker field', '{"input_type":"color_picker","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'CREDIT_CARD_FIELD', 'Credit card field', '{"input_type":"credit_card_field","options":{"include_expiry":true,"include_cvv":true}}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'FILE_UPLOAD', 'File upload field', '{"input_type":"file","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'MULTI_FILE_UPLOAD', 'Multiple file upload field', '{"input_type":"multi_file","options":null}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'FOREIGN_KEY', 'Foreign key field', '{"input_type":"foreign_key","related_table":"related_table_here","related_field":"related_field_here"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'CSV_FOREIGN_KEYS', 'Comma-separated foreign keys field', '{"input_type":"csv_foreign_keys","related_table":"related_table_here","related_field":"related_field_here"}'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'CUSTOM_TYPE', 'Custom field type', '{"input_type":"custom","options":{}}');

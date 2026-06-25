@@ -3,7 +3,7 @@ $form = $this->runData['data']['form'];
 $aiAssistanceUrl = $this->runData['config']['sys']['base_url'] . '/rad-admin/upgrade/aiassist';
 $timezone = $this->runData['entity']['timezone'] ?? ($this->runData['config']['sys']['timezone_default'] ?? 'UTC');
 ?>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/editor/editor.main.css">
+<link rel="stylesheet" href="<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>/editor/editor.main.css">
 
 <div class="card mb-4">
     <div class="card-body">
@@ -80,9 +80,9 @@ $timezone = $this->runData['entity']['timezone'] ?? ($this->runData['config']['s
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.js"></script>
+<script src="<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>/loader.js"></script>
 <script>
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
+require.config({ paths: { 'vs': '<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>' }});
 
 const upgradeAiEndpoint = '<?php echo $aiAssistanceUrl; ?>';
 let upgradeEditor;

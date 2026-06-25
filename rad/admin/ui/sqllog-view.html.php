@@ -359,7 +359,6 @@ $hasFilters = ($filters['date'] ?? $selectedDate) !== $maxDate
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function() {
     const hourlyData = <?php echo json_encode($hourlyChart); ?>;
@@ -413,7 +412,7 @@ $hasFilters = ($filters['date'] ?? $selectedDate) !== $maxDate
     if (hourlyData.labels && hourlyData.labels.length) {
         const ctx = document.getElementById('sqlHourlyChart');
         if (ctx) {
-            new Chart(ctx, {
+            window.RadAdminCharts.render(ctx, {
                 type: 'line',
                 data: {
                     labels: hourlyData.labels,
@@ -437,7 +436,7 @@ $hasFilters = ($filters['date'] ?? $selectedDate) !== $maxDate
     if (typeData.labels && typeData.labels.length) {
         const ctxType = document.getElementById('sqlTypeChart');
         if (ctxType) {
-            new Chart(ctxType, {
+            window.RadAdminCharts.render(ctxType, {
                 type: 'doughnut',
                 data: {
                     labels: typeData.labels,

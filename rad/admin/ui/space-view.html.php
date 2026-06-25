@@ -382,9 +382,9 @@ $sortOptions = [
 <?php } ?>
 
 <script>
-document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-    if (window.bootstrap && window.bootstrap.Tooltip) {
-        new window.bootstrap.Tooltip(el);
+document.querySelectorAll('[data-uif="tooltip"]').forEach(function (el) {
+    if (window.RadAdminUI && window.RadAdminUI.initTooltips) {
+        window.RadAdminUI.initTooltips(el.parentNode || document);
     }
 });
 </script>

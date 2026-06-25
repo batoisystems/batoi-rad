@@ -4,9 +4,6 @@
     if (!table) {
         return;
     }
-    const toastEl = document.getElementById('role-toast');
-    const toast = toastEl && window.bootstrap ? bootstrap.Toast.getOrCreateInstance(toastEl) : null;
-
     table.querySelectorAll('.copy-uid').forEach(button => {
         button.addEventListener('click', event => {
             event.preventDefault();
@@ -15,8 +12,8 @@
                 return;
             }
             const showToast = () => {
-                if (toast) {
-                    toast.show();
+                if (window.RadAdminUI && window.RadAdminUI.showToast) {
+                    window.RadAdminUI.showToast('UID copied to clipboard.', 'success');
                 }
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {

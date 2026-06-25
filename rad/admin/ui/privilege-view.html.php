@@ -312,7 +312,7 @@ function render_entity_badges(array $ids, array $nameMap): string {
             loadFromInput(activeRole);
             renderList('');
             searchInput.value = '';
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            const modal = window.RadAdminUI ? window.RadAdminUI.getModal(modalEl) : null;
             modal.show();
         });
     });
@@ -333,8 +333,10 @@ function render_entity_badges(array $ids, array $nameMap): string {
     document.getElementById('entity-apply').addEventListener('click', () => {
         if (!activeRole) return;
         updateDisplays(activeRole);
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
+        const modal = window.RadAdminUI ? window.RadAdminUI.getModal(modalEl) : null;
+        if (modal) {
+            modal.hide();
+        }
     });
 
     modalEl.addEventListener('shown.bs.modal', () => {

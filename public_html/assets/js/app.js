@@ -1,36 +1,53 @@
-<script>
-  $(document).ready(function () {
-  // Function to load page content
-  function loadPage(page) {
-    // Update content area
-    $('#content').load(page + '.php');
+document.addEventListener('DOMContentLoaded', function () {
+    var content = document.getElementById('content');
+    var menu = document.getElementById('menu');
 
-    // Update active menu item
-    $('#menu .nav-link').removeClass('active');
-    $('#menu .nav-link[data-page="' + page + '"]').addClass('active');
-
-    // Update URL without reloading the page
-    history.pushState({ page: page }, '', page);
-  }
-
-  // Handle menu click events
-  $('#menu .nav-link').on('click', function (e) {
-    e.preventDefault();
-    var page = $(this).data('page');
-    loadPage(page);
-  });
-
-  // Handle browser back/forward buttons
-  window.onpopstate = function (event) {
-    if (event.state && event.state.page) {
-      loadPage(event.state.page);
-    } else {
-      loadPage('home');
+    function setActive(page) {
+        if (!menu) {
+            return;
+        }
+        menu.querySelectorAll('[data-page]').forEach(function (link) {
+            link.classList.toggle('active', link.getAttribute('data-page') === page);
+        });
     }
-  };
 
-  // Load the default page content on initial load
-  var initialPage = location.pathname.replace('/', '') || 'home';
-  loadPage(initialPage);
+    function loadPage(page, pushState) {
+        if (!content) {
+            return;
+        }
+        fetch(page + '.php', { credentials: 'same-origin' })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Unable to load page.');
+                }
+                return response.text();
+            })
+            .then(function (html) {
+                content.innerHTML = html;
+                setActive(page);
+                if (pushState !== false) {
+                    history.pushState({ page: page }, '', page);
+                }
+            })
+            .catch(function () {
+                content.innerHTML = '<div class="rad-alert rad-alert-danger">Unable to load this page.</div>';
+            });
+    }
+
+    if (menu) {
+        menu.addEventListener('click', function (event) {
+            var link = event.target.closest('[data-page]');
+            if (!link) {
+                return;
+            }
+            event.preventDefault();
+            loadPage(link.getAttribute('data-page') || 'home', true);
+        });
+    }
+
+    window.addEventListener('popstate', function (event) {
+        loadPage(event.state && event.state.page ? event.state.page : 'home', false);
+    });
+
+    loadPage(location.pathname.replace(/^\/+/, '') || 'home', false);
 });
-</script>

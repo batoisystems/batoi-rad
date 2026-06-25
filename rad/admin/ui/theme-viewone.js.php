@@ -1,10 +1,10 @@
 <!-- JS for Monaco Editor -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.js"></script>
+<script src="<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>/loader.js"></script>
 <script>
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
+    require.config({ paths: { 'vs': '<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>' }});
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/editor/editor.main.nls.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/editor/editor.main.js"></script>
+<script src="<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>/editor/editor.main.nls.js"></script>
+<script src="<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>/editor/editor.main.js"></script>
 <!-- JS for Monaco Editor -->
 
 <script>
@@ -85,7 +85,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-        themeModal = new bootstrap.Modal(document.getElementById('themeFindReplaceModal'), { keyboard: false });
+        themeModal = window.RadAdminUI ? window.RadAdminUI.getModal(document.getElementById('themeFindReplaceModal')) : null;
     });
 
     require(['vs/editor/editor.main'], function() {

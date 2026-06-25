@@ -425,7 +425,6 @@ $hasFilters = ($filters['date'] ?? $selectedDate) !== $maxDate
 <?php } ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function() {
     const hourlyData = <?php echo json_encode($hourlyChart); ?>;
@@ -463,7 +462,7 @@ $hasFilters = ($filters['date'] ?? $selectedDate) !== $maxDate
     if (hourlyData.labels && hourlyData.labels.length) {
         const ctx = document.getElementById('errorHourlyChart');
         if (ctx) {
-            new Chart(ctx, {
+            window.RadAdminCharts.render(ctx, {
                 type: 'line',
                 data: {
                     labels: hourlyData.labels,
@@ -489,7 +488,7 @@ $hasFilters = ($filters['date'] ?? $selectedDate) !== $maxDate
     if (severityData.labels && severityData.labels.length) {
         const pieCtx = document.getElementById('severityChart');
         if (pieCtx) {
-            new Chart(pieCtx, {
+            window.RadAdminCharts.render(pieCtx, {
                 type: 'doughnut',
                 data: {
                     labels: severityData.labels,
