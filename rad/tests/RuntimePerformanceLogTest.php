@@ -37,6 +37,7 @@ if ($dashboard === null) {
 $limits = [
     'execution_time' => 4.0,
     'query_count' => 200,
+    'duplicate_query_count' => 50,
     'peak_memory_bytes' => 64 * 1024 * 1024,
 ];
 foreach ($limits as $metric => $limit) {
@@ -53,8 +54,9 @@ if (array_key_exists('session_key', $dashboard)) {
 }
 
 echo sprintf(
-    "Runtime performance gate passed: %.3fs, %d queries, %.1f MiB peak memory.\n",
+    "Runtime performance gate passed: %.3fs, %d queries (%d duplicate), %.1f MiB peak memory.\n",
     (float)$dashboard['execution_time'],
     (int)$dashboard['query_count'],
+    (int)$dashboard['duplicate_query_count'],
     (int)$dashboard['peak_memory_bytes'] / 1024 / 1024
 );

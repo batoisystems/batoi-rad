@@ -8,11 +8,12 @@ Before submitting a change, run:
 
 ```sh
 cd rad
-composer validate --strict
-composer test
-cd ..
-php rad/bin/verify-release.php
+composer ci
 ```
+
+This runs strict Composer validation, the dependency advisory audit, unit and
+boundary tests, PHPStan, the release-boundary style/complexity gate, and
+distribution verification. Browser and MySQL matrix checks run in GitHub CI.
 
 Database changes must be additive migration files in `rad/upgrades/`. Never
 modify a migration that has shipped; its checksum is recorded in `s_migration`.

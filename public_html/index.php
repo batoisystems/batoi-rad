@@ -130,6 +130,8 @@ class IndexController {
           // Log the access with the execution time
           $this->logger->logAccess($executionTime, [
               'query_count' => $this->db->getQueryCount(),
+              'unique_query_count' => $this->db->getUniqueQueryCount(),
+              'duplicate_query_count' => $this->db->getDuplicateQueryCount(),
               'peak_memory_bytes' => memory_get_peak_usage(true),
           ]);
       }
