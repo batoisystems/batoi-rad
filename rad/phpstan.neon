@@ -6,6 +6,7 @@ parameters:
         - vendor/batoi/aif/src
     paths:
         - bin
+        - src
         - core/app/FileStore.cls.php
         - core/sys/AuthenticationThrottle.cls.php
         - core/sys/DeveloperToolPolicy.cls.php
