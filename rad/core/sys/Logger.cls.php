@@ -41,14 +41,13 @@ class Logger {
         $this->log('error.log', $message . ' || ' . $contextJson);
     }
 
-    public function logAccess($executionTime) {
+    public function logAccess($executionTime, array $metrics = []) {
         $dateTime = date('Y-m-d H:i:s');
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $requestUri = $_SERVER['REQUEST_URI'] ?? '';
         $requestMethod = $_SERVER['REQUEST_METHOD'] ?? '';
         $executionTime = round($executionTime, 3);
-        $sessionKey = session_id();
         $message = [
             'ip' => $ipAddress,
             'user_agent' => $userAgent,
@@ -56,8 +55,8 @@ class Logger {
             'method' => $requestMethod,
             'execution_time' => $executionTime,
         ];
-        if (!empty($sessionKey)) {
-            $message['session_key'] = $sessionKey;
+        if (session_id() !== '') {
+            $message['session_fingerprint'] = substr(hash('sha256', session_id()), 0, 12);
         }
         if (isset($_SESSION['entity_id'])) {
             $message['user_id'] = $_SESSION['entity_id'];
@@ -71,6 +70,12 @@ class Logger {
         $activity = $this->resolveActivityMetadata();
         if (!empty($activity)) {
             $message = array_merge($message, $activity);
+        }
+        if (isset($metrics['query_count'])) {
+            $message['query_count'] = max(0, (int)$metrics['query_count']);
+        }
+        if (isset($metrics['peak_memory_bytes'])) {
+            $message['peak_memory_bytes'] = max(0, (int)$metrics['peak_memory_bytes']);
         }
         $message = json_encode($message);
         // ensure that the 

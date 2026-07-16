@@ -128,7 +128,10 @@ class IndexController {
           }
   
           // Log the access with the execution time
-          $this->logger->logAccess($executionTime);
+          $this->logger->logAccess($executionTime, [
+              'query_count' => $this->db->getQueryCount(),
+              'peak_memory_bytes' => memory_get_peak_usage(true),
+          ]);
       }
   
       private function registerGateways() {

@@ -10,6 +10,7 @@ $required = [
     'rad/bin/install.php', 'rad/bin/doctor.php', 'rad/composer.json', 'rad/composer.lock',
     'rad/config/sys.inc.php.example', 'rad/vendor/batoi/aif/autoload.php',
     'rad/vendor/batoi/distributions.json',
+    'rad/contracts/v1.json', 'rad/docs/accessibility.md', 'rad/docs/performance.md',
     'rad/admin/install/schema-manifest.json',
     'rad/tests/browser/package-lock.json',
 ];
@@ -54,6 +55,14 @@ foreach (['rad/config/sys.inc.php', '.env', 'public_html/php_error.log'] as $pat
 $version = trim((string)@file_get_contents($root . '/VERSION'));
 if (!preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/', $version)) {
     $errors[] = 'VERSION is not valid semantic version text.';
+}
+
+$maximumArchiveBytes = 12 * 1024 * 1024;
+$candidateArchives = glob($root . '/batoi-rad-*.zip') ?: [];
+foreach ($candidateArchives as $archive) {
+    if (filesize($archive) > $maximumArchiveBytes) {
+        $errors[] = 'Release archive exceeds the 12 MiB performance budget: ' . basename($archive);
+    }
 }
 
 $uifIntegrity = $root . '/public_html/assets/uif/integrity.json';

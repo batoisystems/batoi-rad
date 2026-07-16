@@ -4,6 +4,8 @@ declare(strict_types=1);
 $tests = [
     __DIR__ . '/AifBoundaryTest.php',
     __DIR__ . '/SecurityBoundaryTest.php',
+    __DIR__ . '/CompatibilityContractTest.php',
+    __DIR__ . '/PerformanceBudgetTest.php',
 ];
 
 foreach ($tests as $test) {

@@ -60,6 +60,23 @@ foreach ($files as $relative) {
     $zip->setExternalAttributesName($relative, ZipArchive::OPSYS_UNIX, $mode << 16);
     $manifestFiles[$relative] = hash_file('sha256', $source);
 }
+$uifSourceRoot = $root . '/public_html/assets/uif';
+$uifIterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($uifSourceRoot, FilesystemIterator::SKIP_DOTS)
+);
+foreach ($uifIterator as $file) {
+    if (!$file->isFile()) {
+        continue;
+    }
+    $uifRelative = substr($file->getPathname(), strlen($uifSourceRoot) + 1);
+    $destination = 'rad/admin/assets/uif/' . $uifRelative;
+    if (!$zip->addFile($file->getPathname(), $destination)) {
+        throw new RuntimeException('Unable to generate RAD Admin UIF asset: ' . $uifRelative);
+    }
+    $zip->setMtimeName($destination, $epoch);
+    $zip->setExternalAttributesName($destination, ZipArchive::OPSYS_UNIX, 0100644 << 16);
+    $manifestFiles[$destination] = hash_file('sha256', $file->getPathname());
+}
 $sbomFile = tempnam(sys_get_temp_dir(), 'batoi-rad-sbom-');
 if ($sbomFile === false) {
     throw new RuntimeException('Unable to allocate temporary SBOM file.');
@@ -128,6 +145,9 @@ function releaseExcluded(string $path, string $outputName): bool
         if (str_starts_with($path, $prefix)) {
             return true;
         }
+    }
+    if (str_starts_with($path, 'rad/admin/assets/uif/')) {
+        return true;
     }
     if (str_starts_with($path, 'rad/vendor/') && !str_starts_with($path, 'rad/vendor/batoi/')) {
         return true;

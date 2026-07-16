@@ -23,7 +23,9 @@
     },
     "scripts": {
         "test": "@php tests/run.php",
-        "analyse": "phpstan analyse --no-progress --debug"
+        "analyse": "phpstan analyse --no-progress --debug",
+        "quality": "@php bin/quality-gate.php",
+        "quality-fix": "@php bin/quality-gate.php --fix"
     },
     "config": {
         "platform": {
