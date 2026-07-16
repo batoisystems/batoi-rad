@@ -6,7 +6,7 @@ $root = dirname(__DIR__);
 $fix = in_array('--fix', $argv, true);
 $errors = [];
 $files = [];
-$scopes = ['bin', 'tests'];
+$scopes = ['bin', 'src', 'tests'];
 
 foreach ($scopes as $scope) {
     $iterator = new RecursiveIteratorIterator(

@@ -1,6 +1,7 @@
 <?php
 namespace Core\Sys;
 
+use Batoi\Rad\Diagnostics\QueryProfiler;
 use PDO;
 use PDOException;
 
@@ -9,11 +10,12 @@ class Database {
     private $errorHandler;
     private $enableSqlLog;
     private array $schemaCache = [];
-    private int $queryCount = 0;
+    private QueryProfiler $queryProfiler;
 
     public function __construct($configDb, \Core\Sys\ErrorHandler $errorHandler) {
         // print '<pre>';print_r($configDb);print '</pre>';print $configDb['enable_sql_log'];
         $this->enableSqlLog = $configDb['enable_sql_log'] ?? 0;
+        $this->queryProfiler = new QueryProfiler();
         // print $this->enableSqlLog;die('ok');
         $this->errorHandler = $errorHandler;
         $socket = (string)($configDb['socket'] ?? '');
@@ -48,7 +50,7 @@ class Database {
      * @return void
      */
     private function logQuery($query, $params) {
-        $this->queryCount++;
+        $this->queryProfiler->record((string)$query);
         $log = [
             'query' => $query,
             'params' => $params,
@@ -60,7 +62,15 @@ class Database {
     }
 
     public function getQueryCount(): int {
-        return $this->queryCount;
+        return $this->queryProfiler->queryCount();
+    }
+
+    public function getUniqueQueryCount(): int {
+        return $this->queryProfiler->uniqueQueryCount();
+    }
+
+    public function getDuplicateQueryCount(): int {
+        return $this->queryProfiler->duplicateQueryCount();
     }
 
     function generateUuidV4() {
@@ -388,7 +398,9 @@ class Database {
         if (isset($this->schemaCache[$table])) {
             return $this->schemaCache[$table];
         }
-        $stmt = $this->dbh->prepare("DESCRIBE `{$table}`");
+        $sql = "DESCRIBE `{$table}`";
+        $stmt = $this->dbh->prepare($sql);
+        $this->queryProfiler->record($sql);
         $stmt->execute();
         return $this->schemaCache[$table] = $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -511,6 +523,7 @@ class Database {
         $sql = "INSERT INTO s_version_history (s_db_table, s_data_record_id, s_data_record_dump, s_version_number, s_modified_by) VALUES (?, ?, ?, ?, ?)";
         // print $sql;print_r([$table, $data['id'], $dataDump, $versionNumber, $modifiedBy]);exit;
         try {
+            $this->queryProfiler->record($sql);
             $this->dbh->prepare($sql)->execute([$table, $data['id'], $dataDump, $versionNumber, $modifiedBy]);
         } catch (PDOException $e) {
             throw new \Exception('Failed to save version: ' . $e->getMessage());
@@ -539,6 +552,7 @@ class Database {
             $sql = "SHOW TABLES LIKE '{$tableType}_%'";
         }
         $stmt = $this->dbh->prepare($sql);
+        $this->queryProfiler->record($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -563,6 +577,7 @@ class Database {
             foreach ($where as $field => &$value) {
                 $stmtSelect->bindParam(':' . $field, $value);
             }
+            $this->queryProfiler->record($sqlSelect);
             $stmtSelect->execute();
             $currentData = $stmtSelect->fetchAll(PDO::FETCH_ASSOC);
     
@@ -585,8 +600,9 @@ class Database {
             foreach ($where as $field => &$value) {
                 $stmt->bindParam(':' . $field, $value);
             }
-    
+
             // Execute the prepared statement
+            $this->queryProfiler->record($sql);
             $stmt->execute();
     
             // Commit the transaction
