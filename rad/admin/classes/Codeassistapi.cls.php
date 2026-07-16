@@ -2,6 +2,9 @@
 namespace RadAdmin;
 
 use Batoi\Aif\Rad\RadAifService;
+use Batoi\Rad\Http\CsrfToken;
+use Batoi\Rad\Http\JsonRequest;
+use Batoi\Rad\Http\JsonResponse;
 use Core\Sys\DeveloperToolPolicy;
 use Core\Sys\ReadOnlySqlPolicy;
 use Core\Sys\SafePath;
@@ -49,11 +52,9 @@ class Codeassistapi {
             'content' => $prompt . "\n\nContext:\n" . $context,
         ];
         $response = $this->callAif($messages);
-        header('Content-Type: application/json');
-        echo json_encode([
+        JsonResponse::send([
             'reply' => $response ?: 'No response.',
         ]);
-        exit;
     }
 
     public function autocomplete() {
@@ -72,9 +73,7 @@ class Codeassistapi {
         if (!is_array($decoded)) {
             $decoded = [];
         }
-        header('Content-Type: application/json');
-        echo json_encode($decoded);
-        exit;
+        JsonResponse::send($decoded);
     }
 
     public function fix() {
@@ -89,11 +88,9 @@ class Codeassistapi {
             ['role' => 'system', 'content' => 'Return unified diff patches to fix code.'],
             ['role' => 'user', 'content' => "Fix this code:\n" . $selection],
         ]);
-        header('Content-Type: application/json');
-        echo json_encode([
+        JsonResponse::send([
             'patch' => $response,
         ]);
-        exit;
     }
 
     public function read_file() {
@@ -105,9 +102,7 @@ class Codeassistapi {
         if (!$full || !is_file($full)) {
             $this->respondError('Invalid path.');
         }
-        header('Content-Type: application/json');
-        echo json_encode(['content' => file_get_contents($full)]);
-        exit;
+        JsonResponse::send(['content' => file_get_contents($full)]);
     }
 
     public function write_file() {
@@ -126,9 +121,7 @@ class Codeassistapi {
         if (file_put_contents($full, $content) === false) {
             $this->respondError('Failed to write file.');
         }
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
-        exit;
+        JsonResponse::send(['success' => true]);
     }
 
     public function apply_patch() {
@@ -147,9 +140,7 @@ class Codeassistapi {
             $this->respondError('Patch failed.');
         }
         file_put_contents($full, implode("\n", $patched));
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
-        exit;
+        JsonResponse::send(['success' => true]);
     }
 
     public function search_files() {
@@ -180,9 +171,7 @@ class Codeassistapi {
                 }
             }
         }
-        header('Content-Type: application/json');
-        echo json_encode(['results' => $matches]);
-        exit;
+        JsonResponse::send(['results' => $matches]);
     }
 
     public function run_sql() {
@@ -205,20 +194,18 @@ class Codeassistapi {
         } catch (\Throwable $e) {
             $this->respondError('SQL failed: ' . $e->getMessage());
         }
-        header('Content-Type: application/json');
-        echo json_encode([
+        JsonResponse::send([
             'result' => $result,
             'rollback' => 'SELECT queries do not change data; no rollback needed.',
         ]);
-        exit;
     }
 
     private function decodeJson(): array {
-        $payload = json_decode(file_get_contents('php://input'), true);
-        if (!is_array($payload)) {
+        try {
+            return JsonRequest::decode((string)($this->runData['request']->body ?? ''));
+        } catch (\UnexpectedValueException $exception) {
             $this->respondError('Invalid JSON payload.');
         }
-        return $payload;
     }
 
     private function callAif(array $messages): string {
@@ -296,9 +283,7 @@ class Codeassistapi {
     }
 
     private function respondError(string $message, int $code = 400) {
-        header('Content-Type: application/json', true, $code);
-        echo json_encode(['error' => $message]);
-        exit;
+        JsonResponse::error($message, $code);
     }
 
     private function enforceAiCapability(string $capability): void {
@@ -318,27 +303,9 @@ class Codeassistapi {
         if (!$request) {
             $this->respondError('Unable to verify CSRF token.', 419);
         }
-        $token = $this->extractCsrfToken($request);
-        if (!$token || !$request->checkCSRFToken($token)) {
+        if (!CsrfToken::isValid($request, $_SERVER)) {
             $this->respondError('Invalid CSRF token.', 419);
         }
-    }
-
-    private function extractCsrfToken($request): string {
-        $headers = array_change_key_case($request->headers ?? [], CASE_LOWER);
-        if (!empty($headers['x-csrf-token'])) {
-            return $headers['x-csrf-token'];
-        }
-        if (!empty($_SERVER['HTTP_X_CSRF_TOKEN'])) {
-            return $_SERVER['HTTP_X_CSRF_TOKEN'];
-        }
-        if (!empty($request->post['csrf_token'])) {
-            return $request->post['csrf_token'];
-        }
-        if (!empty($request->get['csrf_token'])) {
-            return $request->get['csrf_token'];
-        }
-        return '';
     }
 
     private function normalizeHistory($history): array {
