@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: batoi_rad_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root-password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+        mysql: ['8.0', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, fileinfo, mbstring, openssl, pdo_mysql, zip
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: rad
+      - run: composer validate --strict
+        working-directory: rad
+      - run: composer audit
+        working-directory: rad
+      - run: composer test
+        working-directory: rad
+      - run: composer analyse
+        working-directory: rad
+      - run: composer quality
+        working-directory: rad
+      - run: npm ci
+        if: matrix.php == '8.4' && matrix.mysql == '8.4'
+        working-directory: rad/tests/browser
+      - run: npx playwright install --with-deps chromium
+        if: matrix.php == '8.4' && matrix.mysql == '8.4'
+        working-directory: rad/tests/browser
+      - run: find core admin/classes bin tests upgrades -name '*.php' -print0 | xargs -0 -n1 php -l
+        working-directory: rad
+      - run: php rad/bin/verify-release.php
+      - run: php rad/bin/build-install-sql.php
+      - name: Verify deterministic release archive
+        run: |
+          php rad/bin/build-release.php --output=/tmp/batoi-rad-1.zip
+          php rad/bin/build-release.php --output=/tmp/batoi-rad-2.zip
+          cmp /tmp/batoi-rad-1.zip /tmp/batoi-rad-2.zip
+      - name: Clean install and readiness check
+        run: >-
+          php rad/bin/install.php
+          --db-host=127.0.0.1
+          --db-name=batoi_rad_ci
+          --db-user=root
+          --db-password=ci-root-password
+          --base-url=http://127.0.0.1:8080
+          --admin-name="CI Administrator"
+          --admin-username=admin
+          --admin-password="CiReleaseTest123!"
+          --non-interactive
+          --skip-composer
+      - run: php rad/bin/doctor.php
+      - name: Installer rerun is safe
+        run: >-
+          php rad/bin/install.php
+          --db-host=127.0.0.1
+          --db-name=batoi_rad_ci
+          --db-user=root
+          --db-password=ci-root-password
+          --base-url=http://127.0.0.1:8080
+          --admin-name="CI Administrator"
+          --admin-username=admin
+          --admin-password="CiReleaseTest123!"
+          --non-interactive
+          --skip-composer
+      - run: php rad/bin/upgrade.php
+      - name: HTTP admin authentication smoke
+        env:
+          RAD_TEST_ADMIN_PASSWORD: CiReleaseTest123!
+        run: |
+          php -S 127.0.0.1:8080 -t public_html public_html/index.php >/tmp/batoi-rad-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..20}; do
+            curl -sS http://127.0.0.1:8080/rad-admin >/dev/null && break
+            sleep 1
+          done
+          bash rad/tests/http-smoke.sh
+      - name: Chromium RAD Admin smoke
+        if: matrix.php == '8.4' && matrix.mysql == '8.4'
+        env:
+          RAD_TEST_ADMIN_PASSWORD: CiReleaseTest123!
+        run: |
+          php -S 127.0.0.1:8080 -t public_html public_html/index.php >/tmp/batoi-rad-browser-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..20}; do
+            curl -sS http://127.0.0.1:8080/rad-admin >/dev/null && break
+            sleep 1
+          done
+          npm test --prefix rad/tests/browser
+          php rad/tests/RuntimePerformanceLogTest.php rad/log

@@ -7,7 +7,14 @@ class AutoLoader {
     public function register() {
         spl_autoload_register([$this, 'loadClass']);
         // Include Composer's autoload file for vendor libraries
-        require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+        $vendorDir = dirname(__DIR__, 2) . '/vendor';
+        require_once $vendorDir . '/autoload.php';
+
+        // Batoi AIF is shipped as a Composer-independent RAD drop-in.
+        $aifAutoload = $vendorDir . '/batoi/aif/autoload.php';
+        if (is_file($aifAutoload)) {
+            require_once $aifAutoload;
+        }
     }
 
     public function addDirectory($directory) {

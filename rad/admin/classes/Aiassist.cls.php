@@ -15,6 +15,7 @@ class Aiassist {
     }
 
     public function view() {
+        $this->assertAiAssistAllowed();
         $this->runData['route']['h1'] = 'Batoi Intelligence';
         $this->runData['route']['meta_title'] = 'Batoi Intelligence';
         $this->runData['route']['breadcrumb'] = ['Batoi Intelligence' => null];
@@ -68,6 +69,8 @@ class Aiassist {
         if (!$payload) {
             $payload = $this->runData['request']->post ?? [];
         }
+        $this->assertDeveloperToolAllowed('source_read');
+        $this->assertCsrfPayload(is_array($payload) ? $payload : []);
 
         $type = $payload['type'] ?? '';
         $identifier = trim($payload['id'] ?? '');
@@ -92,6 +95,7 @@ class Aiassist {
         if (!$payload) {
             $payload = $this->runData['request']->post ?? [];
         }
+        $this->assertCsrfPayload(is_array($payload) ? $payload : []);
 
         $prompt = trim($payload['prompt'] ?? '');
         $attachments = $payload['attachments'] ?? [];

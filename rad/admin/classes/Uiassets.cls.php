@@ -317,13 +317,15 @@ class Uiassets{
         if ($path === null) {
             return '';
         }
-        $path = trim(str_replace("\0", '', $path));
+        $path = trim(str_replace('\\', '/', $path));
         if ($path === '') {
             return '';
         }
-        $segments = array_filter(explode('/', $path), function ($segment) {
-            return $segment !== '' && $segment !== '.' && $segment !== '..';
-        });
+        if (str_contains($path, "\0") || str_contains($path, '://') || str_starts_with($path, '/')
+            || preg_match('/^[A-Za-z]:\//', $path) || in_array('..', explode('/', $path), true)) {
+            throw new \InvalidArgumentException('Invalid asset path.');
+        }
+        $segments = array_filter(explode('/', $path), fn($segment) => $segment !== '' && $segment !== '.');
         return implode('/', $segments);
     }
 
@@ -344,24 +346,30 @@ class Uiassets{
     private function resolveAssetPath(string $relativePath, bool $mustExist = true): string {
         $assetRoot = $this->getAssetRoot();
         $relativePath = $this->sanitizeRelativePath($relativePath);
-        $targetPath = $relativePath === '' ? $assetRoot : $assetRoot . '/' . $relativePath;
+        if ($relativePath === '') {
+            return $assetRoot;
+        }
+        $policy = new \Core\Sys\SafePath($assetRoot);
 
         if ($mustExist) {
-            $real = realpath($targetPath);
-            if ($real === false || strpos($real, $assetRoot) !== 0) {
+            $real = $policy->existing($relativePath);
+            if ($real === null) {
                 throw new \Exception('Asset not found or inaccessible', 404);
             }
             return $real;
         }
 
-        $parent = $relativePath === '' ? $assetRoot : dirname($targetPath);
+        $targetPath = $policy->forWrite($relativePath);
+        if ($targetPath === null) {
+            throw new \Exception('Invalid asset path', 400);
+        }
+        $parent = dirname($targetPath);
         if (!is_dir($parent)) {
             if (!mkdir($parent, 0777, true) && !is_dir($parent)) {
                 throw new \Exception('Unable to prepare directory for asset', 500);
             }
         }
-        $parentReal = realpath($parent);
-        if ($parentReal === false || strpos($parentReal, $assetRoot) !== 0) {
+        if ($policy->forWrite($relativePath) === null) {
             throw new \Exception('Invalid asset path', 400);
         }
 
@@ -611,8 +619,11 @@ class Uiassets{
             if ($zip->open($filePath) !== true) {
                 throw new \Exception('Error opening archive.', 500);
             }
-            $zip->extractTo($this->getAssetRoot());
-            $zip->close();
+            try {
+                \Core\Sys\SafeZipExtractor::extract($zip, $this->getAssetRoot());
+            } finally {
+                $zip->close();
+            }
 
             echo json_encode(['success' => true]);
         } catch (\Throwable $e) {
@@ -840,6 +851,8 @@ class Uiassets{
                 throw new \Exception('Access denied.', 403);
             }
             $payload = json_decode(file_get_contents('php://input'), true);
+            $this->assertDeveloperToolAllowed('source_write');
+            $this->assertCsrfPayload(is_array($payload) ? $payload : []);
             if (!$payload || !isset($payload['path']) || !array_key_exists('content', $payload)) {
                 throw new \Exception('Invalid data provided', 400);
             }
@@ -872,6 +885,7 @@ class Uiassets{
     public function aiassist() {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
+        $this->assertCsrfPayload(is_array($data) ? $data : []);
         if (!$data || !isset($data['content'])) {
             echo json_encode(['error' => 'Invalid data provided']);
             return;

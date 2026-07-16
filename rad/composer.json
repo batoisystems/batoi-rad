@@ -1,15 +1,43 @@
 {
+    "name": "batoi/rad",
+    "description": "Batoi RAD Framework for rapid PHP application development",
+    "type": "project",
+    "license": "Apache-2.0",
     "require": {
-        "league/flysystem": "^3.0",
-        "mailgun/mailgun-php": "^3.5",
-        "symfony/http-client": "^6.3",
-        "nyholm/psr7": "^1.8",
-        "web3p/web3.php": "^0.1.6",
-        "league/commonmark": "^2.8"
+        "php": "^8.3 || ^8.4",
+        "ext-curl": "*",
+        "ext-fileinfo": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-zip": "*",
+        "league/commonmark": "^2.8.3",
+        "mailgun/mailgun-php": "^4.5",
+        "nyholm/psr7": "^1.8"
+    },
+    "suggest": {
+        "ext-redis": "Provides a shared cache backend for multi-node installations.",
+        "twilio/sdk": "Enables SMS delivery for optional MFA one-time codes."
+    },
+    "scripts": {
+        "test": "@php tests/run.php",
+        "analyse": "phpstan analyse --no-progress --debug",
+        "quality": "@php bin/quality-gate.php",
+        "quality-fix": "@php bin/quality-gate.php --fix"
     },
     "config": {
+        "platform": {
+            "php": "8.3.0"
+        },
         "allow-plugins": {
             "php-http/discovery": true
-        }
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
     }
 }

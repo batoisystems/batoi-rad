@@ -50,14 +50,15 @@ $ssoClientLabel = trim((string)($runData['config']['auth']['sso_client']['label'
                         </div>
                     <?php } ?>
                     <form action="<?php echo $baseUrl; ?>/login/localsession" method="post" class="needs-validation">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="redirect_url_post_login" value="<?php echo htmlspecialchars($redirect); ?>">
                         <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" name="s_username" class="form-control" required autocomplete="username">
+                            <label class="form-label" for="rad-admin-username">Username</label>
+                            <input type="text" id="rad-admin-username" name="s_username" class="form-control" required autocomplete="username">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="s_password" class="form-control" required>
+                            <label class="form-label" for="rad-admin-password">Password</label>
+                            <input type="password" id="rad-admin-password" name="s_password" class="form-control" required autocomplete="current-password">
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Sign in</button>
                         <?php if ($ssoClientEnabled) { ?>

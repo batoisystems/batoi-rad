@@ -5,6 +5,7 @@ use Core\Sys\DataSchemaService;
 use Core\Sys\FileVersionService;
 use Core\Sys\PrivilegeService;
 use Core\Sys\BranchService;
+use Core\Sys\DeveloperToolPolicy;
 class Controller{
     use AiAssistAware;
     private const JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE;
@@ -14,6 +15,7 @@ class Controller{
     private $dataSchemaService;
     private $versionService;
     private $branchService;
+    private DeveloperToolPolicy $developerPolicy;
     public function __construct(array $runData) {
         $this->runData = $runData;
         // $this->db = $runData['db'];
@@ -35,6 +37,7 @@ class Controller{
             $this->runData['entity'] ?? [],
             $this->runData['request'] ?? null
         );
+        $this->developerPolicy = new DeveloperToolPolicy($config, $runData['entity'] ?? []);
         // print '<pre>';print_r($this->runData['data']);print '</pre>';die('here');
     }
 
@@ -570,6 +573,8 @@ EOT;
     
         $response = [];
         header('Content-Type: application/json');
+        $this->requireDeveloperCapability('source_write');
+        $this->requireCsrf(is_array($data) ? $data : []);
         $this->traceControllerCodeSave('codesave request received', [
             'path3' => $this->runData['route']['pathparts'][3] ?? '',
             'path4' => $this->runData['route']['pathparts'][4] ?? '',
@@ -700,6 +705,8 @@ EOT;
             $this->errorHandler->setResponseMode('json');
         }
         $data = json_decode(file_get_contents("php://input"), true);
+        $this->requireAiCapability('code_assist_chat');
+        $this->requireCsrf(is_array($data) ? $data : []);
         if (!$data || !isset($data['content'])) {
             echo json_encode(['error' => 'Invalid data provided']);
             return;
@@ -725,6 +732,7 @@ EOT;
         if ($this->errorHandler && method_exists($this->errorHandler, 'setResponseMode')) {
             $this->errorHandler->setResponseMode('json');
         }
+        $this->requireDeveloperCapability('source_read');
 
         $msRef = (string)($this->runData['route']['pathparts'][3] ?? '');
         $controllerRef = (string)($this->runData['route']['pathparts'][4] ?? '');
@@ -750,6 +758,8 @@ EOT;
         if (!is_array($payload)) {
             $payload = $this->runData['request']->post ?? [];
         }
+        $this->requireDeveloperCapability('source_read');
+        $this->requireCsrf($payload);
 
         $task = trim((string)($payload['task'] ?? ''));
         $scope = trim((string)($payload['scope'] ?? 'controller_only'));
@@ -785,6 +795,9 @@ EOT;
         if (!is_array($payload)) {
             $payload = $this->runData['request']->post ?? [];
         }
+        $this->requireAiCapability('code_assist_chat');
+        $this->requireDeveloperCapability('source_read');
+        $this->requireCsrf($payload);
 
         $task = trim((string)($payload['task'] ?? ''));
         $scope = trim((string)($payload['scope'] ?? 'controller_only'));
@@ -830,6 +843,8 @@ EOT;
         if (!is_array($payload)) {
             $payload = $this->runData['request']->post ?? [];
         }
+        $this->requireDeveloperCapability('source_write');
+        $this->requireCsrf($payload);
         $responseMode = strtolower(trim((string)($payload['response_mode'] ?? 'json')));
         $msRef = (string)($this->runData['route']['pathparts'][3] ?? '');
         $controllerRef = (string)($this->runData['route']['pathparts'][4] ?? '');
@@ -3170,6 +3185,25 @@ PHP;
             'status' => $status,
             'output' => trim(implode("\n", $output)),
         ];
+    }
+
+    private function requireDeveloperCapability(string $capability): void {
+        if (!$this->developerPolicy->allowsTool($capability)) {
+            throw new \Exception('Developer tools are disabled or this account lacks the required capability.', 403);
+        }
+    }
+
+    private function requireAiCapability(string $capability): void {
+        if (!$this->developerPolicy->allowsAi($capability)) {
+            throw new \Exception('AI code assistance is disabled or this account lacks the required capability.', 403);
+        }
+    }
+
+    private function requireCsrf(array $payload): void {
+        $token = (string)($payload['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
+        if (!$this->runData['request']->checkCSRFToken($token)) {
+            throw new \Exception('Invalid CSRF token.', 419);
+        }
     }
 
     private function storeControllerAgentProposal(array $payload): string {

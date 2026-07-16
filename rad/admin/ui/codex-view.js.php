@@ -607,7 +607,7 @@
     function formatRoleLabel(role) {
         const r = (role || '').toLowerCase();
         if (r === 'you' || r === 'user') return 'You';
-        if (r === 'codex' || r === 'assistant') return 'Codex';
+        if (r === 'codex' || r === 'assistant') return 'AI Assistant';
         if (r.indexOf('tool') === 0) return 'Tool';
         return role || 'System';
     }
@@ -790,7 +790,7 @@
         if (aiInput && valueOverride !== undefined) {
             aiInput.value = '';
         }
-        codexFetch(adminUrl('/codexapi/chat'), {
+        codexFetch(adminUrl('/codeassistapi/chat'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -806,7 +806,7 @@
             recordChatMessage('user', question);
             handleAiResponse(data);
         })
-        .catch(() => appendAiMessage('Codex', 'Unable to reach AI proxy.'))
+        .catch(() => appendAiMessage('AI Assistant', 'Unable to reach Batoi AIF.'))
         .finally(() => { isSubmitting = false; });
     }
 
@@ -936,7 +936,7 @@
             return;
         }
         const snippet = editor.getModel().getValueInRange(selection);
-        codexFetch(adminUrl('/codexapi/fix'), {
+        codexFetch(adminUrl('/codeassistapi/fix'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -965,7 +965,7 @@
 
     function handleAiResponse(data) {
         const reply = data.reply || data.error || 'No response';
-        appendAiMessage('Codex', reply);
+        appendAiMessage('AI Assistant', reply);
         recordChatMessage('assistant', reply);
         const commands = extractToolCommands(reply);
         if (commands.length) {
@@ -1012,7 +1012,7 @@
     function runTool(cmd) {
         switch (cmd.tool) {
             case 'read_file':
-                return codexFetch(adminUrl('/codexapi/read_file'), {
+                return codexFetch(adminUrl('/codeassistapi/read_file'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ path: cmd.args?.path || activePath, csrf_token: csrfToken }),
@@ -1021,7 +1021,7 @@
                 if (!confirmDestructive('write file', cmd.args?.path || activePath)) {
                     return Promise.reject('User cancelled write_file');
                 }
-                return codexFetch(adminUrl('/codexapi/write_file'), {
+                return codexFetch(adminUrl('/codeassistapi/write_file'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1033,23 +1033,17 @@
             case 'apply_patch':
                 return previewPatch(cmd.args?.patch || '', { source: 'AI Tool' });
             case 'search_files':
-                return codexFetch(adminUrl('/codexapi/search_files'), {
+                return codexFetch(adminUrl('/codeassistapi/search_files'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query: cmd.args?.query || '', csrf_token: csrfToken }),
                 }).then(r => r.json()).then(data => (data.results || []).join('<br>'));
             case 'run_sql':
-                return codexFetch(adminUrl('/codexapi/run_sql'), {
+                return codexFetch(adminUrl('/codeassistapi/run_sql'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sql: cmd.args?.sql || '', csrf_token: csrfToken }),
                 }).then(r => r.json()).then(data => JSON.stringify(data.result || [], null, 2));
-            case 'run_php':
-                return codexFetch(adminUrl('/codexapi/run_php'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: cmd.args?.code || '', csrf_token: csrfToken }),
-                }).then(r => r.json()).then(data => data.output || JSON.stringify(data));
             default:
                 return Promise.resolve('Unknown tool ' + cmd.tool);
         }
@@ -1066,7 +1060,7 @@
         if (!patch) {
             return Promise.reject('Empty patch.');
         }
-        return codexFetch(adminUrl('/codexapi/apply_patch'), {
+        return codexFetch(adminUrl('/codeassistapi/apply_patch'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1233,7 +1227,7 @@
 
     function confirmDestructive(action, target) {
         if (!target) return true;
-        return window.confirm(`Codex is about to ${action}:\n${target}\nProceed?`);
+        return window.confirm(`The AI assistant is about to ${action}:\n${target}\nProceed?`);
     }
 
     function recordChatMessage(role, content) {
@@ -1279,7 +1273,7 @@
 
     function requestAutocomplete(snippet, language, cursor) {
         if (!snippet) return Promise.resolve([]);
-        return codexFetch(adminUrl('/codexapi/autocomplete'), {
+        return codexFetch(adminUrl('/codeassistapi/autocomplete'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

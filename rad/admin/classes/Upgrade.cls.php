@@ -10,7 +10,6 @@ class Upgrade {
     use AiAssistAware;
     private $runData = [];
     private $upgradeDir = '';
-    private $checkpointFile = '';
     private $priv;
 
     public function __construct(array $runData) {
@@ -21,13 +20,8 @@ class Upgrade {
         }
         $radDir = rtrim($this->runData['config']['dir']['rad'], '/');
         $this->upgradeDir = $radDir . '/upgrades';
-        $this->checkpointFile = $radDir . '/data/upgrade/checkpoints.json';
         if (!is_dir($this->upgradeDir)) {
             mkdir($this->upgradeDir, 0775, true);
-        }
-        $checkpointDir = dirname($this->checkpointFile);
-        if (!is_dir($checkpointDir)) {
-            mkdir($checkpointDir, 0775, true);
         }
     }
 
@@ -43,16 +37,11 @@ class Upgrade {
 
         $lastRun = null;
         if (strtoupper($this->runData['request']->method) === 'POST') {
-            if (isset($this->runData['request']->post['revert_upgrade'])) {
-                $targetId = $this->sanitizeUpgradeId($this->runData['request']->post['revert_upgrade']);
-                if ($targetId !== '' && $this->revertUpgrade($targetId)) {
-                    $this->runData['route']['alert'] = 'success';
-                    $this->runData['route']['alert_message'] = sprintf('Upgrade %s reverted to pending for deployment on other servers.', htmlspecialchars($targetId));
-                } else {
-                    $this->runData['route']['alert'] = 'danger';
-                    $this->runData['route']['alert_message'] = 'Unable to revert upgrade status. Please verify the upgrade ID.';
-                }
-            } elseif (isset($this->runData['request']->post['run_rollback'])) {
+            $csrf = (string)($this->runData['request']->post['csrf_token'] ?? '');
+            if (!$this->runData['request']->checkCSRFToken($csrf)) {
+                throw new \Exception('Invalid CSRF token.', 419);
+            }
+            if (isset($this->runData['request']->post['run_rollback'])) {
                 $targetId = $this->sanitizeUpgradeId($this->runData['request']->post['run_rollback']);
                 if ($targetId === '') {
                     $this->runData['route']['alert'] = 'danger';
@@ -84,43 +73,13 @@ class Upgrade {
     }
 
     public function add() {
-        $this->runData['route']['h1'] = 'Add Upgrade Script';
-        $this->runData['route']['meta_title'] = 'Add Upgrade Script';
-        $this->runData['route']['backlink'] = $this->runData['route']['rad_admin_url'] . '/upgrade/view';
-
-        $defaultId = $this->generateUpgradeId();
-        $defaultCode = $this->buildDefaultTemplate($defaultId, 'Short summary of this upgrade.');
-
-        $form = [
-            'id' => $this->runData['request']->post['upgrade_id'] ?? $defaultId,
-            'description' => $this->runData['request']->post['description'] ?? '',
-            'code' => $this->runData['request']->post['code'] ?? $defaultCode,
-        ];
-
-        if (strtoupper($this->runData['request']->method) === 'POST' && isset($this->runData['request']->post['save_upgrade'])) {
-            $errors = $this->validateUpgradeForm($form);
-            if (empty($errors)) {
-                $filePath = $this->upgradeDir . '/' . $form['id'] . '.php';
-                $form['code'] = $this->syncDescriptionInCode($form['code'], $form['description']);
-                file_put_contents($filePath, $form['code']);
-                chmod($filePath, 0664);
-
-                $this->runData['request']->setAlert('Upgrade script created successfully.', 'success');
-                header('Location: ' . $this->runData['route']['rad_admin_url'] . '/upgrade/view');
-                exit;
-            } else {
-                $this->runData['route']['alert'] = 'danger';
-                $this->runData['route']['alert_message'] = implode('<br>', $errors);
-            }
-        }
-
-        $this->runData['data']['form'] = $form;
-        return $this->runData;
+        throw new \Exception('Upgrade definitions are source-controlled and cannot be created from RAD Admin.', 403);
     }
 
     public function aiassist() {
         header('Content-Type: application/json');
         $payload = json_decode(file_get_contents('php://input'), true);
+        $this->assertCsrfPayload(is_array($payload) ? $payload : []);
         if (!$payload || !isset($payload['content'])) {
             echo json_encode(['error' => 'Invalid data provided']);
             return;
@@ -142,54 +101,7 @@ class Upgrade {
     }
 
     public function edit() {
-        $pathParts = $this->runData['route']['pathparts'];
-        $id = $pathParts[3] ?? '';
-        $id = preg_replace('/[^a-z0-9_\-]/', '', strtolower($id));
-        if ($id === '') {
-            throw new \Exception('Upgrade identifier missing.', 404);
-        }
-
-        $filePath = $this->upgradeDir . '/' . $id . '.php';
-        if (!is_file($filePath)) {
-            throw new \Exception('Upgrade script not found.', 404);
-        }
-
-        $definition = @include $filePath;
-        if (!is_array($definition)) {
-            throw new \Exception('Upgrade script is invalid.', 500);
-        }
-
-        $form = [
-            'id' => $id,
-            'description' => $definition['description'] ?? '',
-            'code' => file_get_contents($filePath),
-        ];
-
-        if (strtoupper($this->runData['request']->method) === 'POST' && isset($this->runData['request']->post['update_upgrade'])) {
-            $form['description'] = $this->runData['request']->post['description'] ?? '';
-            $form['code'] = $this->runData['request']->post['code'] ?? '';
-
-            $errors = $this->validateUpgradeForm($form, true);
-            if (empty($errors)) {
-                $form['code'] = $this->syncDescriptionInCode($form['code'], $form['description']);
-                file_put_contents($filePath, $form['code']);
-                chmod($filePath, 0664);
-
-                $this->runData['request']->setAlert('Upgrade script updated successfully.', 'success');
-                header('Location: ' . $this->runData['route']['rad_admin_url'] . '/upgrade/view');
-                exit;
-            } else {
-                $this->runData['route']['alert'] = 'danger';
-                $this->runData['route']['alert_message'] = implode('<br>', $errors);
-            }
-        }
-
-        $this->runData['route']['h1'] = 'Edit Upgrade Script';
-        $this->runData['route']['meta_title'] = 'Edit Upgrade Script';
-        $this->runData['route']['backlink'] = $this->runData['route']['rad_admin_url'] . '/upgrade/view';
-        $this->runData['data']['form'] = $form;
-
-        return $this->runData;
+        throw new \Exception('Applied upgrade definitions are immutable. Add a new source-controlled migration instead.', 403);
     }
 
     private function executeUpgrades(): array {
@@ -344,95 +256,15 @@ class Upgrade {
     }
 
     private function getUpgradeStatus(): array {
-        $upgrades = $this->loadUpgrades();
-        $checkpoints = $this->loadCheckpoints();
-        $historyMap = [];
-        foreach ($checkpoints['history'] as $entry) {
-            $historyMap[$entry['id']] = $entry;
-        }
-
-        foreach ($upgrades as &$upgrade) {
-            $upgrade['applied'] = in_array($upgrade['id'], $checkpoints['applied'], true);
-            $upgrade['executed_at'] = isset($historyMap[$upgrade['id']]) ? $historyMap[$upgrade['id']]['executed_at'] : null;
-            $upgrade['locked'] = in_array($upgrade['id'], $checkpoints['locked'], true);
-        }
-
-        return $upgrades;
-    }
-
-    private function loadUpgrades(): array {
-        if (!is_dir($this->upgradeDir)) {
-            return [];
-        }
-
-        $files = glob($this->upgradeDir . '/*.php');
-        rsort($files);
-
-        $upgrades = [];
-        foreach ($files as $file) {
-            $definition = @include $file;
-            if (!is_array($definition) || empty($definition['id'])) {
-                continue;
-            }
-            $upgrades[] = [
-                'id' => $definition['id'],
-                'description' => $definition['description'] ?? 'No description',
-                'file' => $file,
-                'has_rollback' => isset($definition['rollback']) && is_callable($definition['rollback']),
-            ];
-        }
-
-        return $upgrades;
-    }
-
-    private function loadCheckpoints(): array {
-        if (!is_file($this->checkpointFile)) {
-            return [
-                'applied' => [],
-                'history' => [],
-                'locked' => [],
-            ];
-        }
-
-        $data = json_decode(file_get_contents($this->checkpointFile), true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
-            return [
-                'applied' => [],
-                'history' => [],
-                'locked' => [],
-            ];
-        }
-
-        $data['applied'] = $data['applied'] ?? [];
-        $data['history'] = $data['history'] ?? [];
-        $data['locked'] = $data['locked'] ?? [];
-
-        return $data;
-    }
-
-    private function saveCheckpoints(array $data): void {
-        file_put_contents($this->checkpointFile, json_encode($data, JSON_PRETTY_PRINT));
-    }
-
-    private function revertUpgrade(string $id): bool {
-        $checkpoints = $this->loadCheckpoints();
-        if (!in_array($id, $checkpoints['applied'], true)) {
-            return false;
-        }
-
-        $checkpoints['applied'] = array_values(array_filter(
-            $checkpoints['applied'],
-            function ($appliedId) use ($id) {
-                return $appliedId !== $id;
-            }
-        ));
-
-        $checkpoints['locked'][] = $id;
-        $checkpoints['locked'] = array_values(array_unique($checkpoints['locked']));
-
-        $this->saveCheckpoints($checkpoints);
-
-        return true;
+        $logger = $this->runData['logger'] ?? new Logger($this->runData['config']['dir']['log']);
+        $errorHandler = $this->runData['errorHandler'] ?? new ErrorHandler($logger);
+        $controller = new SysUpgradeController(
+            $this->runData['config'],
+            $this->runData['db'],
+            $logger,
+            $errorHandler
+        );
+        return $controller->status();
     }
 
     private function validateUpgradeForm(array &$form, bool $isEdit = false): array {

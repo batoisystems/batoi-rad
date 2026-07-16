@@ -261,13 +261,15 @@ $detailUrl = $radAdminUrl . '/route/detail/' . $routeUid;
     const previewBtn = document.getElementById('route-help-preview-btn');
     const generateBtn = document.getElementById('route-help-generate-btn');
     const saveStatus = document.getElementById('route-help-save-status');
+    const csrfToken = <?php echo json_encode($this->runData['request']->csrf_token ?? ''); ?>;
 
     async function postJson(url, payload) {
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': csrfToken
             },
             body: JSON.stringify(payload)
         });

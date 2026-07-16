@@ -32,7 +32,7 @@ class MfaService {
         return false;
     }
 
-    public function totpCode(string $secret, int $timeSlice = null): string {
+    public function totpCode(string $secret, ?int $timeSlice = null): string {
         $timeSlice = $timeSlice ?? floor(time() / 30);
         $secretKey = $this->base32Decode($secret);
         $time = pack('N*', 0) . pack('N*', $timeSlice);

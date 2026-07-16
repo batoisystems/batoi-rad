@@ -251,6 +251,35 @@ ALTER TABLE `s_entity_session`
   ADD KEY `idx_entity_sub_id` (`s_entity_sub_id`),
   ADD KEY `idx_session_key` (`s_session_key`);
 
+CREATE TABLE `s_auth_attempt` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `bucket_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `identity_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `failed_count` int NOT NULL DEFAULT 0,
+  `window_started_at` datetime NOT NULL,
+  `blocked_until` datetime DEFAULT NULL,
+  `last_attempt_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_auth_attempt_bucket` (`bucket_hash`),
+  KEY `idx_auth_attempt_blocked` (`blocked_until`),
+  KEY `idx_auth_attempt_last` (`last_attempt_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `s_migration` (
+  `migration_id` varchar(190) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `checksum` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `release_version` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('baseline','running','applied','failed','rolled_back') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `started_at` datetime DEFAULT NULL,
+  `finished_at` datetime DEFAULT NULL,
+  `applied_by` varchar(190) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `error_message` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`migration_id`),
+  KEY `idx_migration_status` (`status`),
+  KEY `idx_migration_finished` (`finished_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `s_ms` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uid` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -580,8 +609,7 @@ CREATE TABLE `s_version_history` (
   `s_version_number` int(11) DEFAULT NULL,
   `s_modified_by` bigint(20) DEFAULT NULL,
   `s_modified_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uid` (`uid`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `s_wf_action` (

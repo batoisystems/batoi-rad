@@ -44,6 +44,27 @@
     --bs-grid-breakpoints-xxl: 1400px; /* Change xxl breakpoint */
 }
 
+.rad-skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 30000;
+    padding: 0.65rem 1rem;
+    color: #fff;
+    background: #0b4f86;
+    border-radius: 0.25rem;
+    transform: translateY(-200%);
+}
+
+.rad-skip-link:focus {
+    transform: translateY(0);
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid #ffbf47 !important;
+    outline-offset: 2px;
+}
+
 .text-primary {
     color: var(--bs-primary) !important;
 }

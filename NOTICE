@@ -1,0 +1,13 @@
+Batoi RAD
+Copyright 2026 Batoi Systems Pvt Ltd
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+This distribution includes pinned copies of Batoi AIF and Batoi UIF. Their
+versions, source revisions, licenses, and integrity values are recorded in
+rad/vendor/batoi/distributions.json.
+
+Third-party PHP packages are installed from rad/composer.lock and retain their
+respective licenses and notices. Browser assets retain their upstream license
+files where supplied. A machine-readable dependency inventory can be generated
+for each release with rad/bin/build-sbom.php.
