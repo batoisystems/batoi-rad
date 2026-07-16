@@ -251,6 +251,35 @@ ALTER TABLE `s_entity_session`
   ADD KEY `idx_entity_sub_id` (`s_entity_sub_id`),
   ADD KEY `idx_session_key` (`s_session_key`);
 
+CREATE TABLE `s_auth_attempt` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `bucket_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `identity_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `failed_count` int NOT NULL DEFAULT 0,
+  `window_started_at` datetime NOT NULL,
+  `blocked_until` datetime DEFAULT NULL,
+  `last_attempt_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_auth_attempt_bucket` (`bucket_hash`),
+  KEY `idx_auth_attempt_blocked` (`blocked_until`),
+  KEY `idx_auth_attempt_last` (`last_attempt_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `s_migration` (
+  `migration_id` varchar(190) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `checksum` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `release_version` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('baseline','running','applied','failed','rolled_back') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `started_at` datetime DEFAULT NULL,
+  `finished_at` datetime DEFAULT NULL,
+  `applied_by` varchar(190) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `error_message` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`migration_id`),
+  KEY `idx_migration_status` (`status`),
+  KEY `idx_migration_finished` (`finished_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `s_ms` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uid` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -580,8 +609,7 @@ CREATE TABLE `s_version_history` (
   `s_version_number` int(11) DEFAULT NULL,
   `s_modified_by` bigint(20) DEFAULT NULL,
   `s_modified_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uid` (`uid`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `s_wf_action` (
@@ -976,6 +1004,7 @@ INSERT INTO `s_config` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatesta
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'country', 'US', 'S', 'Default country.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_name', 'batoi_rad_session', 'S', 'PHP session name.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_lifetime', '1800', 'S', 'Session lifetime in seconds.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_idle_timeout', '900', 'S', 'Session idle timeout in seconds.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_path_default', 'N', 'S', 'Use PHP default session path.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_domain', '', 'S', 'Session cookie domain.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_secure', '0', 'S', 'Require secure session cookie.'),
@@ -991,12 +1020,17 @@ INSERT INTO `s_config` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatesta
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'public_theme_uif_enabled', 'Y', 'S', 'Enable Batoi UIF assets in public runtime themes.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_monaco_base_url', '', 'S', 'Self-hosted Monaco editor base URL for RAD Admin code editors.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_community_edition', 'Y', 'S', 'Hide and block held-back RAD Admin modules in Community Edition.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'ai_code_assist_enabled', 'N', 'S', 'Enable AIF-backed code assistance for authorized developers.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'developer_tools_enabled', 'N', 'S', 'Enable privileged RAD source and read-only SQL developer tools.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'login_max_attempts', '5', 'S', 'Failed primary login attempts allowed per identity and IP.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'login_attempt_window_seconds', '900', 'S', 'Primary login failure counting window in seconds.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'login_lockout_seconds', '900', 'S', 'Primary login lockout duration in seconds.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'dev_debug_flag', 'N', 'S', 'Show developer debug output.');
 
-INSERT INTO `s_role` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_role_name`, `s_default_route_id`, `s_scope`, `s_code`, `s_ms_id`, `s_description`) VALUES
-(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Administrator', NULL, 'platform', 'system_admin', NULL, 'Default platform administrator role.'),
-(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Manager', NULL, 'workspace', 'manager', NULL, 'Default workspace manager role.'),
-(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Member', NULL, 'workspace', 'member', NULL, 'Default workspace member role.');
+INSERT INTO `s_role` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_role_name`, `s_default_route_id`, `s_scope`, `s_description`) VALUES
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Administrator', NULL, 'platform', 'Default platform administrator role.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Manager', NULL, 'workspace', 'Default workspace manager role.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Member', NULL, 'workspace', 'Default workspace member role.');
 
 INSERT INTO `s_data_field_type` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_name`, `s_description`, `s_definition`) VALUES
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'TEXT_BOX', 'Single-line text box', '{"input_type":"text"}'),

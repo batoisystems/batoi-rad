@@ -16,6 +16,7 @@
     var themeAgentContextUrl = <?php echo json_encode($agentContextUrl); ?>;
     var themeAgentPlanUrl = <?php echo json_encode($agentPlanUrl); ?>;
     var themeAgentPatchUrl = <?php echo json_encode($agentPatchUrl); ?>;
+    var themeCsrfToken = <?php echo json_encode($this->runData['request']->csrf_token ?? ''); ?>;
     var themeAiStatusEl = document.getElementById('theme-ai-status');
     var themeAiButton = document.getElementById('theme-ai-btn');
     var themeVersionButton = document.getElementById('theme-version-btn');
@@ -186,7 +187,7 @@
         setThemeSaveStatus(createVersion ? 'Saving & versioning template…' : 'Saving template…', 'info');
         return fetch(themeSaveUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': themeCsrfToken },
             body: JSON.stringify({
                 type: 'tpl',
                 content: content,
@@ -228,7 +229,7 @@
         setThemeAiStatus('Contacting AI…', 'info');
         fetch(themeAiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': themeCsrfToken },
             body: JSON.stringify({ content: content })
         })
         .then(function(response) { return response.json(); })
@@ -262,7 +263,7 @@
         setThemeAgentProgressDetail('Fetching template metadata, usage, history, and recent versions.');
         return fetch(themeAgentContextUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': themeCsrfToken },
             body: JSON.stringify({
                 task: themeAgentTaskEl ? themeAgentTaskEl.value.trim() : '',
                 scope: themeAgentScopeEl ? themeAgentScopeEl.value : 'template_only',
@@ -317,7 +318,7 @@
         setThemeAgentProgressDetail('Reviewing shared usage, layout scope, and implementation risks.');
         fetch(themeAgentPlanUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': themeCsrfToken },
             body: JSON.stringify({ task: task, scope: scope, related_templates: themeAgentSelectedRelatedTemplates })
         })
         .then(async function(response) {
@@ -370,7 +371,7 @@
         setThemeAgentProgressDetail('Preparing a full updated template file for review.');
         fetch(themeAgentPatchUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': themeCsrfToken },
             body: JSON.stringify({ task: task, scope: scope, related_templates: themeAgentSelectedRelatedTemplates })
         })
         .then(async function(response) {

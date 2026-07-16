@@ -119,7 +119,7 @@ if (!defined('CODEX_MONACO_LOADER')) {
                 <div>
                     <h6 class="mb-0">Chat &amp; Tools</h6>
             </div>
-            <button class="btn btn-sm btn-outline-secondary" id="codex-toggle-ai" type="button" aria-label="Toggle Codex panel"
+            <button class="btn btn-sm btn-outline-secondary" id="codex-toggle-ai" type="button" aria-label="Toggle AI assistant panel"
                     onclick="return window.codexTogglePanel ? window.codexTogglePanel('ai', event) : false;">
                 <i class="bi bi-chevron-double-right"></i>
             </button>
@@ -132,7 +132,7 @@ if (!defined('CODEX_MONACO_LOADER')) {
             </div>
             <form id="codex-ai-form" class="codex-ai-input" onsubmit="return false;">
                 <div class="codex-ai-composer">
-                    <textarea class="form-control w-100" rows="3" placeholder="Ask Codex to refactor or review..." id="codex-ai-text"></textarea>
+                    <textarea class="form-control w-100" rows="3" placeholder="Ask the AI assistant to refactor or review..." id="codex-ai-text"></textarea>
                 </div>
                 <div class="codex-composer-bar d-flex align-items-center mt-2">
                     <div class="btn-group codex-quick-inline" role="group" aria-label="Quick actions">
@@ -158,7 +158,6 @@ if (!defined('CODEX_MONACO_LOADER')) {
                                 <button type="button" class="list-group-item list-group-item-action codex-tool-option" data-tool-text="apply_patch">apply_patch</button>
                                 <button type="button" class="list-group-item list-group-item-action codex-tool-option" data-tool-text="search_files">search_files</button>
                                 <button type="button" class="list-group-item list-group-item-action codex-tool-option" data-tool-text="run_sql">run_sql</button>
-                                <button type="button" class="list-group-item list-group-item-action codex-tool-option" data-tool-text="run_php">run_php</button>
                             </div>
                         </div>
                     </div>
@@ -167,7 +166,7 @@ if (!defined('CODEX_MONACO_LOADER')) {
                         <i class="bi bi-send"></i>
                     </button>
                 </div>
-                <small class="text-muted d-block mt-2 helper-text">Codex remembers the last few replies.</small>
+                <small class="text-muted d-block mt-2 helper-text">The AI assistant remembers the last few replies.</small>
             </form>
             <div class="codex-ai-card codex-ai-tools">
                 <h6 class="fw-semibold small text-muted text-uppercase mb-2">Tool Activity</h6>

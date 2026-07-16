@@ -2,6 +2,13 @@
 namespace Core\Sys;
 
 class RadAdminController {
+    private const MUTATING_EVENTS = [
+        'activate', 'archive', 'branchcreate', 'branchdiscard', 'branchmerge',
+        'cancelsync', 'deactivate', 'delete', 'deletefield', 'deletenavset',
+        'deleterole', 'deletelog', 'emptytrash', 'markread', 'previewstart',
+        'previewstop', 'purge', 'purgearchive', 'removeuser', 'resetpassword',
+        'restore', 'restoreversion',
+    ];
     private $db;
     private $view;
     private $session;
@@ -101,6 +108,7 @@ class RadAdminController {
         // Allow the dedicated admin login screen to load without auth
         if ($moduleName !== 'login') {
             $this->checkUserAccess();
+            $this->enforceCsrfForMutation();
             unset($this->runData['session']);
         }
 
@@ -164,6 +172,10 @@ class RadAdminController {
         if ($reflection === null) {
             throw new \Exception("Module method {$eventName} not found", 404);
         }
+        if (in_array(strtolower($eventName), self::MUTATING_EVENTS, true)
+            && strtoupper((string)$this->runData['request']->method) !== 'POST') {
+            throw new \Exception('This operation requires POST.', 405);
+        }
 
         $start = microtime(true);
         $trustedIp = $this->runData['route']['client_ip'] ?? null;
@@ -200,6 +212,21 @@ class RadAdminController {
             header("Location: {$redirectUrl}"); exit;
         } else {
             exit;
+        }
+    }
+
+    private function enforceCsrfForMutation(): void {
+        $method = strtoupper((string)($this->runData['request']->method ?? 'GET'));
+        if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            return;
+        }
+        $token = (string)(
+            $this->runData['request']->post['csrf_token']
+            ?? $_SERVER['HTTP_X_CSRF_TOKEN']
+            ?? ''
+        );
+        if (!$this->runData['request']->checkCSRFToken($token)) {
+            throw new \Exception('Invalid CSRF token.', 419);
         }
     }
 

@@ -12,6 +12,7 @@ INSERT INTO `s_config` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatesta
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'country', 'US', 'S', 'Default country.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_name', 'batoi_rad_session', 'S', 'PHP session name.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_lifetime', '1800', 'S', 'Session lifetime in seconds.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_idle_timeout', '900', 'S', 'Session idle timeout in seconds.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_path_default', 'N', 'S', 'Use PHP default session path.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_domain', '', 'S', 'Session cookie domain.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'session_secure', '0', 'S', 'Require secure session cookie.'),
@@ -27,12 +28,17 @@ INSERT INTO `s_config` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatesta
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'public_theme_uif_enabled', 'Y', 'S', 'Enable Batoi UIF assets in public runtime themes.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_monaco_base_url', '', 'S', 'Self-hosted Monaco editor base URL for RAD Admin code editors.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'rad_admin_community_edition', 'Y', 'S', 'Hide and block held-back RAD Admin modules in Community Edition.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'ai_code_assist_enabled', 'N', 'S', 'Enable AIF-backed code assistance for authorized developers.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'developer_tools_enabled', 'N', 'S', 'Enable privileged RAD source and read-only SQL developer tools.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'login_max_attempts', '5', 'S', 'Failed primary login attempts allowed per identity and IP.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'login_attempt_window_seconds', '900', 'S', 'Primary login failure counting window in seconds.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'login_lockout_seconds', '900', 'S', 'Primary login lockout duration in seconds.'),
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'dev_debug_flag', 'N', 'S', 'Show developer debug output.');
 
-INSERT INTO `s_role` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_role_name`, `s_default_route_id`, `s_scope`, `s_code`, `s_ms_id`, `s_description`) VALUES
-(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Administrator', NULL, 'platform', 'system_admin', NULL, 'Default platform administrator role.'),
-(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Manager', NULL, 'workspace', 'manager', NULL, 'Default workspace manager role.'),
-(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Member', NULL, 'workspace', 'member', NULL, 'Default workspace member role.');
+INSERT INTO `s_role` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_role_name`, `s_default_route_id`, `s_scope`, `s_description`) VALUES
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Administrator', NULL, 'platform', 'Default platform administrator role.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Manager', NULL, 'workspace', 'Default workspace manager role.'),
+(UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'Member', NULL, 'workspace', 'Default workspace member role.');
 
 INSERT INTO `s_data_field_type` (`uid`, `livestatus`, `wf_status`, `space_id`, `updatestamp`, `s_name`, `s_description`, `s_definition`) VALUES
 (UUID(), '1', '0', '0', CURRENT_TIMESTAMP, 'TEXT_BOX', 'Single-line text box', '{"input_type":"text"}'),

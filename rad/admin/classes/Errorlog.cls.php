@@ -526,18 +526,14 @@ class Errorlog{
             exit;
         }
 
-        $aiConfig = $this->resolveAiConfig();
-        if (empty($aiConfig['endpoint']) || empty($aiConfig['api_key'])) {
-            header('HTTP/1.1 500 Internal Server Error');
-            echo json_encode(['error' => 'AI is not configured. Please set ai.api_key and ai.endpoint in rad/admin/rad.config.php or rad/config/ai-config.php.']);
-            exit;
-        }
-
         $summary = $this->buildErrorSummary($payload);
         $prompt = "You are an experienced PHP architect. Analyze the following error log entry and explain likely root causes plus concise fix steps. Highlight any configuration or permission issues. Entry:\n\n" . $summary;
 
         try {
-            $response = $this->requestOpenAi($aiConfig, $prompt);
+            $response = (new \Batoi\Aif\Rad\RadAifService($this->runData['config'] ?? []))->chat([
+                ['role' => 'system', 'content' => 'You are a helpful assistant for debugging PHP/LAMP applications. Provide concise root-cause analysis and fix steps.'],
+                ['role' => 'user', 'content' => $prompt],
+            ], ['max_tokens' => 400]);
         } catch (\RuntimeException $e) {
             $this->errorHandler->reportError('AI advice failed: ' . $e->getMessage());
             header('HTTP/1.1 502 Bad Gateway');
@@ -574,136 +570,6 @@ class Errorlog{
             $parts[] = 'Message: ' . $payload['message'];
         }
         return implode("\n", $parts);
-    }
-
-    private function requestOpenAi(array $config, string $prompt): string {
-        $models = [];
-        if (!empty($config['model'])) {
-            $models[] = $config['model'];
-        }
-        if (!empty($config['fallback_model']) && (!isset($config['model']) || $config['fallback_model'] !== $config['model'])) {
-            $models[] = $config['fallback_model'];
-        }
-        if (empty($models)) {
-            $models[] = 'gpt-5.1';
-        }
-
-        $lastException = null;
-        foreach ($models as $model) {
-            try {
-                return $this->callOpenAi($config, $prompt, $model);
-            } catch (\RuntimeException $e) {
-                $lastException = $e;
-            }
-        }
-
-        throw $lastException ?? new \RuntimeException('AI service unavailable.');
-    }
-
-    private function callOpenAi(array $config, string $prompt, string $model): string {
-        $payload = [
-            'model' => $model,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a helpful assistant for debugging PHP/LAMP applications. Provide concise root-cause analysis and fix steps.'],
-                ['role' => 'user', 'content' => $prompt],
-            ],
-            'max_completion_tokens' => 400,
-        ];
-
-        $ch = curl_init($config['endpoint']);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $config['api_key'],
-            'Content-Type: application/json',
-        ]);
-
-        $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            $err = curl_error($ch);
-            curl_close($ch);
-            throw new \RuntimeException('cURL error: ' . $err);
-        }
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200 || !$response) {
-            $snippet = $response ? substr($response, 0, 300) : 'No response body';
-            throw new \RuntimeException('HTTP ' . $httpCode . ' ' . $snippet);
-        }
-
-        $parsed = json_decode($response, true);
-        if (!isset($parsed['choices'][0]['message'])) {
-            throw new \RuntimeException('Missing assistant content in AI response.');
-        }
-
-        $content = $this->normalizeMessageContent($parsed['choices'][0]['message']['content'] ?? null);
-        if ($content === '') {
-            throw new \RuntimeException('AI returned an empty response.');
-        }
-
-        return $content;
-    }
-
-    private function normalizeMessageContent($content): string {
-        if (is_string($content)) {
-            return trim($content);
-        }
-
-        if (!is_array($content)) {
-            return '';
-        }
-
-        $parts = [];
-        foreach ($content as $segment) {
-            if (is_string($segment)) {
-                $parts[] = $segment;
-                continue;
-            }
-            if (!is_array($segment)) {
-                continue;
-            }
-            if (isset($segment['text']) && is_string($segment['text'])) {
-                $parts[] = $segment['text'];
-                continue;
-            }
-            if (isset($segment['content']) && is_string($segment['content'])) {
-                $parts[] = $segment['content'];
-                continue;
-            }
-        }
-
-        return trim(implode("\n", array_filter($parts, static function ($part) {
-            return trim($part) !== '';
-        })));
-    }
-
-    private function resolveAiConfig(): array {
-        try {
-            if (class_exists('\\Core\\Sys\\AiProviderFactory')) {
-                $config = \Core\Sys\AiProviderFactory::loadConfig($this->runData['config'] ?? []);
-                $profileKey = strtolower((string)($config['default_profile'] ?? 'general'));
-                $profile = $config['profiles'][$profileKey] ?? ($config['profiles']['general'] ?? []);
-                $providerKey = strtolower((string)($profile['provider'] ?? ($config['default_provider'] ?? 'openai')));
-                $providers = $config['providers'] ?? [];
-                if (!empty($providers[$providerKey])) {
-                    $provider = $providers[$providerKey];
-                    $quality = strtolower((string)($profile['default_quality'] ?? ($config['default_quality'] ?? 'mini')));
-                    $qualityModels = $profile['quality_models'][$quality] ?? [];
-                    return [
-                        'endpoint' => $profile['endpoint'] ?? ($provider['endpoint'] ?? ''),
-                        'api_key' => $provider['api_key'] ?? '',
-                        'model' => $qualityModels['model'] ?? ($profile['model'] ?? ($provider['model'] ?? ($provider['ai_model'] ?? ''))),
-                        'fallback_model' => $qualityModels['fallback_model'] ?? ($profile['fallback_model'] ?? ($provider['fallback_model'] ?? '')),
-                    ];
-                }
-            }
-        } catch (\Throwable $e) {
-            // Fall back to legacy config.
-        }
-
-        return $this->runData['config']['ai'] ?? ($this->runData['config']['rad']['ai'] ?? []);
     }
 
     private function purgeLogsOlderThan(int $days): int {

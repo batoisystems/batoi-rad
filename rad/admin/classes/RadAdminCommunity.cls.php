@@ -7,7 +7,7 @@ class RadAdminCommunity
         'aiconfig' => true,
         'aiassist' => true,
         'codex' => true,
-        'codexapi' => true,
+        'codeassistapi' => true,
         'devsecops' => true,
         'observability' => true,
         'sca' => true,

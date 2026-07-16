@@ -1,0 +1,19 @@
+parameters:
+    level: 5
+    phpVersion: 80200
+    scanDirectories:
+        - core/sys
+        - vendor/batoi/aif/src
+    paths:
+        - bin
+        - core/app/FileStore.cls.php
+        - core/sys/AuthenticationThrottle.cls.php
+        - core/sys/DeveloperToolPolicy.cls.php
+        - core/sys/MigrationService.cls.php
+        - core/sys/ReadOnlySqlPolicy.cls.php
+        - core/sys/SafePath.cls.php
+        - core/sys/SafeZipExtractor.cls.php
+        - tests
+    tmpDir: data/cache/phpstan
+    parallel:
+        maximumNumberOfProcesses: 1

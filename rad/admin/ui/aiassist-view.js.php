@@ -16,6 +16,7 @@
     const runButton = document.getElementById('ai-run-btn');
     const copyButton = document.getElementById('ai-copy-response');
     const clearButton = document.getElementById('ai-clear-response');
+    const csrfToken = (document.querySelector('meta[name="rad-csrf"]')?.getAttribute('content') || window.__RAD_CSRF || '');
 
     function renderAttachments() {
         attachmentsContainer.innerHTML = '';
@@ -53,7 +54,7 @@
         setStatus('Loading context...', false);
         fetch(contextUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ type: type, id: select.value })
         })
         .then(res => res.json())
@@ -94,7 +95,7 @@
 
         fetch(chatUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({
                 prompt: prompt,
                 attachments: attachments
@@ -151,7 +152,7 @@
             setStatus('Loading context...', false);
             fetch(contextUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 body: JSON.stringify({ type, id })
             })
             .then(res => res.json())

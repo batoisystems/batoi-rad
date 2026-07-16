@@ -299,6 +299,8 @@ class Theme{
      */
     public function savetpl() {
         $data = json_decode(file_get_contents("php://input"), true);
+        $this->assertDeveloperToolAllowed('source_write');
+        $this->assertCsrfPayload(is_array($data) ? $data : []);
     
         $response = [];
         header('Content-Type: application/json');
@@ -381,6 +383,7 @@ class Theme{
             if (!is_array($payload)) {
                 $payload = $this->runData['request']->post ?? $this->runData['request']->get ?? [];
             }
+            $this->assertDeveloperToolAllowed('source_read');
 
             $template = $this->resolveTemplateNameFromRoute(3);
             $workspace = $this->resolveThemeWorkspaceContext($template);
@@ -417,6 +420,8 @@ class Theme{
             if (!is_array($payload)) {
                 $payload = $this->runData['request']->post ?? [];
             }
+            $this->assertDeveloperToolAllowed('source_read');
+            $this->assertCsrfPayload($payload);
 
             $task = trim((string)($payload['task'] ?? ''));
             $scope = trim((string)($payload['scope'] ?? 'template_only'));
@@ -462,6 +467,8 @@ class Theme{
             if (!is_array($payload)) {
                 $payload = $this->runData['request']->post ?? [];
             }
+            $this->assertDeveloperToolAllowed('source_read');
+            $this->assertCsrfPayload($payload);
 
             $task = trim((string)($payload['task'] ?? ''));
             $scope = trim((string)($payload['scope'] ?? 'template_only'));
@@ -516,6 +523,7 @@ class Theme{
     public function aiassist() {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
+        $this->assertCsrfPayload(is_array($data) ? $data : []);
         if (!$data || !isset($data['content'])) {
             echo json_encode(['error' => 'Invalid data provided']);
             return;
@@ -636,8 +644,7 @@ class Theme{
         } catch (\Exception $e) {
             header('Content-Type: application/json', true, $e->getCode());
             echo json_encode(['error' => $e->getMessage()]);
-            // Add this for debugging.
-            file_put_contents("php_error.log", $e->getMessage());
+            $this->errorHandler->logError('Theme asset listing failed.');
         }
     }
 
@@ -645,65 +652,58 @@ class Theme{
      * Upload files to the theme assets folder
      */
     public function uploadfiles() {
-        // check if the theme exists from the theme folder and with route id from the pathparts array 3rd element
-        if ( !isset($this->runData['route']['pathparts'][3]) && ($this->runData['route']['pathparts'][3] == '') ) {
-            throw new \Exception('Invalid Theme', 404);
+        $privileges = new \Core\Sys\PrivilegeService($this->runData['config'] ?? [], $this->runData['entity'] ?? []);
+        if (!$privileges->can('asset_upload')) {
+            throw new \Exception('Access denied.', 403);
         }
-        $theme = $this->runData['route']['pathparts'][3];
-        if ( !is_dir($this->runData['config']['dir']['rad'] . '/theme/' . $theme) ) {
-            throw new \Exception('Invalid Theme', 404);
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            throw new \Exception('Theme asset upload requires POST.', 405);
         }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                if (isset($_FILES['files'])) {
-                    if (!isset($this->runData['route']['pathparts'][3]) || $this->runData['route']['pathparts'][3] == '') {
-                        throw new \Exception('Invalid Theme', 404);
-                    }
-        
-                    $target_dir = $this->runData['config']['dir']['rad'] . '/theme/' . $theme . '/assets/';
-        
-                    // Validate the theme directory
-                    if (!is_dir($target_dir)) {
-                        throw new \Exception('Invalid Theme', 404);
-                    }
-        
-                    //if pathparts index 4 exists and not blank, then concatenate it to $redirect_dir
-                    if ( isset($this->runData['route']['pathparts'][4]) && ($this->runData['route']['pathparts'][4] != '')) {
-                        $target_dir .= $this->runData['route']['pathparts'][4];
-                    }
-        
-                    // Create directory if it doesn't exist
-                    if (!file_exists($target_dir)) {
-                        mkdir($target_dir, 0777, true);
-                    }
-        
-                    // Move files
-                    error_log("Target Directory: " . $target_dir);
-
-                    // Rest of your code
-                    foreach ($_FILES['files']['tmp_name'] as $index => $tmpName) {
-                        $target_file = $target_dir . '/' . basename($_FILES["files"]["name"][$index]);
-                        error_log("Trying to move " . $tmpName . " to " . $target_file);
-
-                        if (move_uploaded_file($tmpName, $target_file)) {
-                            error_log("Successfully moved " . $tmpName . " to " . $target_file);
-                            echo "Successfully uploaded: " . $_FILES["files"]["name"][$index] . "\n";
-                        } else {
-                            throw new \Exception('Failed to move uploaded file.', 500);
-                        }
-                    }
-                    
-                    http_response_code(200);
-                    echo "Success";
-                } else {
-                    throw new \Exception('No files uploaded.', 400);
-                }
-            } catch (\Exception $e) {
-                error_log("Exception caught: " . $e->getMessage());
-                http_response_code($e->getCode());
-                echo $e->getMessage();
+        try {
+            $theme = (string)($this->runData['route']['pathparts'][3] ?? '');
+            if (!preg_match('/^[A-Za-z0-9_-]+$/', $theme)) {
+                throw new \Exception('Invalid Theme', 404);
             }
-        }        
+            $themeBase = rtrim((string)$this->runData['config']['dir']['rad'], '/') . '/theme';
+            $themePath = (new \Core\Sys\SafePath($themeBase))->existing($theme);
+            if ($themePath === null || !is_dir($themePath . '/assets')) {
+                throw new \Exception('Invalid Theme', 404);
+            }
+            if (!isset($_FILES['files']) || !is_array($_FILES['files']['tmp_name'] ?? null)) {
+                throw new \Exception('No files uploaded.', 400);
+            }
+
+            $assetPolicy = new \Core\Sys\SafePath($themePath . '/assets');
+            $subdirectory = trim((string)($this->runData['route']['pathparts'][4] ?? ''), '/');
+            $targetDirectory = $subdirectory === '' ? $themePath . '/assets' : $assetPolicy->forWrite($subdirectory);
+            if ($targetDirectory === null) {
+                throw new \Exception('Invalid asset directory.', 400);
+            }
+            if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
+                throw new \Exception('Unable to create asset directory.', 500);
+            }
+
+            foreach ($_FILES['files']['tmp_name'] as $index => $tmpName) {
+                if (($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                    throw new \Exception('File upload failed.', 400);
+                }
+                $fileName = basename((string)($_FILES['files']['name'][$index] ?? ''));
+                if ($fileName === '' || $fileName === '.' || str_contains($fileName, "\0")) {
+                    throw new \Exception('Invalid upload filename.', 400);
+                }
+                $relative = ($subdirectory !== '' ? $subdirectory . '/' : '') . $fileName;
+                $targetFile = $assetPolicy->forWrite($relative);
+                if ($targetFile === null || !move_uploaded_file((string)$tmpName, $targetFile)) {
+                    throw new \Exception('Failed to move uploaded file.', 500);
+                }
+            }
+            http_response_code(200);
+            echo 'Success';
+        } catch (\Throwable $exception) {
+            $code = (int)$exception->getCode();
+            http_response_code($code >= 400 && $code < 600 ? $code : 500);
+            echo $exception->getMessage();
+        }
     }
 
     private function resolveTemplateNameFromRoute(int $index): string {
@@ -1388,12 +1388,9 @@ class Theme{
     }
 
     private function traceThemeAgentPatch(string $stage, array $meta = []): void {
-        $line = '[' . date('Y-m-d H:i:s') . '] ' . $stage;
-        if (!empty($meta)) {
-            $line .= ' ' . json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if (($this->runData['config']['sys']['dev_debug_flag'] ?? 'N') === 'Y') {
+            $this->errorHandler->logError('Theme AIF patch stage: ' . $stage, ['metadata' => $meta]);
         }
-        $line .= PHP_EOL;
-        @file_put_contents('/tmp/rad-theme-agentpatch-trace.log', $line, FILE_APPEND);
     }
 
     private function normalizeRelatedTemplateSelection($value): array {

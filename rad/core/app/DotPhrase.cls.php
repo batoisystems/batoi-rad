@@ -11,7 +11,7 @@ use Core\Sys\ErrorHandler;
 class DotPhrase {
     private $service;
 
-    public function __construct(Database $db, ErrorHandler $errorHandler = null) {
+    public function __construct(Database $db, ?ErrorHandler $errorHandler = null) {
         $this->service = new DotPhraseService($db, $errorHandler);
     }
 

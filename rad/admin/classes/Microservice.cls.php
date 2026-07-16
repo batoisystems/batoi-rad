@@ -19,7 +19,7 @@ class Microservice{
         $this->errorHandler = $runData['errorHandler'];
         $this->priv = new PrivilegeService($runData['config'] ?? [], $runData['entity'] ?? []);
         try {
-            $this->aiService = new \Core\Sys\AiService($runData['config'] ?? [], $this->errorHandler);
+            $this->aiService = new \Batoi\Aif\Rad\RadAifService($runData['config'] ?? []);
         } catch (\Throwable $e) {
             $this->aiService = null;
         }
@@ -2947,8 +2947,11 @@ class Microservice{
 
         $extractDir = $this->zipTempDir . '/ms-import-' . uniqid();
         $this->ensureDir($extractDir);
-        $zip->extractTo($extractDir);
-        $zip->close();
+        try {
+            \Core\Sys\SafeZipExtractor::extract($zip, $extractDir);
+        } finally {
+            $zip->close();
+        }
 
         try {
             $this->restoreMicroservice($data, $extractDir);
