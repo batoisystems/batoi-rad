@@ -30,22 +30,82 @@ This repository contains the reusable framework source. It is not intended to be
 | `rad/admin/assets/` | Admin console static assets. |
 | `rad/admin/install/` | Core schema and installation SQL assets. |
 | `rad/bin/` | Framework command-line utilities. |
+| `rad/config/` | Local configuration template and installation configuration. |
+| `rad/data/` | Writable runtime data, caches, uploads, queues, and version history. |
+| `rad/docs/` | Framework documentation. |
+| `rad/log/` | Writable application logs and sessions. |
+| `rad/ms/` | Application microservice and route code. |
+| `rad/tests/` | Framework tests. |
+| `rad/vendor/` | Bundled PHP distributions and Composer-generated dependencies. |
 | `rad/upgrades/` | Upgrade scripts and migration helpers. |
 | `specs/` | Project notes and reference material. |
 
 ## Requirements
 
-- PHP with PDO support.
-- A PDO-supported database.
+- PHP 8.3 or 8.4 with `curl`, `fileinfo`, `json`, `mbstring`, `openssl`,
+  `pdo_mysql`, and `zip`.
+- MySQL 8.0 or 8.4.
 - Composer for PHP dependencies.
 - A web server configured to serve `public_html/` as the document root.
 
-Install Composer dependencies from the framework directory:
+Create an empty database, then run the installer from the project root:
 
 ```sh
-cd rad
-composer install
+php rad/bin/install.php
 ```
+
+The interactive installer creates runtime directories, writes local
+configuration, installs Composer dependencies, initializes the database, sets
+the base URL, and provisions the ID-1 system administrator required by RAD
+Admin.
+
+For automation, provide secrets through environment variables rather than
+command-line arguments:
+
+```sh
+RAD_DB_HOST=127.0.0.1 \
+RAD_DB_NAME=batoi_rad \
+RAD_DB_USER=batoi_rad \
+RAD_DB_PASSWORD='database-secret' \
+RAD_BASE_URL='https://rad.example.test' \
+RAD_ADMIN_NAME='RAD Administrator' \
+RAD_ADMIN_USERNAME='admin' \
+RAD_ADMIN_EMAIL='admin@example.test' \
+RAD_ADMIN_PASSWORD='StrongAdministratorPassword2026' \
+php rad/bin/install.php --non-interactive
+```
+
+Administrator passwords must be at least 12 characters and include upper-case,
+lower-case, and numeric characters. Re-running the installer preserves an
+existing complete schema and matching system administrator. It refuses partial
+or ambiguous database states instead of modifying them.
+
+Configure the web server to use `public_html/` as its document root. The web
+server user must be able to write to `rad/data/` and `rad/log/`.
+
+Run `php rad/bin/doctor.php` after installation. See
+[`rad/docs/installation.md`](rad/docs/installation.md) for Apache/Nginx setup,
+upgrades, backups, and safety defaults.
+
+## Default Distributions
+
+RAD includes two first-party distributions by default:
+
+- Batoi UIF is a client-side library, so its complete distribution is served
+  from `public_html/assets/uif/`. RAD Admin keeps a synchronized runtime copy in
+  `rad/admin/assets/uif/` for its separate admin asset route.
+- Batoi AIF is a PHP library and is shipped under `rad/vendor/batoi/aif/`. Its
+  autoloader is registered automatically, while provider credentials and AIF
+  execution remain opt-in.
+
+All AI provider calls, inference, embeddings, RAD code assistance, and AI API
+endpoints pass through Batoi AIF. RAD core contains no provider clients or AI
+transport implementations. Additional providers must be supplied as Batoi AIF
+provider adapters. See `rad/docs/aif-integration.md`.
+
+Composer continues to create all other `rad/vendor/` content. MCP Audit is not
+bundled because it is a platform-specific development and CI security tool,
+not a web-runtime dependency.
 
 ## Database Conventions
 
@@ -127,6 +187,8 @@ Do not commit:
 - Private database dumps.
 - Local environment files.
 - Application-specific microservices unless they are sanitized examples.
+- Composer-generated vendor dependencies, except the curated first-party
+  distributions under `rad/vendor/batoi/`.
 
 ## Documentation Status
 

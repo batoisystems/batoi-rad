@@ -1,20 +1,23 @@
 <?php
 namespace RadAdmin;
 
-use Core\Sys\PrivilegeService;
+use Core\Sys\DeveloperToolPolicy;
+use Core\Sys\SafePath;
 
 class Filemanager {
     private $runData = [];
-    private PrivilegeService $priv;
+    private DeveloperToolPolicy $policy;
+    private SafePath $paths;
 
     public function __construct(array $runData) {
         $this->runData = $runData;
-        $this->priv = new PrivilegeService($runData['config'] ?? [], $runData['entity'] ?? []);
+        $this->policy = new DeveloperToolPolicy($runData['config'] ?? [], $runData['entity'] ?? []);
+        $this->paths = new SafePath((string)($runData['config']['dir']['rad'] ?? ''));
     }
 
     public function tree() {
         $this->enforceCsrf();
-        $this->enforcePrivilege();
+        $this->enforcePrivilege('source_read');
         $rootKey = trim($this->runData['request']->get['root'] ?? 'ms');
         $relativePath = trim($this->runData['request']->get['path'] ?? '');
         $baseDir = $this->resolveBaseDir($rootKey);
@@ -34,7 +37,7 @@ class Filemanager {
 
     public function read() {
         $this->enforceCsrf();
-        $this->enforcePrivilege();
+        $this->enforcePrivilege('source_read');
         $path = trim($this->runData['request']->post['path'] ?? '');
         $fullPath = $this->sanitizePath($path);
         if (!$fullPath || !is_file($fullPath)) {
@@ -50,12 +53,12 @@ class Filemanager {
 
     public function write() {
         $this->enforceCsrf();
-        $this->enforcePrivilege();
+        $this->enforcePrivilege('source_write');
         $payload = json_decode(file_get_contents('php://input'), true);
         if (!$payload || empty($payload['path']) || !isset($payload['content'])) {
             $this->respondError('Invalid payload.');
         }
-        $fullPath = $this->sanitizePath($payload['path']);
+        $fullPath = $this->sanitizePath($payload['path'], true);
         if (!$fullPath) {
             $this->respondError('Invalid path.');
         }
@@ -76,9 +79,9 @@ class Filemanager {
         exit;
     }
 
-    private function enforcePrivilege(): void {
-        if (!$this->priv->can('asset_upload')) {
-            $this->respondError('Access denied.', 403);
+    private function enforcePrivilege(string $capability): void {
+        if (!$this->policy->allowsTool($capability)) {
+            $this->respondError('Developer tools are disabled or access is denied.', 403);
         }
     }
 
@@ -124,16 +127,14 @@ class Filemanager {
 
     private function resolveTargetDir(string $base, string $relative): ?string {
         $relative = trim($relative, '/');
-        $path = $relative === '' ? $base : $base . '/' . $relative;
-        $real = realpath($path);
-        if ($real === false) {
-            $real = $path;
+        if ($relative === '') {
+            return realpath($base) ?: null;
         }
-        $realBase = realpath($base) ?: $base;
-        if (strpos($real, $realBase) !== 0) {
+        try {
+            return (new SafePath($base))->existing($relative);
+        } catch (\InvalidArgumentException) {
             return null;
         }
-        return $real;
     }
 
     private function scanDirectory(string $root, string $path): array {
@@ -161,17 +162,23 @@ class Filemanager {
         return $items;
     }
 
-    private function sanitizePath(string $relative): ?string {
-        $relative = trim($relative, '/');
-        $base = $this->runData['config']['dir']['rad'] ?? '';
-        $full = realpath($base . '/' . $relative);
-        if ($full === false) {
-            $full = $base . '/' . $relative;
+    private function sanitizePath(string $relative, bool $forWrite = false): ?string {
+        $relative = str_replace('\\', '/', ltrim(trim($relative), '/'));
+        $allowed = false;
+        foreach (['core/', 'admin/classes/', 'admin/ui/', 'ms/', 'theme/', 'upgrades/'] as $prefix) {
+            if (str_starts_with($relative, $prefix)) {
+                $allowed = true;
+                break;
+            }
         }
-        $realBase = realpath($base) ?: $base;
-        if (strpos($full, $realBase) !== 0) {
+        if (!$allowed) {
             return null;
         }
-        return $full;
+        if ($forWrite && !in_array(strtolower(pathinfo($relative, PATHINFO_EXTENSION)), [
+            'php', 'js', 'css', 'json', 'md', 'sql', 'txt',
+        ], true)) {
+            return null;
+        }
+        return $forWrite ? $this->paths->forWrite($relative) : $this->paths->existing($relative);
     }
 }

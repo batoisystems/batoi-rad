@@ -60,7 +60,7 @@
                             <li><a class="rad-menu-item" data-uif-role="item" href="<?php print $this->runData['config']['sys']['base_url'].'/spaces/101';?>">MFA Settings</a></li>
                             <li><a class="rad-menu-item" data-uif-role="item" href="<?php print $this->runData['config']['sys']['base_url'].'/spaces/102';?>">Change Password</a></li>
                             <li><hr class="rad-menu-divider"></li>
-                            <li><a class="rad-menu-item" data-uif-role="item" href="<?php print $this->runData['config']['sys']['base_url'].'/login/logout';?>">Logout</a></li>
+                            <li><form method="post" action="<?php print $this->runData['config']['sys']['base_url'].'/login/logout';?>"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>"><button class="rad-menu-item" type="submit">Logout</button></form></li>
                         </ul>
                     </div>
                 </div>

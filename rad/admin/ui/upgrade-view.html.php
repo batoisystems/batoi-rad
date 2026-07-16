@@ -9,13 +9,8 @@ $upgrades = $this->runData['data']['upgrades'] ?? [];
         <div>
             <h5 class="card-title mb-1">Upgrade Database</h5>
             <p class="text-muted mb-0">
-                Upgrade scripts are versioned via their IDs. The newest executions appear at the top of the list and log tail, and this runner executes the same logic as the CLI while updating checkpoints automatically.
+                Upgrade scripts are versioned by ID and checksum. The RAD Admin and CLI runners share the database migration ledger and execution lock.
             </p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="<?php echo $this->runData['route']['rad_admin_url']; ?>/upgrade/add" class="btn btn-outline-secondary">
-                <i class="bi bi-file-earmark-plus me-1"></i>New Upgrade
-            </a>
         </div>
     </div>
 </div>
@@ -74,16 +69,11 @@ $upgrades = $this->runData['data']['upgrades'] ?? [];
                                 <td>
                                     <?php if ($upgrade['applied']) { ?>
                                         <span class="badge bg-success me-2">Applied</span>
-                                        <form method="post" class="d-inline">
-                                            <button type="submit" name="revert_upgrade" value="<?php echo htmlspecialchars($upgrade['id']); ?>" class="btn btn-link btn-sm p-0 align-baseline" title="Mark as pending for deployment on other servers">
-                                                <i class="bi bi-arrow-counterclockwise"></i>
-                                            </button>
-                                        </form>
                                     <?php } else { ?>
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                        <?php if ($upgrade['locked']) { ?>
-                                            <i class="bi bi-lock-fill text-muted ms-1" title="Already executed on this server. Deploy to another server to run again."></i>
-                                        <?php } ?>
+                                        <span class="badge bg-warning text-dark"><?php echo htmlspecialchars(ucfirst($upgrade['status'] ?? 'pending')); ?></span>
+                                    <?php } ?>
+                                    <?php if (empty($upgrade['checksum_valid'])) { ?>
+                                        <span class="badge bg-danger ms-1">Checksum changed</span>
                                     <?php } ?>
                                 </td>
                                 <td><?php echo $upgrade['executed_at'] ? htmlspecialchars($upgrade['executed_at']) : '—'; ?></td>
@@ -91,6 +81,7 @@ $upgrades = $this->runData['data']['upgrades'] ?? [];
                                     <div class="d-inline-flex gap-2">
                                         <?php if (!$upgrade['applied'] && !$upgrade['locked']) { ?>
                                             <form method="post" class="mb-0">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                 <button type="submit" name="run_upgrade" value="1" class="btn btn-sm btn-primary">
                                                     <i class="bi bi-arrow-repeat me-1"></i>Run Upgrade
                                                 </button>
@@ -100,14 +91,12 @@ $upgrades = $this->runData['data']['upgrades'] ?? [];
                                         <?php } ?>
                                         <?php if ($upgrade['applied'] && !empty($upgrade['has_rollback']) && $latestAppliedId === $upgrade['id']) { ?>
                                             <form method="post" class="mb-0">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                 <button type="submit" name="run_rollback" value="<?php echo htmlspecialchars($upgrade['id']); ?>" class="btn btn-sm btn-outline-danger">
                                                     <i class="bi bi-arrow-return-left me-1"></i>Rollback
                                                 </button>
                                             </form>
                                         <?php } ?>
-                                        <a href="<?php echo $this->runData['route']['rad_admin_url']; ?>/upgrade/edit/<?php echo urlencode($upgrade['id']); ?>" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
                                     </div>
                                 </td>
                             </tr>

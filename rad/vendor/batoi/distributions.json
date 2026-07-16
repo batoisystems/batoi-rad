@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "generated_at": "2026-07-16",
+  "distributions": {
+    "batoi-aif": {
+      "type": "php-drop-in",
+      "path": "rad/vendor/batoi/aif",
+      "version": "1.0.0-dev+e608fa1",
+      "source_commit": "e608fa1d749c3361ae35ec1129af233a049d30fb",
+      "license": "Apache-2.0",
+      "file_count": 106,
+      "tree_sha256": "77d3eab51f60ee4bcbd5dd6c0d341cf616ccb1fcf590fa252936a68f9a360bc2"
+    },
+    "batoi-uif": {
+      "type": "browser-bundle",
+      "paths": [
+        "public_html/assets/uif",
+        "rad/admin/assets/uif"
+      ],
+      "version": "2.1.2",
+      "source_commit": "3b9b224614833bb1cbb5921b1ea3f4a9a1c15fb5",
+      "license": "Apache-2.0",
+      "integrity_manifest": "public_html/assets/uif/integrity.json"
+    }
+  },
+  "excluded": {
+    "mcp-audit": "Development and CI security tooling; not a RAD web-runtime dependency."
+  }
+}

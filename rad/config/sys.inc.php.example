@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+
+/*
+ * Copy this file to sys.inc.php and set the database credentials for the
+ * installation. sys.inc.php is intentionally ignored by Git.
+ */
+return [
+    'database' => [
+        'host' => getenv('RAD_DB_HOST') ?: '127.0.0.1',
+        'port' => getenv('RAD_DB_PORT') ?: '',
+        'socket' => getenv('RAD_DB_SOCKET') ?: '',
+        'ssl_ca' => getenv('RAD_DB_SSL_CA') ?: '',
+        'name' => getenv('RAD_DB_NAME') ?: 'batoi_rad',
+        'user' => getenv('RAD_DB_USER') ?: 'batoi_rad',
+        'password' => getenv('RAD_DB_PASSWORD') ?: '',
+        'enable_sql_log' => filter_var(
+            getenv('RAD_ENABLE_SQL_LOG') ?: 'false',
+            FILTER_VALIDATE_BOOL
+        ),
+    ],
+    'auth' => [
+        'sso_role' => 'disabled',
+    ],
+];

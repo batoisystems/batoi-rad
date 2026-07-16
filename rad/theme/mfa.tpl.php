@@ -16,6 +16,7 @@
                 </div>
             <?php } ?>
             <form method="post" action="<?php echo $this->runData['config']['sys']['base_url']; ?>/login/mfa">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="rad-field">
                     <label class="rad-label">Verification code</label>
                     <input type="text" name="mfa_code" class="rad-input" inputmode="numeric" autofocus required>
@@ -33,7 +34,10 @@
                 <button type="submit" class="rad-btn rad-btn-primary">Verify</button>
             </form>
             <div class="rad-auth-divider">
-                <a class="rad-link" href="<?php echo $this->runData['config']['sys']['base_url']; ?>/login/logout">Use a different account</a>
+                <form method="post" action="<?php echo $this->runData['config']['sys']['base_url']; ?>/login/logout">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    <button class="rad-link" type="submit">Use a different account</button>
+                </form>
             </div>
     </div>
 </main>

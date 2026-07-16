@@ -16,6 +16,7 @@
     var routeSaveStatusEl = document.getElementById('route-save-status');
     var routeSaveResetTimer = null;
     var routeVersionButton = document.getElementById('route-version-btn');
+    var routeCsrfToken = <?php echo json_encode($this->runData['request']->csrf_token ?? ''); ?>;
 
     require(['vs/editor/editor.main'], function() {
         editorLoad = monaco.editor.create(document.getElementById('code_load'), {
@@ -117,7 +118,8 @@
         fetch('<?php print $postThroughAjaxUrl;?>', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': routeCsrfToken
             },
             body: JSON.stringify({
                 type: type,
@@ -159,7 +161,8 @@
         fetch('<?php print $aiAssistanceUrl;?>', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': routeCsrfToken
             },
             body: JSON.stringify({ content: content })
         })

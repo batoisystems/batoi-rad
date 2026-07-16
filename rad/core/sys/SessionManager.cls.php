@@ -13,14 +13,18 @@ class SessionManager {
 
     public function start() {
         if(session_status() == PHP_SESSION_NONE) {
-            // $this->config['sys']['session_path'] = $this->config['dir']['session'];
-            // Set session path
-            // session_save_path($this->config['sys']['session_path']);
-            session_save_path();
+            $sessionDir = (string)($this->sessionParams['dir'] ?? '');
+            if ($sessionDir !== '') {
+                if (!is_dir($sessionDir) && !mkdir($sessionDir, 0700, true) && !is_dir($sessionDir)) {
+                    throw new \RuntimeException('Unable to create the RAD session directory.');
+                }
+                session_save_path($sessionDir);
+            }
 
             // set secure cookie parameters
+            $lifetimeSeconds = max(60, (int)($this->sessionParams['lifetime'] ?? 1800));
             $cookieParams = [
-                'lifetime' => $this->sessionParams['lifetime'] * 60, // convert minutes to seconds
+                'lifetime' => $lifetimeSeconds,
                 'path' => '/',
                 'domain' => $this->sessionParams['domain'],
                 'secure' => $this->sessionParams['secure'], 
@@ -31,13 +35,30 @@ class SessionManager {
 
             session_set_cookie_params($cookieParams);
             session_name($this->sessionParams['name']);
-            session_start();
-            // If user's session is expired or not valid, destroy the session
-            if (!$this->isSessionValid()) {
-                // print '<pre>';print_r('Session is not valid --');print '</pre>';exit;
-                // $this->destroy();
+            if (!session_start()) {
+                throw new \RuntimeException('Unable to start the RAD session.');
+            }
+            // Anonymous sessions are valid for CSRF and login flows. Authenticated
+            // sessions must have a live server-side record and valid timestamps.
+            if ($this->isSessionPresent() && !$this->isSessionValid()) {
+                $this->destroy();
+                if (!session_start()) {
+                    throw new \RuntimeException('Unable to reset the expired RAD session.');
+                }
             }
         }
+    }
+
+    public function rotateId(): string {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            throw new \RuntimeException('Cannot rotate an inactive session.');
+        }
+        if (!session_regenerate_id(true)) {
+            throw new \RuntimeException('Unable to rotate the session identifier.');
+        }
+        // Authentication changes also rotate the CSRF secret.
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        return session_id();
     }
 
     public function set($key, $value) {
@@ -56,8 +77,29 @@ class SessionManager {
 
     public function destroy() {
         if(session_status() === PHP_SESSION_ACTIVE){
+            $recordId = (int)($_SESSION['session_id'] ?? 0);
+            if ($recordId > 0) {
+                try {
+                    $this->db->query(
+                        "UPDATE s_entity_session SET livestatus = '0', updatestamp = NOW() WHERE id = :id",
+                        [':id' => $recordId]
+                    );
+                } catch (\Throwable) {
+                    // Session invalidation must still complete if persistence is unavailable.
+                }
+            }
+            $_SESSION = [];
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', [
+                'expires' => time() - 42000,
+                'path' => $params['path'] ?? '/',
+                'domain' => $params['domain'] ?? '',
+                'secure' => (bool)($params['secure'] ?? false),
+                'httponly' => (bool)($params['httponly'] ?? true),
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
             session_destroy();
-            setcookie(session_name(), '', time() - 42000); // remove session cookie
+            session_id('');
         }
     }    
     
@@ -98,13 +140,21 @@ class SessionManager {
             return false;
         }
 
-        $idleTimeout = $this->sessionParams['idle_timeout'] * 60; // convert minutes to seconds
-        return time() - $lastActivity > $idleTimeout;
+        $idleTimeout = (int)($this->sessionParams['idle_timeout'] ?? 0);
+        if ($idleTimeout <= 0) {
+            $idleTimeout = max(60, (int)($this->sessionParams['lifetime'] ?? 1800));
+        }
+        if (time() - $lastActivity > $idleTimeout) {
+            return true;
+        }
+        $this->set('last_activity', time());
+        return false;
     }
 
     private function isAdminForcedRelogin() {
-        // check a flag in the database or elsewhere that indicates if the admin forced relogin
-        // you will need to implement this check yourself based on your application logic
+        // Revocation is represented by setting the matching s_entity_session
+        // record inactive. isSessionValid() only loads active records.
+        return false;
     }
 
     private function isSessionExpired() {
@@ -116,7 +166,7 @@ class SessionManager {
             return false;
         }
 
-        $sessionLifetime = $this->sessionParams['lifetime'] * 60; // convert minutes to seconds
+        $sessionLifetime = max(60, (int)($this->sessionParams['lifetime'] ?? 1800));
         // $diff = time() - $createTime;
         // print '<pre>';print_r($diff);print '<br/>';print_r($sessionLifetime);print '</pre>';exit;
         return time() - $createTime > $sessionLifetime;

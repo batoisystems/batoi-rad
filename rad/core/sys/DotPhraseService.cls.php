@@ -11,7 +11,7 @@ class DotPhraseService {
     private $db;
     private $errorHandler;
 
-    public function __construct(Database $db, ErrorHandler $errorHandler = null) {
+    public function __construct(Database $db, ?ErrorHandler $errorHandler = null) {
         $this->db = $db;
         $this->errorHandler = $errorHandler;
     }

@@ -35,10 +35,10 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
             <li>Fallback source: legacy <code>rad.config.php</code> <code>ai</code> settings when no dedicated AI config file exists.</li>
             <li>Keys are masked after save. Leave the API key field blank to keep the stored key.</li>
             <li>Profiles decide how the framework routes generic vs coding work. Quality decides whether the request uses the mini or full model.</li>
-            <li>Microsoft support in this layer is configured as Azure OpenAI compatible endpoints, not a separate public Copilot Chat API.</li>
+            <li>Provider execution is owned by Batoi AIF; RAD does not contain provider-specific clients.</li>
         </ul>
         <div class="alert alert-light border small mb-0">
-            Provider capability coverage is not identical. OpenAI and Azure/OpenAI-compatible Microsoft endpoints expose the full surface here. Claude and Gemini intentionally expose a smaller subset.
+            Additional providers become available only after their Batoi AIF provider adapters are installed.
         </div>
     </div>
 </div>

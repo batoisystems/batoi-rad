@@ -88,10 +88,7 @@ class VendorLibraryService {
             if ($zip->open($archivePath) !== true) {
                 throw new RuntimeException('Unable to open ZIP archive.');
             }
-            $this->validateArchiveEntries($zip);
-            if (!$zip->extractTo($tmpDir)) {
-                throw new RuntimeException('Unable to extract archive contents.');
-            }
+            SafeZipExtractor::extract($zip, $tmpDir);
             $zip->close();
         } catch (\Throwable $e) {
             $zip->close();
@@ -189,24 +186,6 @@ class VendorLibraryService {
         if (!@rename($source, $destination)) {
             $this->recursiveCopy($source, $destination);
             $this->rrmdir($source);
-        }
-    }
-
-    private function validateArchiveEntries(ZipArchive $zip): void {
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $stat = $zip->statIndex($i);
-            $name = $stat['name'] ?? '';
-            if ($name === '') {
-                continue;
-            }
-            if (strpos($name, '/') === 0 || strpos($name, '..') !== false) {
-                throw new RuntimeException('Archive contains unsafe paths.');
-            }
-            $externalAttributes = $stat['external_attributes'] ?? 0;
-            $isSymlink = ($externalAttributes & 0xA000) === 0xA000;
-            if ($isSymlink) {
-                throw new RuntimeException('Archive contains symbolic links. Upload a sanitized ZIP.');
-            }
         }
     }
 

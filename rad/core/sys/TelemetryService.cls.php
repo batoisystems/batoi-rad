@@ -5,10 +5,10 @@ use RuntimeException;
 
 class TelemetryService {
     private Database $db;
-    private ErrorHandler $errorHandler;
+    private ?ErrorHandler $errorHandler;
     private array $config;
 
-    public function __construct(Database $db, ErrorHandler $errorHandler = null, array $config = []) {
+    public function __construct(Database $db, ?ErrorHandler $errorHandler = null, array $config = []) {
         $this->db = $db;
         $this->errorHandler = $errorHandler;
         $this->config = $config;

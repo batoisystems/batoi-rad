@@ -1082,6 +1082,8 @@ class Route{
      */
     public function codesave() {
         $data = json_decode(file_get_contents("php://input"), true);
+        $this->assertDeveloperToolAllowed('source_write');
+        $this->assertCsrfPayload(is_array($data) ? $data : []);
     
         $response = [];
         header('Content-Type: application/json');
@@ -1364,6 +1366,8 @@ class Route{
     public function helpsave() {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
+        $this->assertDeveloperToolAllowed('source_write');
+        $this->assertCsrfPayload(is_array($data) ? $data : []);
         if (!is_array($data) || !isset($data['content'])) {
             echo json_encode(['message' => 'Invalid data provided']);
             exit;
@@ -1397,7 +1401,7 @@ class Route{
 
         $dir = dirname($path);
         if (!is_dir($dir)) {
-            @mkdir($dir, 0777, true);
+            @mkdir($dir, 0775, true);
         }
         $content = (string)$data['content'];
         if (file_put_contents($path, $content) === false) {
@@ -1434,6 +1438,9 @@ class Route{
 
     public function helpgenerate() {
         header('Content-Type: application/json');
+        $payload = json_decode(file_get_contents('php://input'), true);
+        $this->assertDeveloperToolAllowed('source_read');
+        $this->assertCsrfPayload(is_array($payload) ? $payload : []);
         $ref = (string)($this->runData['route']['pathparts'][3] ?? '');
         $routeRows = $this->locateRouteRecord($ref);
         if (count($routeRows) !== 1) {
@@ -1674,6 +1681,7 @@ class Route{
     public function aiassist() {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
+        $this->assertCsrfPayload(is_array($data) ? $data : []);
         if (!$data || !isset($data['content'])) {
             echo json_encode(['error' => 'Invalid data provided']);
             return;

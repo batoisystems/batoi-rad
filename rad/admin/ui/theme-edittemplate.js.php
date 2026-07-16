@@ -1,6 +1,7 @@
 <!-- JS for Monaco Editor -->
 <script src="<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>/loader.js"></script>
 <script>
+    var themeCsrfToken = <?php echo json_encode($this->runData['request']->csrf_token ?? ''); ?>;
     require.config({ paths: { 'vs': '<?php echo htmlspecialchars(\RadAdmin\RadAdminAssets::monacoBaseUrl($this->runData), ENT_QUOTES, 'UTF-8'); ?>' }});
 </script>
 
@@ -131,7 +132,8 @@ require(['vs/editor/editor.main'], function() {
         fetch('<?php print $postThroughAjaxUrl;?>', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': themeCsrfToken
             },
             body: JSON.stringify({
                 type: type,
@@ -173,7 +175,8 @@ require(['vs/editor/editor.main'], function() {
         fetch('<?php print $aiAssistanceUrl;?>', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': themeCsrfToken
             },
             body: JSON.stringify({ content: content })
         })
