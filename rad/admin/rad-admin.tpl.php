@@ -201,6 +201,13 @@ $navSections = [
     ],
 ];
 $currentEntityId = (int)($this->runData['entity']['id'] ?? ($this->runData['entity']['entity_id'] ?? 0));
+$aiToolsEnabled = filter_var($this->runData['config']['sys']['ai_code_assist_enabled'] ?? false, FILTER_VALIDATE_BOOL);
+if (!$aiToolsEnabled) {
+    $navSections['Build & Code'] = array_values(array_filter(
+        $navSections['Build & Code'],
+        static fn (array $item): bool => !in_array($item['path'], ['/codex/view', '/aiassist'], true)
+    ));
+}
 $privService = new \Core\Sys\PrivilegeService($this->runData['config'] ?? [], $this->runData['entity'] ?? []);
 $role = $privService->role();
 if ($role !== 'system_admin') {
@@ -268,7 +275,7 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                             <a href="<?php print $this->runData['config']['sys']['base_url'];?>/rad-admin/all/view" class="top-icon" title="All RAD Admin">
                                 <i class="bi bi-grid-3x3-gap"></i>
                             </a>
-                            <div class="dropdown">
+                            <?php if ($aiToolsEnabled) { ?><div class="dropdown">
                                 <a href="#" class="top-icon" id="batoiIntelDropdownToggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Batoi Intelligence">
                                     <i class="bi bi-stars"></i>
                                 </a>
@@ -289,7 +296,7 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                                         </a>
                                     </div>
                                 </div>
-                            </div>
+                            </div><?php } ?>
                             <a href="https://www.batoi.com/support/docs/rad-framework" class="top-icon" title="Help" target="_blank">
                                 <i class="bi bi-question-circle"></i>
                             </a>
@@ -315,8 +322,8 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                                     <?php } ?>
                                     <li><hr class="dropdown-divider"></li>
                                 <?php } ?>
-                                <li><a class="dropdown-item small" href="<?php echo htmlspecialchars($batoiIntelUrl, ENT_QUOTES, 'UTF-8'); ?>"><i class="bi bi-stars menu-icon"></i> Batoi Intelligence</a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                <?php if ($aiToolsEnabled) { ?><li><a class="dropdown-item small" href="<?php echo htmlspecialchars($batoiIntelUrl, ENT_QUOTES, 'UTF-8'); ?>"><i class="bi bi-stars menu-icon"></i> Batoi Intelligence</a></li>
+                                <li><hr class="dropdown-divider"></li><?php } ?>
                                 <li><a class="dropdown-item small" href="<?php print $this->runData['route']['rad_admin_url'].'/profile/overview';?>"><i class="bi bi-person-circle menu-icon"></i> My Account</a></li>
                                 <li><a class="dropdown-item small" href="<?php print $this->runData['route']['rad_admin_url'].'/profile/sessions';?>"><i class="bi bi-clock-history menu-icon"></i> Sessions</a></li>
                                 <li><a class="dropdown-item small" href="<?php print $this->runData['route']['rad_admin_url'].'/profile/preferences';?>"><i class="bi bi-sliders menu-icon"></i> Preferences</a></li>
@@ -516,6 +523,72 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
         echo '<script src="'.$this->runData['route']['rad_assets_url'].'/bootstrap/bootstrap-5.3.0/dist/js/bootstrap.bundle.min.js"></script>';
     }
     echo \RadAdmin\RadAdminAssets::renderUifBody($this->runData);
+    ?>
+    <script>
+        (function () {
+            const token = (window.__RAD_CSRF || '').trim();
+            if (!token) { return; }
+
+            document.addEventListener('submit', function (event) {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || (form.method || 'get').toLowerCase() !== 'post') { return; }
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.appendChild(input);
+                }
+            }, true);
+
+            const mutatingEvents = new Set([
+                'activate', 'archive', 'branchcreate', 'branchdiscard', 'branchmerge',
+                'cancelsync', 'deactivate', 'delete', 'deletefield', 'deletenavset',
+                'deleterole', 'deletelog', 'emptytrash', 'markread', 'previewstart',
+                'previewstop', 'purge', 'purgearchive', 'removeuser', 'resetpassword',
+                'restore', 'restoreversion'
+            ]);
+            document.addEventListener('click', function (event) {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
+                const anchor = event.target.closest('a[href]');
+                if (!anchor) { return; }
+                const url = new URL(anchor.href, window.location.href);
+                if (url.origin !== window.location.origin) { return; }
+                const parts = url.pathname.split('/').filter(Boolean);
+                const adminIndex = parts.indexOf('rad-admin');
+                const adminEvent = adminIndex >= 0 ? String(parts[adminIndex + 2] || '').toLowerCase() : '';
+                const isLogout = parts.slice(-2).join('/') === 'login/logout';
+                if (!isLogout && !mutatingEvents.has(adminEvent)) { return; }
+                event.preventDefault();
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = url.toString();
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrf_token';
+                csrf.value = token;
+                form.appendChild(csrf);
+                document.body.appendChild(form);
+                form.submit();
+            });
+
+            const nativeFetch = window.fetch.bind(window);
+            window.fetch = function (input, init) {
+                const options = Object.assign({}, init || {});
+                const method = String(options.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+                const url = new URL(input instanceof Request ? input.url : String(input), window.location.href);
+                if (url.origin === window.location.origin && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                    const headers = new Headers(options.headers || (input instanceof Request ? input.headers : undefined));
+                    if (!headers.has('X-CSRF-Token')) {
+                        headers.set('X-CSRF-Token', token);
+                    }
+                    options.headers = headers;
+                }
+                return nativeFetch(input, options);
+            };
+        })();
+    </script>
+    <?php
     $jsFile = $this->runData['config']['dir']['admin'].'/ui/'.$this->runData['route']['pathparts'][1].'-'.$this->runData['route']['pathparts'][2].'.js.php';
     if(file_exists($jsFile)){
         include($jsFile);

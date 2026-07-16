@@ -180,8 +180,8 @@ class ApiController {
                 $service = new VendorApiService();
                 return $service->execute($endpoint, $this->payload['params'] ?? []);
             case 'ai':
-                $aiClient = new AiService($this->runData['config'], $this->errorHandler);
-                $service = new AiApiGatewayService($aiClient, $this->errorHandler);
+                $aiClient = new \Batoi\Aif\Rad\RadAifService($this->runData['config']);
+                $service = new \Batoi\Aif\Rad\RadApiGatewayService($aiClient, $this->errorHandler);
                 return $service->execute($endpoint, $this->payload['params'] ?? []);
             default:
                 $this->respondError(400, 'Unsupported endpoint type.');

@@ -21,6 +21,7 @@
     ?>
     <main class="rad-auth-shell">
     <form action="<?php echo $this->runData['config']['sys']['base_url'].'/login/localsession/'; ?>" method="post" class="rad-auth-card" novalidate>
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
         <input type="hidden" name="redirect_url_post_login" value="<?php echo htmlspecialchars($redirectUrlPostLogin, ENT_QUOTES, 'UTF-8'); ?>">
         <img src="<?php print $this->runData['route']['assets_url'];?>/img/logo-icon.svg" alt="<?php print $this->runData['config']['sys']['project_title'];?>" class="rad-auth-logo">
         <h1 class="rad-auth-title">Please sign in</h1>

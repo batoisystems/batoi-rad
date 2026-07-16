@@ -1,9 +1,28 @@
 specs/
+!specs/
+specs/*
+!specs/batoi-rad-open-source-github-blueprint.md
 
 # Runtime and local environment files
-rad/config/
-rad/data/
-rad/log/
+rad/config/*
+!rad/config/sys.inc.php.example
+rad/data/*
+!rad/data/.gitkeep
+rad/log/*
+!rad/log/.gitkeep
+rad/ms/*
+!rad/ms/.gitkeep
+rad/vendor/*
+!rad/vendor/batoi/
+rad/vendor/batoi/*
+!rad/vendor/batoi/README.md
+!rad/vendor/batoi/distributions.json
+!rad/vendor/batoi/aif/
+!rad/vendor/batoi/aif/**
 public_html/php_error.log
 .env
 .DS_Store
+rad/tests/browser/node_modules/
+rad/tests/browser/test-results/
+rad/tests/browser/playwright-report/
+/test-results/

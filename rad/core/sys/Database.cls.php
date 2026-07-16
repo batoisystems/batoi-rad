@@ -8,23 +8,34 @@ class Database {
     private $dbh;
     private $errorHandler;
     private $enableSqlLog;
+    private array $schemaCache = [];
 
     public function __construct($configDb, \Core\Sys\ErrorHandler $errorHandler) {
         // print '<pre>';print_r($configDb);print '</pre>';print $configDb['enable_sql_log'];
         $this->enableSqlLog = $configDb['enable_sql_log'] ?? 0;
         // print $this->enableSqlLog;die('ok');
         $this->errorHandler = $errorHandler;
-        $dsn = 'mysql:host=' . $configDb['host'] . ';dbname=' . $configDb['name'];
+        $socket = (string)($configDb['socket'] ?? '');
+        $port = (string)($configDb['port'] ?? '');
+        $dsn = 'mysql:' . ($socket !== ''
+            ? 'unix_socket=' . $socket . ';'
+            : 'host=' . $configDb['host'] . ($port !== '' ? ';port=' . $port : '') . ';')
+            . 'dbname=' . $configDb['name'] . ';charset=utf8mb4';
         $options = array(
-            PDO::ATTR_PERSISTENT => true, 
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
         );
+        if (!empty($configDb['ssl_ca'])) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = $configDb['ssl_ca'];
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+        }
 
         try {
             $this->dbh = new PDO($dsn, $configDb['user'], $configDb['password'], $options);
         } 
         catch(PDOException $e) {
-            $this->errorHandler = $e->getMessage();
+            throw new \RuntimeException('Unable to connect to the RAD database.', 0, $e);
         }
     }
 
@@ -58,6 +69,8 @@ class Database {
     }
 
     public function select($table, $where = [], $allFields = false, $order = [], $limit = null, $join = null, $group = null) {
+        $table = $this->assertIdentifier((string)$table);
+        $this->assertIdentifierMap($where);
         // Get the schema of the table to determine the fields
         $fields = $this->getSchema($table);
         // if $allFields is not true, then remove the fields that do not start with a_ or s_
@@ -77,15 +90,15 @@ class Database {
         }
 
         if($group) {
-            $sql .= " GROUP BY " . $group;
+            $sql .= " GROUP BY " . $this->identifierList((string)$group);
         }
 
         if(!empty($order)) {
             $sql .= " ORDER BY " . $this->orderClause($order);
         }
 
-        if($limit) {
-            $sql .= " LIMIT " . $limit;
+        if($limit !== null) {
+            $sql .= " LIMIT " . $this->assertLimit($limit);
         }
     
         $stmt = $this->dbh->prepare($sql);
@@ -100,6 +113,8 @@ class Database {
     }
 
     public function insert($table, $data, $state_data = []) {
+        $table = $this->assertIdentifier((string)$table);
+        $this->assertIdentifierMap($data);
         // Ensure that the data array is not empty
         if (empty($data)) {
             throw new \InvalidArgumentException('The data array in an INSERT query cannot be empty.');
@@ -184,6 +199,9 @@ class Database {
     }
 
     public function update($table, $data, $where, $state_data = []) {
+        $table = $this->assertIdentifier((string)$table);
+        $this->assertIdentifierMap($data);
+        $this->assertIdentifierMap($where);
         // Ensure that the data and where arrays are not empty
         if (empty($data)) {
             throw new \InvalidArgumentException('The data array in an UPDATE query cannot be empty.');
@@ -275,6 +293,8 @@ class Database {
     }    
 
     public function delete($table, $where) {
+        $table = $this->assertIdentifier((string)$table);
+        $this->assertIdentifierMap($where);
         // Ensure that the where array is not empty to prevent deleting all rows
         if (empty($where)) {
             throw new \InvalidArgumentException('The WHERE clause in a DELETE query cannot be empty.');
@@ -358,9 +378,13 @@ class Database {
     }              
 
     private function getSchema($table) {
-        $stmt = $this->dbh->prepare("DESCRIBE $table");
+        $table = $this->assertIdentifier((string)$table);
+        if (isset($this->schemaCache[$table])) {
+            return $this->schemaCache[$table];
+        }
+        $stmt = $this->dbh->prepare("DESCRIBE `{$table}`");
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $this->schemaCache[$table] = $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     private function whereClause($where) {
@@ -382,7 +406,11 @@ class Database {
     private function joinClause($join) {
         $joinClause = '';
         foreach ($join as $table => $condition) {
-            $joinClause .= "JOIN $table ON $condition ";
+            $table = $this->assertIdentifier((string)$table);
+            if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*\s*=\s*[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*(?:\s+AND\s+[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*\s*=\s*[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)*$/i', trim((string)$condition))) {
+                throw new \InvalidArgumentException('Invalid JOIN condition.');
+            }
+            $joinClause .= "JOIN `{$table}` ON {$condition} ";
         }
         return $joinClause;
     }
@@ -398,9 +426,50 @@ class Database {
     private function orderClause($order) {
         $orderClause = '';
         foreach ($order as $column => $direction) {
+            $column = $this->assertQualifiedIdentifier((string)$column);
+            $direction = strtoupper((string)$direction);
+            if (!in_array($direction, ['ASC', 'DESC'], true)) {
+                throw new \InvalidArgumentException('Invalid ORDER BY direction.');
+            }
             $orderClause .= "$column $direction, ";
         }
         return rtrim($orderClause, ', ');
+    }
+
+    private function assertIdentifier(string $identifier): string {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $identifier)) {
+            throw new \InvalidArgumentException('Invalid SQL identifier.');
+        }
+        return $identifier;
+    }
+
+    private function assertQualifiedIdentifier(string $identifier): string {
+        $parts = explode('.', $identifier);
+        if (count($parts) > 2) {
+            throw new \InvalidArgumentException('Invalid SQL identifier.');
+        }
+        return implode('.', array_map(fn($part) => $this->assertIdentifier($part), $parts));
+    }
+
+    private function assertIdentifierMap(array $values): void {
+        foreach (array_keys($values) as $identifier) {
+            $this->assertIdentifier((string)$identifier);
+        }
+    }
+
+    private function identifierList(string $list): string {
+        $identifiers = array_filter(array_map('trim', explode(',', $list)));
+        if ($identifiers === []) {
+            throw new \InvalidArgumentException('Invalid GROUP BY value.');
+        }
+        return implode(', ', array_map(fn($identifier) => $this->assertQualifiedIdentifier($identifier), $identifiers));
+    }
+
+    private function assertLimit(mixed $limit): int {
+        if (filter_var($limit, FILTER_VALIDATE_INT) === false || (int)$limit < 0) {
+            throw new \InvalidArgumentException('Invalid LIMIT value.');
+        }
+        return (int)$limit;
     }
 
     private function saveVersion($table, $data, $where) {

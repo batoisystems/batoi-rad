@@ -14,6 +14,7 @@ class LoginController {
     private $trustedCookieName = 'rad_trusted_device';
     private ?\Core\Sys\MfaSettings $mfaSettings = null;
     private ?array $ssoServerClientRegistryCache = null;
+    private AuthenticationThrottle $loginThrottle;
     
     public function __construct(array $runData, \Core\Sys\View $view, \Core\Sys\ErrorHandler $errorHandler) {
         $this->runData = $runData;
@@ -27,6 +28,7 @@ class LoginController {
         $mfaconfig = $runData['config'] ?? [];
         $mfaconfig['mfa_settings_obj'] = $this->mfaSettings;
         $this->mfaService = new \Core\Sys\MfaService($mfaconfig, $errorHandler);
+        $this->loginThrottle = new AuthenticationThrottle($this->db, $runData['config'] ?? []);
     }
 
     public function handle() {
@@ -109,9 +111,24 @@ class LoginController {
             $this->runData['data']['sso_client_label'] = $this->getClientModeLabel();
         }
         if (isset($_POST['s_username']) && isset($_POST['s_password'])) {
+            $csrf = (string)($_POST['csrf_token'] ?? '');
+            if (!$this->runData['request']->checkCSRFToken($csrf)) {
+                $this->setLoginFailure('Unable to sign in with the supplied credentials.', $this->isAdminLoginFlow($redirectHint), [
+                    'reason' => 'csrf_rejected',
+                ]);
+                return;
+            }
             $username = $_POST['s_username'];
             $password = $_POST['s_password'];
             $isAdminLogin = $this->isAdminLoginFlow($redirectHint);
+            $clientIp = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+            if ($this->loginThrottle->blocked($username, $clientIp)) {
+                $this->setLoginFailure('Unable to sign in with the supplied credentials.', $isAdminLogin, [
+                    'redirect' => $redirectHint,
+                    'reason' => 'rate_limited',
+                ]);
+                return;
+            }
 
             $userDetails = $this->db->select('s_entity', [
                 'livestatus' => '1',
@@ -122,6 +139,7 @@ class LoginController {
             if (count($userDetails) == 1) {
                 $userAuthInfo = $this->loadAuthInfo($userDetails[0]);
                 if (password_verify($password, $userDetails[0]['s_identity_secret'])) {
+                    $this->loginThrottle->success($username, $clientIp);
                     if ($this->shouldEnforceMfa($userAuthInfo)) {
                         if (!$this->canDispatchMfa($userAuthInfo, $userDetails[0])) {
                             $this->setLoginFailure(
@@ -140,10 +158,14 @@ class LoginController {
                     }
                     $this->completeLogin($userDetails, $userAuthInfo, $redirectHint);
                 } else {
-                    $this->setLoginFailure('Invalid password.', $isAdminLogin, ['redirect' => $redirectHint]);
+                    $this->loginThrottle->failure($username, $clientIp);
+                    $this->setLoginFailure('Unable to sign in with the supplied credentials.', $isAdminLogin, ['redirect' => $redirectHint]);
                 }
             } else {
-                $this->setLoginFailure('Invalid username.', $isAdminLogin, ['redirect' => $redirectHint]);
+                // Perform one password verification to reduce account-enumeration timing differences.
+                password_verify($password, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+                $this->loginThrottle->failure($username, $clientIp);
+                $this->setLoginFailure('Unable to sign in with the supplied credentials.', $isAdminLogin, ['redirect' => $redirectHint]);
             }
         }
         $this->consumeLoginFlash();
@@ -188,6 +210,10 @@ class LoginController {
     }
 
     private function handleLogout() {
+        if (strtoupper((string)$this->runData['request']->method) !== 'POST'
+            || !$this->runData['request']->checkCSRFToken((string)($this->runData['request']->post['csrf_token'] ?? ''))) {
+            throw new \Exception('Invalid logout request.', 419);
+        }
         $userId = (int)($this->session->get('entity_id') ?? 0);
         if ($userId > 0) {
             $this->recordAuthEvent('logout', $userId);
@@ -854,20 +880,35 @@ class LoginController {
         $this->runData['route']['pagepart'] = 'mfa';
         $this->runData['ms']['tpl_name'] = 'mfa';
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $code = trim($_POST['mfa_code'] ?? '');
-            $validCode = $pending['code'] ?? '';
-            if ($code !== '' && ($code === $validCode || $code === '000000')) {
-                $userDetails = [$pending['user']];
-                $this->completeLogin($userDetails, $pending['auth'], $pending['redirect'] ?? null);
+            $csrf = (string)($_POST['csrf_token'] ?? '');
+            if (!$this->runData['request']->checkCSRFToken($csrf)) {
+                $this->runData['route']['alert'] = 'danger';
+                $this->runData['route']['alert_message'] = 'The verification request expired. Please try again.';
+                return;
+            }
+            if ((int)($pending['expires_at'] ?? 0) < time()) {
                 $this->session->delete('mfa_pending');
+                $this->runData['route']['alert'] = 'danger';
+                $this->runData['route']['alert_message'] = 'The verification code expired. Please sign in again.';
+                return;
+            }
+            $maxAttempts = max(1, (int)($pending['max_attempts'] ?? 5));
+            if ((int)($pending['attempts'] ?? 0) >= $maxAttempts) {
+                $this->session->delete('mfa_pending');
+                $this->runData['route']['alert'] = 'danger';
+                $this->runData['route']['alert_message'] = 'Too many verification attempts. Please sign in again.';
+                return;
+            }
+            $code = trim($_POST['mfa_code'] ?? '');
+            $codeHash = (string)($pending['code_hash'] ?? '');
+            if ($code !== '' && $codeHash !== '' && password_verify($code, $codeHash)) {
+                $this->completePendingMfa($pending);
                 return;
             }
             // If TOTP secret available, accept valid TOTP even if SMS code mismatched
             $secret = $pending['auth']['mfa_secret'] ?? '';
             if ($secret && $this->mfaService && $this->mfaService->totpVerify($secret, $code)) {
-                $userDetails = [$pending['user']];
-                $this->completeLogin($userDetails, $pending['auth'], $pending['redirect'] ?? null);
-                $this->session->delete('mfa_pending');
+                $this->completePendingMfa($pending);
                 return;
             }
             // backup codes (hashed)
@@ -886,12 +927,12 @@ class LoginController {
                 if ($match) {
                     $pending['auth']['mfa_backup_codes'] = $remaining;
                     $this->persistAuthInfo((int)$pending['user']['id'], $pending['auth']);
-                    $userDetails = [$pending['user']];
-                    $this->completeLogin($userDetails, $pending['auth'], $pending['redirect'] ?? null);
-                    $this->session->delete('mfa_pending');
+                    $this->completePendingMfa($pending);
                     return;
                 }
             }
+            $pending['attempts'] = (int)($pending['attempts'] ?? 0) + 1;
+            $this->session->set('mfa_pending', $pending);
             $this->runData['route']['alert'] = 'danger';
             $this->runData['route']['alert_message'] = 'Invalid verification code.';
         }
@@ -900,7 +941,7 @@ class LoginController {
             $ui = $this->mfaSettings->ui();
             $showHint = !empty($ui['show_hint']);
         }
-        $this->runData['data']['mfa_hint'] = $showHint ? ($pending['code'] ?? null) : null;
+        $this->runData['data']['mfa_hint'] = $showHint ? ($pending['debug_code'] ?? null) : null;
         $this->runData['data']['trust_requested'] = !empty($pending['trust']);
     }
 
@@ -1891,6 +1932,8 @@ class LoginController {
     }
 
     private function createSession($userDetails, $userAuthInfo) {
+        // Rotate before attaching identity to prevent session fixation.
+        $this->session->rotateId();
         $this->session->set('entity_id', $userDetails[0]['id']);
         $this->session->set('entity_uid', $userDetails[0]['uid']);
         $this->session->set('entity_type', $userDetails[0]['s_type']);
@@ -1919,7 +1962,7 @@ class LoginController {
         $operatingSystem = PHP_OS;
         $browser = $_SERVER['HTTP_USER_AGENT'];
         $ip = $_SERVER['REMOTE_ADDR']; // IP of the user
-        $otp = rand(100000, 999999);
+        $otp = random_int(100000, 999999);
     
         // Insert new session record in s_entity_session table
         $insertedSessionId = $this->db->insert('s_entity_session', [
@@ -2220,21 +2263,35 @@ EOT;
     }
 
     private function startPendingMfa(array $userRow, array $userAuthInfo, ?string $redirectOverride = null, bool $trust = false): void {
-        $code = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $redirect = $redirectOverride ?? ($_POST['redirect_url_post_login'] ?? ($_COOKIE['redirect_url_post_login'] ?? null));
+        $ttl = max(60, (int)($this->mfaSettings ? $this->mfaSettings->otpTtlSeconds() : 300));
+        $limits = $this->mfaSettings ? $this->mfaSettings->rateLimit() : ['max_attempts' => 5];
         $pending = [
             'entity_id' => (int)$userRow['id'],
             'user' => $userRow,
             'auth' => $userAuthInfo,
-            'code' => $code,
+            'code_hash' => password_hash($code, PASSWORD_DEFAULT),
+            'expires_at' => time() + $ttl,
+            'attempts' => 0,
+            'max_attempts' => max(1, (int)($limits['max_attempts'] ?? 5)),
             'redirect' => $redirect,
             'trust' => $trust || !empty($_POST['trust_device']),
         ];
+        $ui = $this->mfaSettings ? $this->mfaSettings->ui() : [];
+        if (!empty($ui['show_hint'])) {
+            $pending['debug_code'] = $code;
+        }
         $this->session->set('mfa_pending', $pending);
         if (isset($_COOKIE['redirect_url_post_login'])) {
             setcookie('redirect_url_post_login', '', time() - 3600, '/');
         }
-        $this->dispatchMfaCode($pending);
+        $this->dispatchMfaCode($pending + ['code' => $code]);
+    }
+
+    private function completePendingMfa(array $pending): void {
+        $this->session->delete('mfa_pending');
+        $this->completeLogin([$pending['user']], $pending['auth'], $pending['redirect'] ?? null);
     }
 
     private function completeLogin(array $userDetails, array $userAuthInfo, ?string $redirectOverride = null): void {

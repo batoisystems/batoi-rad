@@ -1,7 +1,7 @@
 <?php
 namespace RadAdmin;
 
-use Core\Sys\AiProviderFactory;
+use Batoi\Aif\Rad\RadAifConfig;
 use Core\Sys\PrivilegeService;
 use RuntimeException;
 
@@ -68,6 +68,7 @@ class Aiconfig {
 
             $providers[$key] = $this->sanitizeProviderConfig($providerConfig);
         }
+        $providers = array_intersect_key($providers, $providerDefinitions);
 
         $profiles = [];
         foreach ($profileDefinitions as $key => $definition) {
@@ -126,7 +127,7 @@ class Aiconfig {
                 return $data;
             }
         }
-        return AiProviderFactory::loadConfig($this->runData['config'] ?? []);
+        return RadAifConfig::load($this->runData['config'] ?? []);
     }
 
     private function maskConfig(array $config): array {
@@ -226,51 +227,12 @@ class Aiconfig {
     private function getProviderDefinitions(): array {
         return [
             'openai' => [
-                'label' => 'OpenAI',
-                'summary' => 'Full feature support: chat, vision, images, embeddings, speech-to-text, and text-to-speech.',
-                'notes' => 'Best default when you want the broadest capability coverage.',
-                'capabilities' => ['Chat', 'Completion', 'Vision', 'Images', 'Embeddings', 'Speech-to-text', 'Text-to-speech'],
-                'advanced_fields' => [
-                    'image_model' => ['label' => 'Image model', 'placeholder' => 'gpt-image-1'],
-                    'embedding_model' => ['label' => 'Embedding model', 'placeholder' => 'text-embedding-3-small'],
-                    'stt_model' => ['label' => 'STT model', 'placeholder' => 'whisper-1'],
-                    'tts_model' => ['label' => 'TTS model', 'placeholder' => 'gpt-4o-mini-tts'],
-                    'image_endpoint' => ['label' => 'Image endpoint', 'placeholder' => 'https://api.openai.com/v1/images/generations'],
-                    'embeddings_endpoint' => ['label' => 'Embeddings endpoint', 'placeholder' => 'https://api.openai.com/v1/embeddings'],
-                    'audio_transcribe_endpoint' => ['label' => 'Audio transcribe endpoint', 'placeholder' => 'https://api.openai.com/v1/audio/transcriptions'],
-                    'audio_speech_endpoint' => ['label' => 'Audio speech endpoint', 'placeholder' => 'https://api.openai.com/v1/audio/speech'],
-                ],
-            ],
-            'copilot' => [
-                'label' => 'Microsoft Copilot / Azure OpenAI',
-                'summary' => 'Configured here as an Azure OpenAI-compatible provider using Microsoft-hosted endpoints.',
-                'notes' => 'Use your Azure resource URLs and API key. This is not a separate public Copilot Chat API.',
-                'capabilities' => ['Chat', 'Completion', 'Vision', 'Images', 'Embeddings', 'Speech-to-text', 'Text-to-speech'],
-                'advanced_fields' => [
-                    'image_model' => ['label' => 'Image model', 'placeholder' => 'gpt-image-1'],
-                    'embedding_model' => ['label' => 'Embedding model', 'placeholder' => 'text-embedding-3-small'],
-                    'stt_model' => ['label' => 'STT model', 'placeholder' => 'whisper-1'],
-                    'tts_model' => ['label' => 'TTS model', 'placeholder' => 'gpt-4o-mini-tts'],
-                    'image_endpoint' => ['label' => 'Image endpoint', 'placeholder' => 'https://YOUR-RESOURCE.openai.azure.com/openai/v1/images/generations'],
-                    'embeddings_endpoint' => ['label' => 'Embeddings endpoint', 'placeholder' => 'https://YOUR-RESOURCE.openai.azure.com/openai/v1/embeddings'],
-                    'audio_transcribe_endpoint' => ['label' => 'Audio transcribe endpoint', 'placeholder' => 'https://YOUR-RESOURCE.openai.azure.com/openai/v1/audio/transcriptions'],
-                    'audio_speech_endpoint' => ['label' => 'Audio speech endpoint', 'placeholder' => 'https://YOUR-RESOURCE.openai.azure.com/openai/v1/audio/speech'],
-                ],
-            ],
-            'claude' => [
-                'label' => 'Claude',
-                'summary' => 'Strong text and vision support through the Anthropic messages API.',
-                'notes' => 'This layer currently supports chat, completion, and vision for Claude. Image generation, embeddings, and audio are not exposed here.',
-                'capabilities' => ['Chat', 'Completion', 'Vision'],
-                'advanced_fields' => [],
-            ],
-            'gemini' => [
-                'label' => 'Gemini',
-                'summary' => 'Supports chat, vision, and embeddings through Google Gemini.',
-                'notes' => 'This layer currently supports chat, completion, vision, and embeddings for Gemini. Image generation and audio are not exposed here.',
+                'label' => 'OpenAI via Batoi AIF',
+                'summary' => 'Governed text, vision, and embedding execution through the Batoi AIF gateway.',
+                'notes' => 'Additional providers must be installed as Batoi AIF provider adapters; RAD does not implement providers directly.',
                 'capabilities' => ['Chat', 'Completion', 'Vision', 'Embeddings'],
                 'advanced_fields' => [
-                    'embedding_model' => ['label' => 'Embedding model', 'placeholder' => 'text-embedding-004'],
+                    'embedding_model' => ['label' => 'Embedding model', 'placeholder' => 'text-embedding-3-small'],
                 ],
             ],
         ];

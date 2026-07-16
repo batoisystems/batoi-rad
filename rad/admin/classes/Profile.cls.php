@@ -99,8 +99,25 @@ class Profile{
                 $this->runData['route']['alert'] = 'success';
                 $this->runData['route']['alert_message'] = 'Password updated successfully!';
                 $this->runData['request']->setAlert($this->runData['route']['alert_message'], $this->runData['route']['alert']);
-                // redirect to logout page
-                $redirectUrl = $this->runData['config']['sys']['base_url'].'/login/logout';
+                // A password change revokes every existing session for the account.
+                $this->db->query(
+                    "UPDATE s_entity_session SET livestatus = '0', updatestamp = NOW() WHERE s_entity_id = :entity_id",
+                    [':entity_id' => $userId]
+                );
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    $_SESSION = [];
+                    $params = session_get_cookie_params();
+                    setcookie(session_name(), '', [
+                        'expires' => time() - 42000,
+                        'path' => $params['path'] ?? '/',
+                        'domain' => $params['domain'] ?? '',
+                        'secure' => (bool)($params['secure'] ?? false),
+                        'httponly' => (bool)($params['httponly'] ?? true),
+                        'samesite' => $params['samesite'] ?? 'Lax',
+                    ]);
+                    session_destroy();
+                }
+                $redirectUrl = $this->runData['config']['sys']['base_url'].'/login/localsession';
                 if (headers_sent()) {
                     $this->runData['route']['redirect'] = $redirectUrl;
                     return;

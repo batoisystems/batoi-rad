@@ -32,6 +32,7 @@
     var controllerAgentContextUrl = <?php echo json_encode($agentContextUrl); ?>;
     var controllerAgentPlanUrl = <?php echo json_encode($agentPlanUrl); ?>;
     var controllerAgentPatchUrl = <?php echo json_encode($agentPatchUrl); ?>;
+    var controllerCsrfToken = <?php echo json_encode($this->runData['request']->csrf_token ?? ''); ?>;
     var controllerAgentRefreshBtn = document.getElementById('controller-agent-refresh');
     var controllerAgentPlanBtn = document.getElementById('controller-agent-plan');
     var controllerAgentPatchBtn = document.getElementById('controller-agent-patch');
@@ -197,7 +198,8 @@
             body: JSON.stringify({
                 type: type,
                 content: content,
-                create_version: createVersion ? 1 : 0
+                create_version: createVersion ? 1 : 0,
+                csrf_token: controllerCsrfToken
             })
         })
         .then(response => response.json())
@@ -236,7 +238,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ content: content })
+            body: JSON.stringify({ content: content, csrf_token: controllerCsrfToken })
         })
         .then(async response => {
             const raw = await response.text();
@@ -354,7 +356,8 @@
             },
             body: JSON.stringify({
                 task: task,
-                scope: scope
+                scope: scope,
+                csrf_token: controllerCsrfToken
             })
         })
         .then(async response => {
@@ -495,7 +498,8 @@
             },
             body: JSON.stringify({
                 task: task,
-                scope: scope
+                scope: scope,
+                csrf_token: controllerCsrfToken
             })
         })
         .then(async response => {
@@ -668,7 +672,8 @@
                 content: controllerAgentPatchState.proposed_content || '',
                 create_version: 1,
                 expected_checksum: controllerAgentPatchState.base_checksum || '',
-                lint_before_save: 1
+                lint_before_save: 1,
+                csrf_token: controllerCsrfToken
             })
         })
         .then(async response => {

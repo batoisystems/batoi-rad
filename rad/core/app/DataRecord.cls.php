@@ -60,7 +60,8 @@ class DataRecord {
         if (!empty($filters)) {
             $clauses = [];
             foreach ($filters as $col => $val) {
-                $paramKey = ':p_' . preg_replace('/[^a-zA-Z0-9_]/', '', $col);
+                $col = $this->assertColumn((string)$col);
+                $paramKey = ':p_' . $col;
                 $clauses[] = "{$col} = {$paramKey}";
                 $params[$paramKey] = $val;
             }
@@ -69,6 +70,7 @@ class DataRecord {
         if (!empty($order)) {
             $parts = [];
             foreach ($order as $col => $dir) {
+                $col = $this->assertColumn((string)$col);
                 $d = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
                 $parts[] = "{$col} {$d}";
             }
@@ -169,6 +171,13 @@ class DataRecord {
             throw new InvalidArgumentException('Only a_* tables are permitted');
         }
         return $table;
+    }
+
+    private function assertColumn(string $column): string {
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
+            throw new InvalidArgumentException('Invalid column identifier');
+        }
+        return $column;
     }
 
     private function resolveDmCacheKey(array $cache): ?array {

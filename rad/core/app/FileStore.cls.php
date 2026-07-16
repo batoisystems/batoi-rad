@@ -19,8 +19,8 @@ class FileStore
 {
     private string $globalBase;
     private string $workspaceBase;
-    private string $normalizedGlobalBase;
-    private string $normalizedWorkspaceBase;
+    private \Core\Sys\SafePath $globalPolicy;
+    private \Core\Sys\SafePath $workspacePolicy;
 
     /**
      * @param array $config expects ['dir']['data'] pointing to rad/data
@@ -33,8 +33,10 @@ class FileStore
         }
         $this->globalBase = $dataDir . '/uploads/global';
         $this->workspaceBase = $dataDir . '/uploads/workspaces';
-        $this->normalizedGlobalBase = $this->normalizePath($this->globalBase);
-        $this->normalizedWorkspaceBase = $this->normalizePath($this->workspaceBase);
+        $this->ensureDir($this->globalBase);
+        $this->ensureDir($this->workspaceBase);
+        $this->globalPolicy = new \Core\Sys\SafePath($this->globalBase);
+        $this->workspacePolicy = new \Core\Sys\SafePath($this->workspaceBase);
     }
 
     /**
@@ -48,9 +50,13 @@ class FileStore
     public function storeGlobal(string $fileName, string $contentOrPath, bool $isTempPath = false): string
     {
         $safeName = $this->sanitizeFileName($fileName);
-        $targetDir = $this->datedPath($this->globalBase);
+        $relative = $this->datedRelativePath() . '/' . $safeName;
+        $targetPath = $this->globalPolicy->forWrite($relative);
+        if ($targetPath === null) {
+            throw new RuntimeException('Invalid global storage path.');
+        }
+        $targetDir = dirname($targetPath);
         $this->ensureDir($targetDir);
-        $targetPath = $targetDir . '/' . $safeName;
         $this->writeFile($targetPath, $contentOrPath, $isTempPath);
         return $targetPath;
     }
@@ -67,11 +73,14 @@ class FileStore
     public function storeWorkspace(string $spaceUid, string $fileName, string $contentOrPath, bool $isTempPath = false): string
     {
         $safeName = $this->sanitizeFileName($fileName);
-        $hash = $this->workspaceHash($spaceUid);
-        $base = $this->workspaceBase . '/' . $hash . '/' . $spaceUid;
-        $targetDir = $this->datedPath($base);
+        $spaceUid = $this->normalizeWorkspaceUid($spaceUid);
+        $relative = $this->workspaceHash($spaceUid) . '/' . $spaceUid . '/' . $this->datedRelativePath() . '/' . $safeName;
+        $targetPath = $this->workspacePolicy->forWrite($relative);
+        if ($targetPath === null) {
+            throw new RuntimeException('Invalid workspace storage path.');
+        }
+        $targetDir = dirname($targetPath);
         $this->ensureDir($targetDir);
-        $targetPath = $targetDir . '/' . $safeName;
         $this->writeFile($targetPath, $contentOrPath, $isTempPath);
         return $targetPath;
     }
@@ -82,8 +91,11 @@ class FileStore
     public function pathForGlobal(string $fileName, ?\DateTimeInterface $date = null): string
     {
         $safeName = $this->sanitizeFileName($fileName);
-        $targetDir = $this->datedPath($this->globalBase, $date);
-        return $targetDir . '/' . $safeName;
+        $target = $this->globalPolicy->forWrite($this->datedRelativePath($date) . '/' . $safeName);
+        if ($target === null) {
+            throw new RuntimeException('Invalid global storage path.');
+        }
+        return $target;
     }
 
     /**
@@ -92,10 +104,13 @@ class FileStore
     public function pathForWorkspace(string $spaceUid, string $fileName, ?\DateTimeInterface $date = null): string
     {
         $safeName = $this->sanitizeFileName($fileName);
-        $hash = $this->workspaceHash($spaceUid);
-        $base = $this->workspaceBase . '/' . $hash . '/' . $spaceUid;
-        $targetDir = $this->datedPath($base, $date);
-        return $targetDir . '/' . $safeName;
+        $spaceUid = $this->normalizeWorkspaceUid($spaceUid);
+        $relative = $this->workspaceHash($spaceUid) . '/' . $spaceUid . '/' . $this->datedRelativePath($date) . '/' . $safeName;
+        $target = $this->workspacePolicy->forWrite($relative);
+        if ($target === null) {
+            throw new RuntimeException('Invalid workspace storage path.');
+        }
+        return $target;
     }
 
     /**
@@ -131,6 +146,11 @@ class FileStore
         $d = $date ?: new \DateTimeImmutable();
         $parts = [$d->format('Y'), $d->format('m'), $d->format('d')];
         return $baseDir . '/' . implode('/', $parts);
+    }
+
+    private function datedRelativePath(?\DateTimeInterface $date = null): string
+    {
+        return ltrim($this->datedPath('', $date), '/');
     }
 
     /**
@@ -210,29 +230,20 @@ class FileStore
 
     private function isAllowedPath(string $path): bool
     {
-        $normalized = $this->normalizePath($path);
-        return ($normalized !== null)
-            && (strpos($normalized, $this->normalizedGlobalBase . '/') === 0
-                || strpos($normalized, $this->normalizedWorkspaceBase . '/') === 0);
+        return $this->globalPolicy->relative($path) !== null
+            || $this->workspacePolicy->relative($path) !== null;
     }
 
-    private function normalizePath(string $path): ?string
+    private function normalizeWorkspaceUid(string $uid): string
     {
-        $parts = explode('/', str_replace('\\', '/', $path));
-        $stack = [];
-        foreach ($parts as $part) {
-            if ($part === '' || $part === '.') {
-                continue;
-            }
-            if ($part === '..') {
-                array_pop($stack);
-                continue;
-            }
-            $stack[] = $part;
+        $uid = strtolower(trim($uid));
+        if (str_contains($uid, '/') || str_contains($uid, '\\') || str_contains($uid, '..') || str_contains($uid, "\0")) {
+            throw new RuntimeException('Invalid workspace identifier.');
         }
-        if (empty($stack)) {
-            return null;
+        $uid = preg_replace('/[^a-z0-9]+/', '', $uid) ?? '';
+        if ($uid === '') {
+            throw new RuntimeException('Invalid workspace identifier.');
         }
-        return '/' . implode('/', $stack);
+        return $uid;
     }
 }

@@ -115,12 +115,15 @@ class Request {
 
     public function generateCSRFToken() {
         if (!isset($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = base64_encode(openssl_random_pseudo_bytes(32));
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
     }
 
     public function checkCSRFToken($token) {
-        return $token === $this->csrf_token;
+        return is_string($token)
+            && is_string($this->csrf_token)
+            && $token !== ''
+            && hash_equals($this->csrf_token, $token);
     }
     
 }

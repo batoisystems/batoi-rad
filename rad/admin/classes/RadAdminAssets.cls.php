@@ -250,6 +250,16 @@ class RadAdminAssets
             item.dataset.uifRole = 'item';
         });
         initComponent(root);
+        if (root.dataset.radDropdownBridge !== '1') {
+            root.dataset.radDropdownBridge = '1';
+            var syncDropdown = function() {
+                var open = trigger.getAttribute('aria-expanded') === 'true';
+                panel.classList.toggle('show', open);
+                panel.hidden = !open;
+            };
+            new MutationObserver(syncDropdown).observe(trigger, { attributes: true, attributeFilter: ['aria-expanded'] });
+            syncDropdown();
+        }
     }
     function prepareTabs(root) {
         if (!root) {
