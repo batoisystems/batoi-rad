@@ -74,6 +74,12 @@ class Logger {
         if (isset($metrics['query_count'])) {
             $message['query_count'] = max(0, (int)$metrics['query_count']);
         }
+        if (isset($metrics['unique_query_count'])) {
+            $message['unique_query_count'] = max(0, (int)$metrics['unique_query_count']);
+        }
+        if (isset($metrics['duplicate_query_count'])) {
+            $message['duplicate_query_count'] = max(0, (int)$metrics['duplicate_query_count']);
+        }
         if (isset($metrics['peak_memory_bytes'])) {
             $message['peak_memory_bytes'] = max(0, (int)$metrics['peak_memory_bytes']);
         }

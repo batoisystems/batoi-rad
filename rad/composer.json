@@ -21,11 +21,25 @@
         "ext-redis": "Provides a shared cache backend for multi-node installations.",
         "twilio/sdk": "Enables SMS delivery for optional MFA one-time codes."
     },
+    "autoload": {
+        "psr-4": {
+            "Batoi\\Rad\\": "src/"
+        }
+    },
     "scripts": {
         "test": "@php tests/run.php",
         "analyse": "phpstan analyse --no-progress --debug",
         "quality": "@php bin/quality-gate.php",
-        "quality-fix": "@php bin/quality-gate.php --fix"
+        "quality-fix": "@php bin/quality-gate.php --fix",
+        "verify-release": "@php bin/verify-release.php",
+        "ci": [
+            "@composer validate --strict",
+            "@composer audit --locked",
+            "@test",
+            "@analyse",
+            "@quality",
+            "@verify-release"
+        ]
     },
     "config": {
         "platform": {
