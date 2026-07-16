@@ -9,6 +9,7 @@ class Database {
     private $errorHandler;
     private $enableSqlLog;
     private array $schemaCache = [];
+    private int $queryCount = 0;
 
     public function __construct($configDb, \Core\Sys\ErrorHandler $errorHandler) {
         // print '<pre>';print_r($configDb);print '</pre>';print $configDb['enable_sql_log'];
@@ -47,6 +48,7 @@ class Database {
      * @return void
      */
     private function logQuery($query, $params) {
+        $this->queryCount++;
         $log = [
             'query' => $query,
             'params' => $params,
@@ -55,6 +57,10 @@ class Database {
             // print $this->enableSqlLog;die('ok');
             $this->errorHandler->logSql($log);
         }
+    }
+
+    public function getQueryCount(): int {
+        return $this->queryCount;
     }
 
     function generateUuidV4() {

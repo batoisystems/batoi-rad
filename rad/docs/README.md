@@ -8,3 +8,6 @@ Start with:
 - [Batoi AIF integration](aif-integration.md)
 - [Bundled AIF/UIF distributions](distributions.md)
 - [Versioning and compatibility](versioning.md)
+- [Machine-checked compatibility contract](compatibility.md)
+- [Accessibility release gate](accessibility.md)
+- [Performance budgets](performance.md)

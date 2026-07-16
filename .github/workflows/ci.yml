@@ -46,6 +46,8 @@ jobs:
         working-directory: rad
       - run: composer analyse
         working-directory: rad
+      - run: composer quality
+        working-directory: rad
       - run: npm ci
         if: matrix.php == '8.4' && matrix.mysql == '8.4'
         working-directory: rad/tests/browser
@@ -114,3 +116,4 @@ jobs:
             sleep 1
           done
           npm test --prefix rad/tests/browser
+          php rad/tests/RuntimePerformanceLogTest.php rad/log

@@ -1,0 +1,37 @@
+{
+    "schema": 1,
+    "major": 1,
+    "runtime": {
+        "php": ["8.3", "8.4"],
+        "database": ["MySQL 8.0", "MySQL 8.4"],
+        "extensions": ["curl", "fileinfo", "json", "mbstring", "openssl", "pdo", "pdo_mysql", "zip"]
+    },
+    "public_routes": {
+        "/api": "ApiController",
+        "/login": "LoginController",
+        "/queue": "QueueController",
+        "/rad-admin": "RadAdminController",
+        "/fs-store": "FileStorageController",
+        "/error-pages": "ErrorController"
+    },
+    "installer_options": [
+        "db-host", "db-port", "db-socket", "db-ssl-ca", "db-name", "db-user",
+        "db-password", "db-password-file", "base-url", "admin-name", "admin-username",
+        "admin-password", "admin-password-file", "non-interactive", "skip-composer",
+        "check", "dry-run", "json"
+    ],
+    "environment": [
+        "RAD_DB_HOST", "RAD_DB_PORT", "RAD_DB_SOCKET", "RAD_DB_SSL_CA", "RAD_DB_NAME",
+        "RAD_DB_USER", "RAD_DB_PASSWORD", "RAD_ENABLE_SQL_LOG", "RAD_ADMIN_UIF_ENABLED"
+    ],
+    "extension_points": [
+        "Batoi AIF provider and transport contracts",
+        "RAD database migration files",
+        "RAD Admin route registration",
+        "Batoi UIF browser assets"
+    ],
+    "internal": [
+        "RAD Admin templates", "undocumented classes", "database implementation details",
+        "developer execution tools"
+    ]
+}

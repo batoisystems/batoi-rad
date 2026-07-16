@@ -256,24 +256,25 @@ $notificationBadge = (int)($this->runData['nav']['notifications_unread'] ?? 0);
 $recentNotifications = $this->runData['nav']['notifications_recent'] ?? [];
 $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
 ?>
+    <a class="rad-skip-link" href="#rad-main-content">Skip to main content</a>
     <div class="d-flex flex-column min-vh-100">
         <div class="container-fluid px-0 flex-grow-1">
             <header class="py-2 border-bottom bg-white">
                 <div class="container-fluid d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
-                        <button class="btn btn-outline-secondary btn-sm d-none d-lg-inline-flex" id="sidebarToggle" type="button" title="Toggle navigation">
-                            <i class="bi bi-layout-sidebar"></i>
+                        <button class="btn btn-outline-secondary btn-sm d-none d-lg-inline-flex" id="sidebarToggle" type="button" title="Toggle navigation" aria-label="Toggle navigation">
+                            <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
                         </button>
                         <img src="<?php print $this->runData['route']['rad_assets_url'];?>/img/batoi-rad-framework-logo.svg" alt="Batoi RAD Framework" height="32">
                         <strong>RAD Admin</strong>
                     </div>
                     <div class="d-flex align-items-center gap-3">
                         <div class="d-none d-lg-flex align-items-center gap-2">
-                            <a href="<?php print $this->runData['config']['sys']['base_url'];?>/rad-admin/home/view" class="top-icon" title="Home Dashboard">
-                                <i class="bi bi-house"></i>
+                            <a href="<?php print $this->runData['config']['sys']['base_url'];?>/rad-admin/home/view" class="top-icon" title="Home Dashboard" aria-label="Home Dashboard">
+                                <i class="bi bi-house" aria-hidden="true"></i>
                             </a>
-                            <a href="<?php print $this->runData['config']['sys']['base_url'];?>/rad-admin/all/view" class="top-icon" title="All RAD Admin">
-                                <i class="bi bi-grid-3x3-gap"></i>
+                            <a href="<?php print $this->runData['config']['sys']['base_url'];?>/rad-admin/all/view" class="top-icon" title="All RAD Admin" aria-label="All RAD Admin">
+                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
                             </a>
                             <?php if ($aiToolsEnabled) { ?><div class="dropdown">
                                 <a href="#" class="top-icon" id="batoiIntelDropdownToggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Batoi Intelligence">
@@ -291,24 +292,24 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                                         <button type="button" class="btn btn-primary btn-sm flex-grow-1" id="batoiIntelOpenBtn" data-open-url="<?php echo htmlspecialchars($batoiIntelUrl, ENT_QUOTES, 'UTF-8'); ?>">
                                             <i class="bi bi-arrow-up-right-square me-1"></i>Open Batoi Intelligence
                                         </button>
-                                        <a href="<?php echo htmlspecialchars($batoiIntelUrl, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-secondary btn-sm">
-                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        <a href="<?php echo htmlspecialchars($batoiIntelUrl, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-secondary btn-sm" aria-label="Open Batoi Intelligence workspace">
+                                            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                                         </a>
                                     </div>
                                 </div>
                             </div><?php } ?>
-                            <a href="https://www.batoi.com/support/docs/rad-framework" class="top-icon" title="Help" target="_blank">
-                                <i class="bi bi-question-circle"></i>
+                            <a href="https://www.batoi.com/support/docs/rad-framework" class="top-icon" title="Help" aria-label="Help (opens in a new tab)" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-question-circle" aria-hidden="true"></i>
                             </a>
-                            <a href="<?php print $this->runData['route']['rad_admin_url'];?>/notifications/view" class="top-icon position-relative" title="Notifications">
-                                <i class="bi bi-bell"></i>
+                            <a href="<?php print $this->runData['route']['rad_admin_url'];?>/notifications/view" class="top-icon position-relative" title="Notifications" aria-label="Notifications<?php echo $notificationBadge > 0 ? ': ' . $notificationBadge . ' unread' : ''; ?>">
+                                <i class="bi bi-bell" aria-hidden="true"></i>
                                 <?php if ($notificationBadge > 0) { ?>
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $notificationBadge > 99 ? '99+' : $notificationBadge; ?></span>
                                 <?php } ?>
                             </a>
                         </div>
                         <div class="dropdown text-end d-lg-none">
-                            <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open navigation menu">
                                 <i class="bi bi-list" style="font-size:1.5rem;"></i>
                             </a>
                             <ul class="dropdown-menu text-small shadow">
@@ -334,7 +335,7 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                             </ul>
                         </div>
                         <div class="dropdown text-end d-none d-lg-block">
-                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open account menu for <?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?>">
                                 <span class="top-avatar"><?php echo $userInitial; ?></span>
                             </a>
                             <ul class="dropdown-menu text-small shadow">
@@ -356,18 +357,18 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                 <aside class="rad-sidebar d-none d-lg-block">
                     <?php foreach ($navSections as $group => $items) { ?>
                         <h6 class="<?php echo !empty($activeSections[$group]) ? 'active-section' : ''; ?>"><?php echo $group; ?></h6>
-                        <nav class="nav flex-column flex-grow-1">
+                        <nav class="nav flex-column flex-grow-1" aria-label="<?php echo htmlspecialchars($group, ENT_QUOTES, 'UTF-8'); ?>">
                             <?php foreach ($items as $item) {
                                 $isActive = ($item['path'] === $activeMatch);
                             ?>
-                                <a class="nav-link <?php echo $isActive ? 'active' : ''; ?>" href="<?php echo $this->runData['route']['rad_admin_url'] . $item['path']; ?>">
+                                <a class="nav-link <?php echo $isActive ? 'active' : ''; ?>" href="<?php echo $this->runData['route']['rad_admin_url'] . $item['path']; ?>"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                                     <i class="<?php echo $item['icon']; ?> me-2"></i><?php echo $item['label']; ?>
                                 </a>
                             <?php } ?>
                         </nav>
                     <?php } ?>
                 </aside>
-                <main class="flex-grow-1 px-3 py-4">
+                <main class="flex-grow-1 px-3 py-4" id="rad-main-content" tabindex="-1">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div>
                             <nav aria-label="breadcrumb" class="mb-1">
@@ -410,7 +411,7 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                     </div>
 
                     <?php if ( isset($this->runData['route']['alert']) && ($this->runData['route']['alert'] != '') ): ?>
-                        <div class="alert alert-<?php echo $this->runData['route']['alert'];?> d-flex align-items-start py-2 px-3 mb-3">
+                        <div class="alert alert-<?php echo $this->runData['route']['alert'];?> d-flex align-items-start py-2 px-3 mb-3" role="status" aria-live="polite">
                             <div class="icon me-2 pt-1">
                                 <?php
                                 switch ($this->runData['route']['alert']) {
@@ -497,8 +498,8 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
 
         <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 mb-4 px-3 border-top">
             <div class="col-md-4 d-flex align-items-center">
-                <a href="/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
-                    <img src="<?php print $this->runData['route']['rad_assets_url'];?>/img/batoi-rad-framework-logo.svg" height="24">
+                <a href="/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1" aria-label="Batoi RAD home">
+                    <img src="<?php print $this->runData['route']['rad_assets_url'];?>/img/batoi-rad-framework-logo.svg" height="24" alt="">
                 </a>
                 <span class="mb-3 mb-md-0 text-body-secondary small">&copy; <?php echo date('Y');?> <a class="text-primary text-decoration-none" href="https://www.batoi.com/framework/" target="_blank">Batoi</a></span>
             </div>
@@ -510,9 +511,9 @@ $batoiIntelUrl = $this->runData['route']['rad_admin_url'] . '/aiassist';
                 You are accessing from trusted IP <?php echo $clientLabel; ?>
             </div>
             <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
-                <li class="ms-3"><a class="text-primary" href="https://linkedin.com/company/batoi" target="_blank"><i class="bi bi-linkedin"></i></a></li>
-                <li class="ms-3"><a class="text-dark" href="https://twitter.com/batoisystems" target="_blank"><i class="bi bi-twitter-x"></i></a></li>
-                <li class="ms-3"><a class="text-danger" href="https://mastodon.social/@batoisystems" target="_blank"><i class="bi bi-mastodon"></i></a></li>
+                <li class="ms-3"><a class="text-primary" href="https://linkedin.com/company/batoi" target="_blank" rel="noopener noreferrer" aria-label="Batoi on LinkedIn (opens in a new tab)"><i class="bi bi-linkedin" aria-hidden="true"></i></a></li>
+                <li class="ms-3"><a class="text-dark" href="https://twitter.com/batoisystems" target="_blank" rel="noopener noreferrer" aria-label="Batoi on X (opens in a new tab)"><i class="bi bi-twitter-x" aria-hidden="true"></i></a></li>
+                <li class="ms-3"><a class="text-danger" href="https://mastodon.social/@batoisystems" target="_blank" rel="noopener noreferrer" aria-label="Batoi on Mastodon (opens in a new tab)"><i class="bi bi-mastodon" aria-hidden="true"></i></a></li>
             </ul>
         </footer>
     </div>

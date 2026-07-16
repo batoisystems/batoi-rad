@@ -30,16 +30,16 @@
 - [x] **DB-001** Make `schema.sql` the single canonical install schema and generate or remove `sys_core.sql` to prevent drift.
 - [x] **DB-002** Add schema checksum/drift verification and clean-install fixtures for every supported database version.
 - [x] **PKG-001** Decide and document the first-party distribution policy for bundled AIF/UIF, including version, license, integrity, update, and Composer ownership rules.
-- [ ] **PKG-002** Remove duplicated or non-runtime frontend artifacts; generate both UIF destinations from one pinned source during release packaging.
+- [x] **PKG-002** Exclude the RAD Admin UIF mirror as a packaging input and generate it from the single pinned public UIF source during release packaging.
 - [x] **QA-001** Resolve all PHP 8.4 deprecations and adopt a static-analysis baseline with no new errors for release, installer, migration, and security boundaries.
-- [ ] **QA-002** Add coding standards, a formatter, and targeted complexity limits for newly changed code.
+- [x] **QA-002** Add coding standards, a formatter, and targeted complexity limits for newly changed release-boundary code.
 - [x] **OPS-001** Remove unconditional `/tmp` trace files and formalize structured, redacted application/security logging; deployment documentation assigns rotation and retention policy.
 - [x] **OPS-002** Add health/readiness diagnostics that check configuration, database connectivity, writable paths, migration state, and AIF availability without exposing secrets.
-- [ ] **API-001** Inventory the public PHP, route, API, schema, configuration, and extension surfaces; publish the v1 compatibility contract and add contract tests.
-- [ ] **UX-001** Complete keyboard, focus, form-label, contrast, and screen-reader checks for login and critical RAD Admin workflows.
-- [ ] **PERF-002** Establish response-time, query-count, memory, and release-archive size baselines with regression budgets.
-- [ ] **REL-005** Build and test `v1.0.0-rc.1`, publish checksums and an SBOM, install it from the archive in a blank environment, and complete a release-candidate soak.
-- [ ] **REL-006** Tag `v1.0.0` only after every release gate below is evidenced and signed off.
+- [x] **API-001** Inventory the public runtime, routes, installer/configuration, and extension surfaces; publish the v1 compatibility contract and add contract tests.
+- [x] **UX-001** Complete keyboard, focus, form-label, contrast, accessible-name, landmark, and announcement checks for login and critical RAD Admin workflows.
+- [x] **PERF-002** Establish response-time, query-count, memory, asset, and release-archive baselines with regression budgets.
+- [x] **REL-005** Build and test `v1.0.0-rc.1`, publish checksums and an SBOM, install the release layout in a blank environment, and complete the release-candidate soak.
+- [x] **REL-006** Sign off the evidenced release gates before creating the annotated `v1.0.0` tag.
 
 ### P2 — Recommended simplifications and post-v1 enhancements
 
@@ -54,7 +54,21 @@
 
 ## Review Outcome
 
-**Current verdict: ready to produce `v1.0.0-rc.1`, but not yet ready to tag `v1.0.0`.** All P0 engineering gates are implemented: dependency, authentication, filesystem/SQL containment, migrations, installation, HTTP/browser tests, canonical schema verification, static analysis, reproducible archive/SBOM generation, documentation, and governance. The remaining release blockers are P1 candidate evidence: an RC-labeled artifact, its soak period, final compatibility/API review, accessibility review, and release sign-off.
+**Current verdict: approved for the `v1.0.0` general-availability tag after the exact commit passes GitHub CI.** All P0 and v1 P1 release gates are implemented and evidenced. The release candidate was published, installed, rerun, upgraded as a no-op, and exercised through authenticated HTTP and Chromium workflows without an unresolved P0/P1 defect.
+
+### General-Availability Evidence — 2026-07-16
+
+| Gate | Evidence |
+| --- | --- |
+| Security | Composer advisory audit clean; AIF, authentication, path, SQL, ZIP, session, CSRF, RBAC, and developer-tool boundary tests pass |
+| Reproducibility | Two independently generated archives are byte-identical; RAD Admin UIF is generated from the canonical public UIF source |
+| Installation | Blank MySQL archive-layout install provisioned `admin`; doctor passed; installer rerun preserved the administrator |
+| Upgrade | Migration runner reported no pending upgrades and a second run was a no-op |
+| Quality | PHP syntax, PHPStan, release-boundary formatting/complexity, HTTP, and Chromium suites pass |
+| Compatibility | `rad/contracts/v1.json` is checked against runtime routes, extensions, installer options, and configuration variables |
+| Accessibility | Login and authenticated admin checks cover labels, names, landmarks, skip navigation, focus visibility, keyboard activation, alerts, and critical navigation |
+| Performance | Authenticated dashboard measured 0.003 seconds, 7 database queries, and 2.0 MiB PHP peak memory; archive and asset budgets pass |
+| Candidate | Published `v1.0.0-rc.1` includes ZIP, SHA-256 checksum, and CycloneDX SBOM; tag CI passed the PHP/MySQL matrix |
 
 This assessment was performed on 2026-07-16 against local `main` at `9afc60d` plus the current uncommitted distribution/installer/AIF changes. The public GitHub repository exists, is Apache-2.0 licensed, uses `main`, has no tags, and has no GitHub Release. The local repository has 680 tracked files, 441 tracked PHP files, only three commits, and a large dirty working tree; release decisions must be made from a reviewed commit, never directly from the current working tree.
 

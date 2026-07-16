@@ -4,6 +4,19 @@ All notable changes to Batoi RAD will be documented here.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-16
+
+- Promoted the validated `1.0.0-rc.1` architecture to general availability.
+- Added a machine-checked 1.x compatibility contract.
+- Added source formatting and release-boundary complexity checks.
+- Made release packaging generate RAD Admin UIF assets from the canonical
+  public UIF distribution.
+- Added accessibility gates for keyboard navigation, landmarks, accessible
+  names, form labels, focus visibility, and alert announcements.
+- Added release archive, asset, response-time, query-count, and memory budgets.
+- Added request-level performance metrics with one-way session fingerprints;
+  raw session identifiers are no longer written to access logs.
+
 ## [1.0.0-rc.1] - 2026-07-16
 
 - Added an idempotent CLI installer with administrator provisioning.
