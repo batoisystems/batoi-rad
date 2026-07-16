@@ -45,7 +45,7 @@
 
 - [x] **ARC-001** Introduce Composer PSR-4 autoloading for new code; retire the custom autoloader incrementally as legacy classes are touched.
 - [ ] **ARC-002** Split oversized admin classes into application services, repositories, validators, and thin HTTP actions.
-- [ ] **ARC-003** Centralize admin JSON responses, CSRF enforcement, privilege enforcement, file policy, and request decoding. Mutation CSRF and developer-tool privilege policy are centralized; response/request consolidation remains.
+- [ ] **ARC-003** Centralize admin JSON responses, CSRF enforcement, privilege enforcement, file policy, and request decoding. Mutation CSRF and developer-tool privilege policy are centralized; shared JSON and CSRF-token boundaries now cover code assist and file manager, with broader legacy admin migration remaining.
 - [ ] **ARC-004** Replace array-shaped global `runData` dependencies with typed context/configuration objects at new boundaries.
 - [x] **ARC-005** Merge the duplicate CLI and RAD Admin upgrade implementations behind one migration service.
 - [x] **PERF-001** Remove persistent PDO connections, cache schema metadata per request, and record aggregate total/unique/duplicate query metrics for route profiling.

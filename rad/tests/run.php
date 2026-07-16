@@ -7,6 +7,7 @@ $tests = [
     __DIR__ . '/CompatibilityContractTest.php',
     __DIR__ . '/PerformanceBudgetTest.php',
     __DIR__ . '/QueryProfilerTest.php',
+    __DIR__ . '/HttpBoundaryTest.php',
 ];
 
 foreach ($tests as $test) {
