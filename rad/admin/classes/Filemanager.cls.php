@@ -1,6 +1,9 @@
 <?php
 namespace RadAdmin;
 
+use Batoi\Rad\Http\CsrfToken;
+use Batoi\Rad\Http\JsonRequest;
+use Batoi\Rad\Http\JsonResponse;
 use Core\Sys\DeveloperToolPolicy;
 use Core\Sys\SafePath;
 
@@ -26,13 +29,11 @@ class Filemanager {
             $this->respondError('Invalid directory.');
         }
         $tree = $this->scanDirectory($baseDir, $targetDir);
-        header('Content-Type: application/json');
-        echo json_encode([
+        JsonResponse::send([
             'root' => $rootKey,
             'path' => $relativePath,
             'tree' => $tree,
         ]);
-        exit;
     }
 
     public function read() {
@@ -43,19 +44,21 @@ class Filemanager {
         if (!$fullPath || !is_file($fullPath)) {
             $this->respondError('File not found.');
         }
-        header('Content-Type: application/json');
-        echo json_encode([
+        JsonResponse::send([
             'path' => $path,
             'content' => file_get_contents($fullPath),
         ]);
-        exit;
     }
 
     public function write() {
         $this->enforceCsrf();
         $this->enforcePrivilege('source_write');
-        $payload = json_decode(file_get_contents('php://input'), true);
-        if (!$payload || empty($payload['path']) || !isset($payload['content'])) {
+        try {
+            $payload = JsonRequest::decode((string)($this->runData['request']->body ?? ''));
+        } catch (\UnexpectedValueException $exception) {
+            $this->respondError($exception->getMessage());
+        }
+        if (empty($payload['path']) || !isset($payload['content'])) {
             $this->respondError('Invalid payload.');
         }
         $fullPath = $this->sanitizePath($payload['path'], true);
@@ -68,15 +71,11 @@ class Filemanager {
         if (file_put_contents($fullPath, $payload['content']) === false) {
             $this->respondError('Failed to write file.');
         }
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
-        exit;
+        JsonResponse::send(['success' => true]);
     }
 
     private function respondError(string $message, int $code = 400) {
-        header('Content-Type: application/json', true, $code);
-        echo json_encode(['error' => $message]);
-        exit;
+        JsonResponse::error($message, $code);
     }
 
     private function enforcePrivilege(string $capability): void {
@@ -90,27 +89,9 @@ class Filemanager {
         if (!$request) {
             $this->respondError('Unable to verify CSRF token.', 419);
         }
-        $token = $this->extractCsrfToken($request);
-        if (!$token || !$request->checkCSRFToken($token)) {
+        if (!CsrfToken::isValid($request, $_SERVER)) {
             $this->respondError('Invalid CSRF token.', 419);
         }
-    }
-
-    private function extractCsrfToken($request): string {
-        $headers = array_change_key_case($request->headers ?? [], CASE_LOWER);
-        if (!empty($headers['x-csrf-token'])) {
-            return $headers['x-csrf-token'];
-        }
-        if (!empty($_SERVER['HTTP_X_CSRF_TOKEN'])) {
-            return $_SERVER['HTTP_X_CSRF_TOKEN'];
-        }
-        if (!empty($request->post['csrf_token'])) {
-            return $request->post['csrf_token'];
-        }
-        if (!empty($request->get['csrf_token'])) {
-            return $request->get['csrf_token'];
-        }
-        return '';
     }
 
     private function resolveBaseDir(string $root): string {

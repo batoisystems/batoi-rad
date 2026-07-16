@@ -9,6 +9,8 @@ All notable changes to Batoi RAD will be documented here.
 - Added aggregate total, unique, and duplicate query profiling without logging
   SQL text or parameters.
 - Added `composer ci` as the one-command contributor verification workflow.
+- Added shared JSON request/response and CSRF-token boundary utilities, with the
+  code-assist and file-manager APIs migrated off duplicated HTTP handling.
 
 ## [1.0.0] - 2026-07-16
 
