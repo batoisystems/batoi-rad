@@ -1,7 +1,4 @@
 specs/
-!specs/
-specs/*
-!specs/batoi-rad-open-source-github-blueprint.md
 
 # Runtime and local environment files
 rad/config/*
