@@ -14,6 +14,7 @@
         "/fs-store": "FileStorageController",
         "/error-pages": "ErrorController"
     },
+    "microservicelet_types": ["DYN"],
     "installer_options": [
         "db-host", "db-port", "db-socket", "db-ssl-ca", "db-name", "db-user",
         "db-password", "db-password-file", "base-url", "admin-name", "admin-username",

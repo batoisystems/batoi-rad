@@ -430,7 +430,7 @@ class Microservice{
                                 $created['routes']++;
                                 $routeKey = $this->getRouteFileKey(
                                     ['id' => $routeId, 's_name' => $name],
-                                    $ms['s_type'] ?? 'STA'
+                                    'DYN'
                                 );
                                 $this->ensureRouteFiles($ms['s_name'], $routeKey);
                                 $this->inheritMsBindingsToRoute($newMSId, (int)$routeId);
@@ -451,7 +451,7 @@ class Microservice{
                             $created['routes']++;
                             $routeKey = $this->getRouteFileKey(
                                 ['id' => $defaultRouteId, 's_name' => 'default'],
-                                $ms['s_type'] ?? 'STA'
+                                'DYN'
                             );
                             $this->ensureRouteFiles($ms['s_name'], $routeKey);
                             $this->inheritMsBindingsToRoute($newMSId, (int)$defaultRouteId);
@@ -484,25 +484,6 @@ class Microservice{
                                 $created['data_models']++;
                             }
                         }
-                    }
-
-                    $contentTitles = $this->runData['request']->post['content_title'] ?? [];
-                    if (($this->runData['request']->post['s_type'] ?? '') === 'STA' && is_array($contentTitles)) {
-                        $contentSlugs = $this->runData['request']->post['content_slug'] ?? [];
-                        $contentTypes = $this->runData['request']->post['content_type'] ?? [];
-                        $contentBodies = $this->runData['request']->post['content_body'] ?? [];
-                        $contentSummaries = $this->runData['request']->post['content_summary'] ?? [];
-                        foreach ($contentTitles as $idx => $title) {
-                            $slug = trim((string)($contentSlugs[$idx] ?? ''));
-                            $type = trim((string)($contentTypes[$idx] ?? 'C'));
-                            $body = trim((string)($contentBodies[$idx] ?? ''));
-                            $summary = trim((string)($contentSummaries[$idx] ?? ''));
-                            if ($this->createContentBlock($newMSId, (string)$title, $slug, $type, $body, $summary, $warnings)) {
-                                $created['content_blocks']++;
-                            }
-                        }
-                    } elseif (!empty($contentTitles)) {
-                        $warnings[] = 'Content Blocks were skipped (only available for Static microservicelets).';
                     }
 
                     $messageParts = [
@@ -596,7 +577,7 @@ class Microservice{
                     $updateResult = $this->runData['db']->update('s_ms', [
                         's_name' => $this->runData['request']->post['s_name'],
                         's_description' => $this->runData['request']->post['s_description'],
-                        's_type' => $this->runData['request']->post['s_type'],
+                        's_type' => 'DYN',
                         's_definition' => $json_str,
                         's_scope' => $this->runData['request']->post['s_scope'] ?? 'platform',
                         's_tpl_name' => $s_template
@@ -1270,7 +1251,7 @@ class Microservice{
 
     private function inspectMicroserviceFilesystem(array $ms): array {
         $msName = (string)($ms['s_name'] ?? '');
-        $msType = (string)($ms['s_type'] ?? 'STA');
+        $msType = 'DYN';
         $msDir = rtrim((string)($this->runData['config']['dir']['ms'] ?? ''), '/') . '/' . $msName;
         $audit = [
             'directory' => $msDir,
@@ -1361,125 +1342,6 @@ class Microservice{
         usort($audit['cleanup_candidates'], fn($a, $b) => strcmp($a['file'], $b['file']));
 
         return $audit;
-    }
-
-    /**
-     * Upgrade a Microservicelet to DYN type.
-     */
-    public function upgradetodyn() {
-        $entityId = (int)($this->runData['entity']['id'] ?? 0);
-        if ($entityId !== 1 || !$this->priv->can('microservice_edit')) {
-            throw new \Exception('Access denied.', 403);
-        }
-        $uid = $this->runData['route']['pathparts'][3] ?? '';
-        if ($uid === '') {
-            throw new \Exception('Invalid Microservicelet', 404);
-        }
-        $msRows = $this->runData['db']->select('s_ms', ['uid' => $uid], true);
-        if (count($msRows) !== 1) {
-            throw new \Exception('Invalid Microservicelet', 404);
-        }
-        $ms = $msRows[0];
-        if (strtoupper($ms['s_type'] ?? '') === 'DYN') {
-            $this->runData['request']->setAlert('Microservicelet is already DYN.', 'info');
-            header('Location: ' . $this->runData['route']['rad_admin_url'] . '/microservice/detail/' . $uid);
-            exit;
-        }
-        $post = $this->runData['request']->post ?? [];
-        $csrfToken = $post['csrf_token'] ?? '';
-        if (!$this->runData['request']->checkCSRFToken($csrfToken)) {
-            $this->runData['request']->setAlert('Invalid request token. Please try again.', 'danger');
-            header('Location: ' . $this->runData['route']['rad_admin_url'] . '/microservice/detail/' . $uid);
-            exit;
-        }
-
-        $rewriteRoutes = !empty($post['rewrite_routes']);
-        $rewriteTheme = !empty($post['rewrite_theme']);
-
-        $msId = (int)$ms['id'];
-        $msName = $ms['s_name'] ?? '';
-        $workspacePrefix = $this->runData['config']['sys']['workspace_slug_prefix'] ?? null;
-
-        $routes = $this->runData['db']->select('s_msroute', ['s_ms_id' => $msId], true);
-        $renameCounts = ['renamed' => 0, 'overwritten' => 0, 'created' => 0, 'missing' => 0];
-        $rewriteCount = 0;
-        $routeWarnings = 0;
-
-        foreach ($routes as $route) {
-            $routeId = (int)($route['id'] ?? 0);
-            $routeName = (string)($route['s_name'] ?? '');
-            if ($routeId <= 0 || $routeName === '') {
-                $routeWarnings++;
-                continue;
-            }
-            if (strpos($routeName, '/') !== false) {
-                $routeWarnings++;
-                continue;
-            }
-            $rename = $this->renameRouteFilesByKey($msName, (string)$routeId, $routeName);
-            $renameCounts['renamed'] += $rename['renamed'];
-            $renameCounts['overwritten'] += $rename['overwritten'];
-            $renameCounts['created'] += $rename['created'];
-            $renameCounts['missing'] += $rename['missing'];
-
-            if ($rewriteRoutes) {
-                $rules = $this->buildDynRewriteRules($msName, $routeId, $routeName, $workspacePrefix);
-                $msDir = rtrim($this->runData['config']['dir']['ms'] ?? '', '/') . '/' . $msName;
-                foreach (['php', 'pagepart.php', 'prepart.php', 'postpart.php'] as $suffix) {
-                    $filePath = $msDir . '/route.' . $routeName . '.' . $suffix;
-                    if (!file_exists($filePath)) {
-                        $filePath = $msDir . '/route.' . $routeId . '.' . $suffix;
-                    }
-                    $rewriteCount += $this->rewriteDynLinksInFile($filePath, $rules);
-                }
-            }
-        }
-
-        $themeRewriteCount = 0;
-        if ($rewriteTheme) {
-            $tplName = $ms['s_tpl_name'] ?? '';
-            if ($tplName !== '') {
-                $tplPath = rtrim($this->runData['config']['dir']['theme'] ?? '', '/') . '/' . $tplName . '.tpl.php';
-                if (file_exists($tplPath)) {
-                    foreach ($routes as $route) {
-                        $routeId = (int)($route['id'] ?? 0);
-                        $routeName = (string)($route['s_name'] ?? '');
-                        if ($routeId <= 0 || $routeName === '') {
-                            continue;
-                        }
-                        if (strpos($routeName, '/') !== false) {
-                            continue;
-                        }
-                        $rules = $this->buildDynRewriteRules($msName, $routeId, $routeName, $workspacePrefix);
-                        $themeRewriteCount += $this->rewriteDynLinksInFile($tplPath, $rules);
-                    }
-                }
-            }
-        }
-
-        $this->runData['db']->update('s_ms', ['s_type' => 'DYN'], ['id' => $msId], ['updatedby' => $entityId]);
-
-        $message = 'Microservicelet upgraded to DYN. ';
-        $message .= 'Files renamed: ' . $renameCounts['renamed'] . '. ';
-        if ($renameCounts['overwritten'] > 0) {
-            $message .= 'Overwritten: ' . $renameCounts['overwritten'] . '. ';
-        }
-        if ($renameCounts['created'] > 0) {
-            $message .= 'Created: ' . $renameCounts['created'] . '. ';
-        }
-        if ($rewriteRoutes) {
-            $message .= 'Route rewrites: ' . $rewriteCount . '. ';
-        }
-        if ($rewriteTheme) {
-            $message .= 'Theme rewrites: ' . $themeRewriteCount . '. ';
-        }
-        if ($routeWarnings > 0) {
-            $message .= 'Skipped/conflicts: ' . $routeWarnings . '.';
-        }
-
-        $this->runData['request']->setAlert(trim($message), 'success');
-        header('Location: ' . $this->runData['route']['rad_admin_url'] . '/microservice/detail/' . $uid);
-        exit;
     }
 
     /**
@@ -2152,7 +2014,7 @@ class Microservice{
             if (empty($routeRow[0])) {
                 return ['status' => true, 'message' => 'Microservicelet folder recreated but default route could not be resolved for file generation.'];
             }
-            $routeKey = $this->getRouteFileKey($routeRow[0], $msRow['s_type'] ?? 'STA');
+            $routeKey = $this->getRouteFileKey($routeRow[0], 'DYN');
             $routeLabel = $routeRow[0]['s_name'] ?? $routeKey;
             $fileTemplates = [
                 'route.%s.php' => "<?php\n// Auto-generated placeholder for %s route %s.\n",
@@ -2463,15 +2325,6 @@ class Microservice{
         return $this->truncate($name, 255);
     }
 
-    private function sanitizeMsType(string $type): string {
-        $type = strtoupper(trim($type));
-        $allowed = ['STA', 'DYN', 'SSR', 'API'];
-        if (!in_array($type, $allowed, true)) {
-            return 'DYN';
-        }
-        return $type;
-    }
-
     private function sanitizeMsScope(string $scope): string {
         $scope = strtolower(trim($scope));
         $allowed = ['global', 'platform', 'workspace'];
@@ -2501,10 +2354,7 @@ class Microservice{
     }
 
     private function getRouteFileKey(array $routeRow, string $msType): string {
-        if (strtoupper($msType) === 'DYN') {
-            return (string)($routeRow['s_name'] ?? $routeRow['id'] ?? '');
-        }
-        return (string)($routeRow['id'] ?? '');
+        return (string)($routeRow['s_name'] ?? $routeRow['id'] ?? '');
     }
 
     private function ensureRouteFiles(string $msName, string $routeKey): void {
@@ -2521,91 +2371,6 @@ class Microservice{
                 file_put_contents($path, '');
             }
         }
-    }
-
-    private function renameRouteFilesByKey(string $msName, string $oldKey, string $newKey): array {
-        $result = ['renamed' => 0, 'overwritten' => 0, 'created' => 0, 'missing' => 0];
-        if ($msName === '' || $oldKey === '' || $newKey === '' || $oldKey === $newKey) {
-            return $result;
-        }
-        $msDir = rtrim($this->runData['config']['dir']['ms'] ?? '', '/') . '/' . $msName;
-        if (!is_dir($msDir)) {
-            return $result;
-        }
-        foreach (['php', 'pagepart.php', 'prepart.php', 'postpart.php'] as $suffix) {
-            $oldPath = $msDir . '/route.' . $oldKey . '.' . $suffix;
-            $newPath = $msDir . '/route.' . $newKey . '.' . $suffix;
-            if (file_exists($oldPath)) {
-                if (file_exists($newPath)) {
-                    @unlink($newPath);
-                    $result['overwritten']++;
-                }
-                if (@rename($oldPath, $newPath)) {
-                    $result['renamed']++;
-                }
-                continue;
-            }
-            $result['missing']++;
-            if (!file_exists($newPath)) {
-                file_put_contents($newPath, '');
-                $result['created']++;
-            }
-        }
-        return $result;
-    }
-
-    private function rewriteDynLinksInFile(string $filePath, array $rules): int {
-        if (!is_file($filePath) || !is_readable($filePath)) {
-            return 0;
-        }
-        $content = file_get_contents($filePath);
-        if ($content === false) {
-            return 0;
-        }
-        $total = 0;
-        foreach ($rules as $rule) {
-            if ($rule['type'] === 'regex') {
-                $count = 0;
-                $content = preg_replace($rule['pattern'], $rule['replacement'], $content, -1, $count);
-                $total += $count;
-            } else {
-                $count = substr_count($content, $rule['search']);
-                if ($count > 0) {
-                    $content = str_replace($rule['search'], $rule['replace'], $content);
-                    $total += $count;
-                }
-            }
-        }
-        if ($total > 0) {
-            file_put_contents($filePath, $content);
-        }
-        return $total;
-    }
-
-    private function buildDynRewriteRules(string $msName, int $routeId, string $routeName, ?string $workspacePrefix): array {
-        $msName = trim($msName);
-        $routeName = trim($routeName);
-        if ($msName === '' || $routeName === '' || $routeId <= 0) {
-            return [];
-        }
-        $prefixSegment = $workspacePrefix ? '/' . trim($workspacePrefix, "/ \t\n\r\0\x0B") : '';
-        $workspaceReplacement = $prefixSegment . '/{space_name}/' . $msName . '/' . $routeName . '/';
-        $routeIdStr = (string)$routeId;
-        $escapedMs = preg_quote($msName, '~');
-        $escapedId = preg_quote($routeIdStr, '~');
-        $workspacePattern = '~/' . $escapedMs . '/' . $escapedId . '/(?:\\$[A-Za-z_][A-Za-z0-9_]*|\\{[A-Za-z_][A-Za-z0-9_]*\\}|[a-fA-F0-9-]{36})/~';
-        return [
-            [
-                'type' => 'regex',
-                'pattern' => $workspacePattern,
-                'replacement' => $workspaceReplacement,
-            ],
-            [
-                'type' => 'string',
-                'search' => '/' . $msName . '/' . $routeIdStr . '/',
-                'replace' => '/' . $msName . '/' . $routeName . '/',
-            ],
-        ];
     }
 
     private function sanitizeControllerName(string $name): string {
@@ -2969,6 +2734,9 @@ class Microservice{
         if (empty($msData['s_name'])) {
             throw new \Exception('Microservice name missing in package.');
         }
+        if (strtoupper((string)($msData['s_type'] ?? '')) !== 'DYN') {
+            throw new \Exception('Unsupported package: only DYN microservicelets can be imported.');
+        }
 
         $strategy = $this->runData['request']->post['collision_strategy'] ?? 'abort';
         $msName = $msData['s_name'];
@@ -2985,6 +2753,7 @@ class Microservice{
         $msInsert = $msData;
         unset($msInsert['id'], $msInsert['uid']);
         $msInsert['s_name'] = $msName;
+        $msInsert['s_type'] = 'DYN';
         $msInsert['uid'] = $this->runData['db']->generateUuidV4();
         $msInsert['s_default_route_id'] = 0;
         $newMsId = $this->runData['db']->insert('s_ms', $msInsert);
@@ -3009,7 +2778,7 @@ class Microservice{
                 }
                 $routeKey = $this->getRouteFileKey(
                     ['id' => $newId, 's_name' => $oldName],
-                    $msInsert['s_type'] ?? 'STA'
+                    'DYN'
                 );
                 $this->ensureRouteFiles($msName, $routeKey);
                 $this->inheritMsBindingsToRoute($newMsId, (int)$newId);
@@ -3065,10 +2834,6 @@ class Microservice{
             }
             $this->copyDir($msFolder, $targetDir);
 
-            // Rename route files to new IDs
-            foreach ($routeMapById as $oldId => $newId) {
-                $this->renameRouteFiles($targetDir, $oldId, $newId, $msData['s_type'] ?? 'STA');
-            }
         }
     }
 
@@ -3096,20 +2861,6 @@ class Microservice{
                 $this->ensureDir(dirname($target));
                 @copy($item->getPathname(), $target);
             }
-        }
-    }
-
-    private function renameRouteFiles(string $dir, int $oldId, int $newId, string $msType = 'STA'): void {
-        if (strtoupper($msType) === 'DYN') {
-            return;
-        }
-        $patterns = glob($dir . '/route.' . $oldId . '.*');
-        if (!$patterns) {
-            return;
-        }
-        foreach ($patterns as $file) {
-            $newName = str_replace('route.' . $oldId . '.', 'route.' . $newId . '.', basename($file));
-            @rename($file, dirname($file) . '/' . $newName);
         }
     }
 

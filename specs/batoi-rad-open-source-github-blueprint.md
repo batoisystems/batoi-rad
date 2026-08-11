@@ -48,6 +48,7 @@
 - [ ] **ARC-003** Centralize admin JSON responses, CSRF enforcement, privilege enforcement, file policy, and request decoding. Mutation CSRF and developer-tool privilege policy are centralized; shared JSON and CSRF-token boundaries now cover code assist and file manager, with broader legacy admin migration remaining.
 - [ ] **ARC-004** Replace array-shaped global `runData` dependencies with typed context/configuration objects at new boundaries.
 - [x] **ARC-005** Merge the duplicate CLI and RAD Admin upgrade implementations behind one migration service.
+- [x] **ARC-006** Standardize microservicelets on DYN-only named routing; remove static, ID, and UID runtime/admin support without a compatibility layer.
 - [x] **PERF-001** Remove persistent PDO connections, cache schema metadata per request, and record aggregate total/unique/duplicate query metrics for route profiling.
 - [x] **DX-001** Add a one-command contributor verification workflow with the supported local installation documented separately.
 - [ ] **DX-002** Move intentional sample applications and migrations into `examples/` so production installers contain no demo schema.

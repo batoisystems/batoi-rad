@@ -263,7 +263,7 @@ class Config{
             ],
             's_ms' => [
                 's_scope' => 'global/platform/workspace.',
-                's_type' => 'STA/DYN/UID/ID.',
+                's_type' => 'DYN (the only supported microservicelet type).',
                 'default_route_id' => 'Default landing route.',
             ],
             's_msroute' => [

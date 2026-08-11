@@ -35,7 +35,7 @@ foreach ($microservices as &$ms) {
         $saasCount++;
     }
 
-    $ms['type_slug'] = strtolower($ms['s_type'] ?: 'STA');
+    $ms['type_slug'] = 'dyn';
 
     $ms['has_bindings'] = $this->runData['permissionService']->hasBindings('ms', (int)$ms['id']);
     if ($ms['has_bindings']) {
@@ -177,16 +177,6 @@ if ($numberOfMesh > 0) {
                 </select>
             </div>
             <div class="col-md-2 col-lg-2">
-                <label class="form-label">Type</label>
-                <select class="form-select" id="ms-filter-type">
-                    <option value="">All</option>
-                    <option value="sta">Static</option>
-                    <option value="dyn">Dynamic</option>
-                    <option value="id">ID-Based</option>
-                    <option value="uid">UID-Based</option>
-                </select>
-            </div>
-            <div class="col-md-2 col-lg-2">
                 <label class="form-label">Scope</label>
                 <select class="form-select" id="ms-filter-scope">
                     <option value="">All</option>
@@ -255,7 +245,6 @@ if ($numberOfMesh > 0) {
                     ?>
                     <tr
                         data-status="<?php echo $ms['status_meta']['slug']; ?>"
-                        data-type="<?php echo htmlspecialchars($ms['type_slug']); ?>"
                         data-scope="<?php echo htmlspecialchars($ms['scope_slug']); ?>"
                         data-saas="<?php echo htmlspecialchars($ms['saas_slug']); ?>"
                         data-binding="<?php echo $ms['has_bindings'] ? 'bound' : 'legacy'; ?>"
@@ -271,15 +260,7 @@ if ($numberOfMesh > 0) {
                             </span>
                         </td>
                         <td>
-                            <?php
-                            $typeLabels = [
-                                'sta' => 'Static',
-                                'dyn' => 'Dynamic',
-                                'id' => 'ID-Based',
-                                'uid' => 'UID-Based'
-                            ];
-                            echo $typeLabels[$ms['type_slug']] ?? strtoupper($ms['type_slug']);
-                            ?>
+                            Dynamic (DYN)
                         </td>
                         <td>
                             <?php if ($ms['scope_slug'] === 'private'): ?>

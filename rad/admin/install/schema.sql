@@ -293,7 +293,7 @@ CREATE TABLE `s_ms` (
   `updatestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `s_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `s_description` text COLLATE utf8mb4_unicode_ci,
-  `s_type` enum('STA','DYN','ID','UID') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ID',
+  `s_type` enum('DYN') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DYN',
   `s_definition` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   `s_scope` enum('global','platform','workspace') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'platform',
   `s_default_route_id` bigint(20) DEFAULT NULL,

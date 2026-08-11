@@ -46,7 +46,6 @@ $formSubmissionUrl = $this->runData['route']['url'];
             <small id="entityScopeHelp" class="form-text text-muted">Entity scope can be for users, APIs or both.</small>
         </div>
         
-        <?php if ($this->runData['data']['ms']['s_type'] == 'DYN') { ?>
         <!-- Service Definition (assuming JSON input) -->
         <div class="form-group">
             <label for="s_service_definition">Service Definition (JSON Format)</label>
@@ -56,8 +55,6 @@ $formSubmissionUrl = $this->runData['route']['url'];
             </div>
             <small id="serviceDefinitionHelp" class="form-text text-muted">For Dynamic routes, define the service method only (example: {"method":"index"}). The URL uses /{ms_name}/{route_name}/... (workspace: /{workspace_slug_prefix}/{space_name}/{ms_name}/{route_name}/...).</small>
         </div>
-        <?php } ?>
-
     <?php } ?>
 
     <!-- Submit button with an icon -->
