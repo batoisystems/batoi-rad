@@ -4,6 +4,8 @@ All notable changes to Batoi RAD will be documented here.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-11
+
 - Added Composer PSR-4 autoloading for new `Batoi\\Rad\\` classes while
   retaining the legacy RAD autoloader.
 - Added aggregate total, unique, and duplicate query profiling without logging

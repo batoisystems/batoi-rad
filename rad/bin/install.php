@@ -76,7 +76,7 @@ try {
     try {
         $freshInstall = initializeDatabase($pdo, $radDir . '/admin/install/schema.sql', $radDir . '/admin/install/seed.community.sql');
         if ($freshInstall) {
-            baselineBundledMigrations($pdo, $radDir . '/upgrades');
+            baselineBundledMigrations($pdo, $radDir . '/upgrades', releaseVersion($projectRoot));
         }
         updateBaseUrl($pdo, $baseUrl);
         provisionAdministrator($pdo, $adminName, $adminUsername, $adminEmail, $adminPassword);
@@ -429,14 +429,23 @@ function resetFreshDatabase(PDO $pdo): void
     }
 }
 
-function baselineBundledMigrations(PDO $pdo, string $upgradeDir): void
+function releaseVersion(string $projectRoot): string
+{
+    $version = trim((string)@file_get_contents($projectRoot . '/VERSION'));
+    if (!preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/', $version)) {
+        throw new RuntimeException('The repository VERSION file is missing or invalid.');
+    }
+    return $version;
+}
+
+function baselineBundledMigrations(PDO $pdo, string $upgradeDir, string $releaseVersion): void
 {
     $files = glob(rtrim($upgradeDir, '/') . '/*.php') ?: [];
     sort($files);
     $statement = $pdo->prepare(
         "INSERT INTO s_migration
             (migration_id, checksum, release_version, status, started_at, finished_at, applied_by, error_message)
-         VALUES (?, ?, '1.0.0', 'applied', NOW(), NOW(), 'fresh-install', NULL)"
+         VALUES (?, ?, ?, 'applied', NOW(), NOW(), 'fresh-install', NULL)"
     );
     foreach ($files as $file) {
         $migrationId = pathinfo($file, PATHINFO_FILENAME);
@@ -444,7 +453,7 @@ function baselineBundledMigrations(PDO $pdo, string $upgradeDir): void
         if ($checksum === false) {
             throw new RuntimeException('Unable to checksum migration: ' . $file);
         }
-        $statement->execute([$migrationId, $checksum]);
+        $statement->execute([$migrationId, $checksum, $releaseVersion]);
     }
     echo 'Bundled database migrations baselined.' . PHP_EOL;
 }

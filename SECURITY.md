@@ -2,8 +2,8 @@
 
 ## Supported Versions
 
-Security fixes are provided for the latest stable Batoi RAD release. Before the
-1.0.0 release, fixes are made on the default development branch.
+Security fixes are provided for the latest stable Batoi RAD release. Fixes are
+developed on the default branch and published in a supported release.
 
 ## Reporting a Vulnerability
 

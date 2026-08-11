@@ -122,15 +122,18 @@ echo 'SHA-256 ' . $checksum . PHP_EOL;
 
 function releaseExcluded(string $path, string $outputName): bool
 {
-    if ($path === $outputName || $path === $outputName . '.sha256') {
+    if ($path === $outputName || $path === $outputName . '.sha256'
+        || preg_match('/^batoi-rad-.*\.zip(?:\.sha256)?$/', $path)) {
         return true;
     }
-    foreach (['.git/', '.github/', 'specs/'] as $prefix) {
+    foreach (['.git/', '.github/', 'specs/', 'test-results/'] as $prefix) {
         if (str_starts_with($path, $prefix)) {
             return true;
         }
     }
-    if (basename($path) === '.DS_Store' || in_array($path, ['.env', 'public_html/php_error.log'], true)) {
+    if (basename($path) === '.DS_Store' || in_array($path, [
+        '.env', '.gitignore', '.gitattributes', 'public_html/php_error.log',
+    ], true)) {
         return true;
     }
     if (str_starts_with($path, 'rad/config/') && $path !== 'rad/config/sys.inc.php.example') {
