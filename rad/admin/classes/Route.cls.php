@@ -551,10 +551,10 @@ class Route{
 
         $routeKey = $this->getRouteFileKey(
             ['id' => $routeId, 's_name' => $routeName],
-            $microservice['s_type'] ?? 'STA'
+            'DYN'
         );
         $this->ensureRouteFiles($microservice['s_name'], $routeKey);
-        $this->ensureRouteHelpFile($microservice['s_name'], $routeName, $routeKey, (string)($microservice['s_type'] ?? 'STA'));
+        $this->ensureRouteHelpFile($microservice['s_name'], $routeName, $routeKey, 'DYN');
         $this->inheritMsBindingsToRoute((int)$microservice['id'], (int)$routeId);
         $this->logRouteActivity('create', $routeId, (int)$microservice['id'], $routeName, $description);
 
@@ -621,7 +621,7 @@ class Route{
 
                     $this->logRouteActivity('update', (int)$routeDetails[0]['id'], (int)$msRow[0]['id'], $this->runData['request']->post['s_name'], $this->runData['request']->post['s_description']);
                     $msName = $msRow[0]['s_name'];
-                    $msType = $msRow[0]['s_type'] ?? 'STA';
+                    $msType = 'DYN';
                     $oldKey = $this->getRouteFileKey($routeDetails[0], $msType);
                     $newKey = $this->getRouteFileKey(
                         ['id' => $routeDetails[0]['id'], 's_name' => $this->runData['request']->post['s_name']],
@@ -861,7 +861,7 @@ class Route{
         $deleted = 0;
         $filesDeleted = 0;
         $deletedIds = [];
-        $msType = (string)($ms['s_type'] ?? 'STA');
+        $msType = 'DYN';
         $msName = (string)($ms['s_name'] ?? '');
         foreach ($rows as $row) {
             $routeId = (int)($row['id'] ?? 0);
@@ -972,7 +972,7 @@ class Route{
             exit;
         }
         $this->runData['data']['route']['ms_name'] = $msRow[0]['s_name'];
-        $this->runData['data']['route']['ms_type'] = $msRow[0]['s_type'] ?? 'STA';
+        $this->runData['data']['route']['ms_type'] = 'DYN';
         $routeKey = $this->getRouteFileKey($this->runData['data']['route'], $this->runData['data']['route']['ms_type']);
 
         $branch = $this->branchService->resolveEditorBranch();
@@ -1188,7 +1188,7 @@ class Route{
             throw new \Exception('Microservicelet not found.', 404);
         }
         $msName = $msRows[0]['s_name'];
-        $routeKey = $this->getRouteFileKey($route, $msRows[0]['s_type'] ?? 'STA');
+        $routeKey = $this->getRouteFileKey($route, 'DYN');
         $result = $this->branchService->createRouteBeta($msName, (int)$route['id'], $routeKey);
         $this->runData['request']->setAlert($result['message'], $result['status'] ? 'success' : 'danger');
         $redirect = $this->getRouteWorkspaceRedirect((string)($route['uid'] ?? ''), (string)($msRows[0]['uid'] ?? ''), 'beta');
@@ -1215,7 +1215,7 @@ class Route{
             throw new \Exception('Microservicelet not found.', 404);
         }
         $msName = $msRows[0]['s_name'];
-        $routeKey = $this->getRouteFileKey($route, $msRows[0]['s_type'] ?? 'STA');
+        $routeKey = $this->getRouteFileKey($route, 'DYN');
         $result = $this->branchService->mergeRouteBeta($msName, (int)$route['id'], $routeKey);
         $this->runData['request']->setAlert($result['message'], $result['status'] ? 'success' : 'danger');
         $redirect = $this->getRouteWorkspaceRedirect((string)($route['uid'] ?? ''), (string)($msRows[0]['uid'] ?? ''), 'live');
@@ -1242,7 +1242,7 @@ class Route{
             throw new \Exception('Microservicelet not found.', 404);
         }
         $msName = $msRows[0]['s_name'];
-        $routeKey = $this->getRouteFileKey($route, $msRows[0]['s_type'] ?? 'STA');
+        $routeKey = $this->getRouteFileKey($route, 'DYN');
         $result = $this->branchService->discardRouteBeta($msName, (int)$route['id'], $routeKey);
         $this->runData['request']->setAlert($result['message'], $result['status'] ? 'success' : 'danger');
         $redirect = $this->getRouteWorkspaceRedirect((string)($route['uid'] ?? ''), (string)($msRows[0]['uid'] ?? ''), 'live');
@@ -1269,7 +1269,7 @@ class Route{
             throw new \Exception('Microservicelet not found.', 404);
         }
         $ms = $msRows[0];
-        $routeKey = $this->getRouteFileKey($route, $ms['s_type'] ?? 'STA');
+        $routeKey = $this->getRouteFileKey($route, 'DYN');
         if (!$this->branchService->hasRouteBetaFiles($ms['s_name'], $routeKey)) {
             $this->runData['request']->setAlert('Create a beta branch before starting preview.', 'warning');
         } else {
@@ -1394,7 +1394,7 @@ class Route{
 
         $branch = $this->branchService->resolveEditorBranch();
         $path = $this->branchService->getRouteHelpFilePath($msName, (string)$route['s_name'], $branch, false);
-        if ($branch === 'beta' && !$this->branchService->hasRouteBetaFiles($msName, $this->getRouteFileKey($route, (string)($msRows[0]['s_type'] ?? 'STA'))) && !$this->branchService->hasRouteHelpBetaFile($msName, (string)$route['s_name'])) {
+        if ($branch === 'beta' && !$this->branchService->hasRouteBetaFiles($msName, $this->getRouteFileKey($route, 'DYN')) && !$this->branchService->hasRouteHelpBetaFile($msName, (string)$route['s_name'])) {
             echo json_encode(['message' => 'Create a beta branch before saving beta help.']);
             exit;
         }
@@ -1455,7 +1455,7 @@ class Route{
         }
         $ms = $msRows[0];
         $branch = $this->branchService->resolveEditorBranch();
-        $routeKey = $this->getRouteFileKey($route, (string)($ms['s_type'] ?? 'STA'));
+        $routeKey = $this->getRouteFileKey($route, 'DYN');
 
         $snippets = [];
         foreach (['load', 'prepart', 'pagepart', 'postpart'] as $part) {
@@ -1807,10 +1807,7 @@ class Route{
     }
 
     private function getRouteFileKey(array $routeRow, string $msType): string {
-        if (strtoupper($msType) === 'DYN') {
-            return (string)($routeRow['s_name'] ?? $routeRow['id'] ?? '');
-        }
-        return (string)($routeRow['id'] ?? '');
+        return (string)($routeRow['s_name'] ?? $routeRow['id'] ?? '');
     }
 
     private function resolveRouteFileKey(string $routeRef): string {
@@ -1823,7 +1820,7 @@ class Route{
         if (count($msRows) !== 1) {
             return $routeRef;
         }
-        return $this->getRouteFileKey($route, $msRows[0]['s_type'] ?? 'STA');
+        return $this->getRouteFileKey($route, 'DYN');
     }
 
     private function ensureRouteFiles(string $msName, string $routeKey): void {
@@ -1895,7 +1892,7 @@ class Route{
         }
         $ms = $msRows[0];
         $branch = $this->branchService->resolveEditorBranch();
-        $routeKey = $this->getRouteFileKey($route, (string)($ms['s_type'] ?? 'STA'));
+        $routeKey = $this->getRouteFileKey($route, 'DYN');
         $helpPath = $this->branchService->getRouteHelpFilePath((string)$ms['s_name'], (string)$route['s_name'], $branch, false);
         $helpReadPath = $this->branchService->getRouteHelpFilePath((string)$ms['s_name'], (string)$route['s_name'], $branch, true);
         $helpExists = is_file($helpPath);
@@ -2002,7 +1999,7 @@ class Route{
         return $deleted;
     }
 
-    private function buildRouteHelpStub(string $msName, string $routeName, string $routeKey, string $msType = 'STA'): string {
+    private function buildRouteHelpStub(string $msName, string $routeName, string $routeKey, string $msType = 'DYN'): string {
         $routeKey = trim($routeKey) !== '' ? $routeKey : $routeName;
         $scopeLine = '/' . $msName . '/' . $routeName . '/...';
         $lines = [
@@ -2079,7 +2076,7 @@ class Route{
         $prompt[] = '';
         $prompt[] = 'ROUTE METADATA';
         $prompt[] = 'Microservicelet: ' . (string)($ms['s_name'] ?? '');
-        $prompt[] = 'Microservicelet type: ' . (string)($ms['s_type'] ?? 'STA');
+        $prompt[] = 'Microservicelet type: DYN';
         $prompt[] = 'Route name: ' . (string)($route['s_name'] ?? '');
         $prompt[] = 'Route description: ' . (string)($route['s_description'] ?? '');
         $prompt[] = 'Entity scope: ' . (string)($route['s_entity_scope'] ?? 'U');

@@ -91,23 +91,14 @@ class GenericController {
         }
         // print '<pre>';print_r($msDetails);print count($msDetails);print '<br/>';die('here');
         if(count($msDetails) == 1) {
+            if (strtoupper((string)($msDetails[0]['s_type'] ?? '')) !== 'DYN') {
+                $this->errorHandler->handleException('Unsupported Microservicelet type. Only DYN is supported.');
+            }
             $this->runData['ms']['id'] = $msDetails[0]['id'];
             $this->runData['ms']['uid'] = $msDetails[0]['uid'];
             $this->runData['ms']['name'] = $msDetails[0]['s_name'];
-            $this->runData['ms']['type'] = $msDetails[0]['s_type'];
+            $this->runData['ms']['type'] = 'DYN';
             $this->runData['ms']['definition'] = ($msDetails[0]['s_definition'] == '') ? [] : json_decode($msDetails[0]['s_definition'], true);
-            if (isset($this->runData['ms']['definition']['route_path']) && $this->runData['ms']['definition']['route_path'] == 'auto') {
-                $this->runData['ms']['route_path'] = 'auto';
-                // Get the default routename from the s_msroute table
-                $defaultRouteDetails = $this->db->select('s_msroute', ['livestatus'=>'1','id' => $msDetails[0]['s_default_route_id'],'s_ms_id'=> $msDetails[0]['id'] ], true);
-                if(count($defaultRouteDetails) != 1) {
-                    $this->errorHandler->handleException('No default route found.');
-                }
-                $this->runData['ms']['default_route_name'] = $defaultRouteDetails[0]['s_name'];
-            }
-            else {
-                $this->runData['ms']['route_path'] = 'manual';
-            }
             $this->runData['ms']['scope'] = $msDetails[0]['s_scope'];
             $scope = strtolower($msDetails[0]['s_scope'] ?? '');
             $this->runData['ms']['access_scope'] = $scope === 'global' ? 'public' : 'private';
@@ -124,91 +115,32 @@ class GenericController {
         // get route details
         $routePartsAfterMs = array_slice($this->routeIndex, $msIndex + 1); // original segments after ms name
         $this->routeIndex = $routePartsAfterMs;
-        $routeSegmentsUsed = 0;
-        $serviceArgs = [];
         if (count($this->routeIndex) == 0) {
             // Get route details from default route id
             $routeDetails = $this->db->select('s_msroute', ['livestatus'=>'1','id' => $this->runData['ms']['default_route_id'],'s_ms_id'=> $this->runData['ms']['id'] ], true);
             if(count($routeDetails) != 1) {
                 $this->errorHandler->handleException('No default route found.');
             }
-            $routeSegmentsUsed = 0;
         }
         else {
-            if ($this->runData['ms']['type'] == 'STA') {
-                $routeSegmentsUsed = 0;
-                if (isset($this->runData['ms']['definition']['degree']) && $this->runData['ms']['definition']['degree'] > 0) {
-                    $degree = $this->runData['ms']['definition']['degree'];
+            $routeName = $this->routeIndex[0] ?? null;
+            if (!$routeName) {
+                $routeDetails = $this->db->select('s_msroute', [
+                    'livestatus' => '1',
+                    'id' => $this->runData['ms']['default_route_id'],
+                    's_ms_id' => $this->runData['ms']['id']
+                ], true);
+                if (count($routeDetails) != 1) {
+                    $this->errorHandler->handleException('No default route found.');
                 }
-                else {
-                    $degree = 1;
-                }
-                // form the $routeName from $this->routeIndex upto $degree parts
-                $this->routeIndex = array_slice($this->routeIndex, 0, $degree);
-                $routeSegmentsUsed = min(count($routePartsAfterMs), $degree);
-                $routeName = implode('/', $this->routeIndex);
-                // print '<pre>';print_r($routeName);print '</pre>';die('here');
-                // If $routeName == $this->runData['ms']['default_route_name'], then redirect to base_url/[ms_name]
-                if ( ( isset($this->runData['ms']['default_route_name']) ) && ($routeName == $this->runData['ms']['default_route_name']) ) {
-                    $redirectUrl = $this->runData['config']['sys']['base_url'].'/'.$this->runData['ms']['name'];
-                    header("Location: {$redirectUrl}");exit;
-                }
-                
-                if ($this->runData['ms']['route_path'] == 'auto') {
-                    $routeDetails[0]['id'] = 0;
-                    $routeDetails[0]['uid'] = '0';
-                    $routeDetails[0]['s_service_definition'] = '{}';
-                }
-                else {
-                    $routeDetails = $this->db->select('s_msroute', ['livestatus'=>'1','s_name' => $routeName,'s_ms_id'=> $this->runData['ms']['id'] ], true);
-                    if(count($routeDetails) != 1) {
-                        $this->errorHandler->handleException('No static route found.');
-                    }
-                }
-            }
-            else if ($this->runData['ms']['type'] == 'DYN') {
-                $routeName = $this->routeIndex[0] ?? null;
-                if (!$routeName) {
-                    $routeDetails = $this->db->select('s_msroute', [
-                        'livestatus' => '1',
-                        'id' => $this->runData['ms']['default_route_id'],
-                        's_ms_id' => $this->runData['ms']['id']
-                    ], true);
-                    if (count($routeDetails) != 1) {
-                        $this->errorHandler->handleException('No default route found.');
-                    }
-                    $routeName = $routeDetails[0]['s_name'] ?? '';
-                    $routeSegmentsUsed = 0;
-                    $serviceArgs = [];
-                } else {
-                    $routeSegmentsUsed = 1;
-                    $serviceArgs = array_slice($routePartsAfterMs, 1);
-                    $routeDetails = $this->db->select('s_msroute', ['livestatus'=>'1','s_name' => $routeName,'s_ms_id'=> $this->runData['ms']['id'] ], true);
-                    if(count($routeDetails) != 1) {
-                        $this->errorHandler->handleException('No Dynamic route found.');
-                    }
-                }
-            }
-            else if ($this->runData['ms']['type'] == 'UID') {
-                $routeSegmentsUsed = 1;
-                $routeUID = $this->routeIndex[0];
-                $routeDetails = $this->db->select('s_msroute', ['livestatus'=>'1','uid' => $routeUID,'s_ms_id'=> $this->runData['ms']['id'] ], true);
+                $routeName = $routeDetails[0]['s_name'] ?? '';
+            } else {
+                $routeDetails = $this->db->select('s_msroute', ['livestatus'=>'1','s_name' => $routeName,'s_ms_id'=> $this->runData['ms']['id'] ], true);
                 if(count($routeDetails) != 1) {
-                    $this->errorHandler->handleException('No UID route found.');
+                    $this->errorHandler->handleException('No Dynamic route found.');
                 }
             }
-            else if ($this->runData['ms']['type'] == 'ID') {
-                $routeSegmentsUsed = 1;
-                $routeID = $this->routeIndex[0];
-                $routeDetails = $this->db->select('s_msroute', ['livestatus'=>'1','id' => $routeID,'s_ms_id'=> $this->runData['ms']['id'] ], true);
-                if(count($routeDetails) != 1) {
-                    $this->errorHandler->handleException('No ID route found.');
-                }
         }
-        else {
-            $this->errorHandler->handleException('Invalid Microservicelet type.');
-        }
-    }
         $this->runData['route']['id'] = $routeDetails[0]['id'];
         // print '<pre>';print_r($this->runData['route']);print_r($this->runData['ms']);print '</pre>';die('here');
         $this->runData['route']['uid'] = $routeDetails[0]['uid'];
@@ -220,9 +152,7 @@ class GenericController {
         else {
             $this->runData['route']['path_full'] = $this->runData['ms']['name'];
         }
-        $this->runData['route']['file_key'] = ($this->runData['ms']['type'] === 'DYN')
-            ? ($routeDetails[0]['s_name'] ?? $this->runData['route']['id'])
-            : (string)$this->runData['route']['id'];
+        $this->runData['route']['file_key'] = $routeDetails[0]['s_name'] ?? $this->runData['route']['id'];
         // Check if private and does not have session
         $scope = $this->runData['ms']['scope'] ?? 'platform';
         $this->runData['ms']['access_scope'] = $scope === 'global' ? 'public' : 'private';
@@ -246,29 +176,13 @@ class GenericController {
         // Determine space slug position for SaaS microservicelets
         $spaceId = null;
         if ($isSaas) {
-            if ($this->runData['ms']['type'] == 'DYN') {
-                // Space slug already captured as 3rd segment.
-            } elseif ($this->runData['ms']['type'] == 'UID' || $this->runData['ms']['type'] == 'ID') {
-                $spaceSlug = $routePartsAfterMs[1] ?? null;
-            } else { // STA and others
-                if ($routeSegmentsUsed !== 1) {
-                    $this->renderSpaceError('Workspace static routes must use single-segment paths to reserve the third segment for space slug.');
-                }
-                $spaceSlug = $routePartsAfterMs[$routeSegmentsUsed] ?? null;
-            }
+            // The workspace slug is captured before the DYN microservicelet segment.
 
             if (empty($spaceSlug)) {
                 $this->renderSpaceError('Workspace identifier (space slug/uid) is required for SaaS routes.');
             }
 
-            // Resolve workspace by slug/uid (STA/DYN use slug; ID/UID use uid)
-            $spaceLookup = $this->db->select(
-                's_space',
-                ($this->runData['ms']['type'] === 'UID' || $this->runData['ms']['type'] === 'ID')
-                    ? ['uid' => $spaceSlug]
-                    : ['s_slug' => $spaceSlug],
-                true
-            );
+            $spaceLookup = $this->db->select('s_space', ['s_slug' => $spaceSlug], true);
             if (empty($spaceLookup)) {
                 $this->renderSpaceError('Workspace not found for the provided identifier.');
             }
@@ -316,45 +230,7 @@ class GenericController {
             $this->runData['route']['content_tpl'] = 'N';
         }
         // print '<pre>';print_r($route_definition);print '</pre>';die('here');
-        /* Complete MS stype specific definition processing */
-        if ($this->runData['ms']['type'] == 'STA') {
-            // print '<pre>';print_r($this->runData['route']);print '</pre>';die('here');
-            if ($this->runData['ms']['route_path'] == 'auto') {
-                if ($this->runData['route']['path'] == '') {
-                    // check if the ms definition has array index default_action
-                    if (isset($this->runData['ms']['definition']['default_action'])) {
-                        if ($this->runData['ms']['definition']['default_action'] == 'redirect') {
-                            // redirect to base_url/definition['default_action_redirect_path'] if it exists, else redirect to base_url
-                            if (isset($this->runData['ms']['definition']['default_action_redirect_path'])) {
-                                $redirectUrl = $this->runData['config']['sys']['base_url'].'/'.$this->runData['ms']['definition']['default_action_redirect_path'];
-                            }
-                            else {
-                                $redirectUrl = $this->runData['config']['sys']['base_url'];
-                            }
-                        }
-                        else if ($this->runData['ms']['definition']['default_action'] == 'content') {
-                            // get content details from s_content table
-                            $this->getContent($this->runData['ms']['definition']['default_action_content_id'],'id');
-                        }
-                        else {
-                            //
-                        }
-                    }
-                    //
-                }
-                else {
-                    $this->getContent($this->runData['route']['path'],'slug');
-                }
-            }
-            else {
-                if (isset($route_definition['content_id'])) {
-                    $this->getContent($route_definition['content_id'],'id');
-                }
-            }
-        }
-        if ($this->runData['ms']['type'] == 'DYN') {
-            // DYN routes are rendered from route.{name}.php only (no controller lookup).
-        }
+        // DYN routes are rendered from route.{name}.php only (no controller lookup).
         $this->enforceIpAccessRules($spaceLookup[0] ?? null);
         // print('<pre>');print_r($this->runData['route']);print('</pre>');die('here');
         if ($this->runData['route']['access_scope'] == 'private') {
@@ -478,94 +354,6 @@ class GenericController {
         exit;
     }
 
-    /**
-     * Get Content
-     */
-    public function getContent($contentID, $refPath) {
-        $branchService = new \Core\Sys\BranchService(
-            $this->db,
-            $this->runData['config'] ?? [],
-            $this->runData['entity'] ?? [],
-            $this->runData['request'] ?? null
-        );
-        $branch = $branchService->resolveRuntimeBranch([
-            'ms_name' => (string)($this->runData['ms']['name'] ?? ''),
-            'content_id' => (int)$contentID,
-        ]);
-        $cacheVariant = json_encode([
-            'ref' => $refPath,
-            'space_id' => $this->runData['route']['space_id'] ?? 0,
-            'slug' => $refPath === 'slug' ? (string)$contentID : null,
-            'branch' => $branch,
-        ], JSON_UNESCAPED_SLASHES);
-        if ($this->cacheService->isEnabled() && $refPath === 'id') {
-            $cacheHit = $this->cacheService->get($this->runData['ms']['name'], 'content', (string)$contentID, $cacheVariant);
-            if (!empty($cacheHit['hit']) && is_array($cacheHit['payload'])) {
-                $payload = $cacheHit['payload'];
-                $this->runData['route']['content_id'] = $payload['id'] ?? $contentID;
-                $this->runData['route']['content_title'] = $payload['s_title'] ?? '';
-                $this->runData['route']['content'] = $payload['s_content'] ?? '';
-                $this->runData['route']['meta_title'] = $payload['s_meta_title'] ?? '';
-                $this->runData['route']['meta_description'] = $payload['s_meta_description'] ?? '';
-                $this->registerCacheActivity('hit', 'content');
-                $this->registerCacheDebug('hit', $cacheVariant, $cacheHit, 'content', (string)$contentID);
-                return;
-            }
-            $this->registerCacheActivity('miss', 'content');
-            $this->registerCacheDebug('miss', $cacheVariant, $cacheHit, 'content', (string)$contentID);
-        }
-        if ($refPath == 'slug') {
-            $contentDetails = $this->db->select('s_content', ['livestatus'=>'1','s_slug' => $contentID ], false);
-        }
-        else if ($refPath == 'id') {
-            $contentDetails = $this->db->select('s_content', ['livestatus'=>'1','id' => $contentID ], false);
-        }
-        else {
-            $this->errorHandler->handleException('Invalid refPath for accessing Content.');
-        }
-        if(count($contentDetails) == 1) {
-            if ($branch === 'beta') {
-                $beta = $this->extractContentBranch($contentDetails[0]);
-                if (!empty($beta)) {
-                    $contentDetails[0] = $this->applyContentBranch($contentDetails[0], $beta);
-                }
-            }
-            $resolvedContentId = $contentDetails[0]['id'] ?? $contentID;
-            $this->runData['route']['content_id'] = $resolvedContentId;
-            $this->runData['route']['content_title'] = $contentDetails[0]['s_title'];
-            $this->runData['route']['content'] = $contentDetails[0]['s_content'];
-            $this->runData['route']['meta_title'] = $contentDetails[0]['s_meta_title'];
-            $this->runData['route']['meta_description'] = $contentDetails[0]['s_meta_description'];
-            if ($this->cacheService->isEnabled()) {
-                $cacheId = (string)$resolvedContentId;
-                $payload = [
-                    'id' => $resolvedContentId,
-                    's_title' => $contentDetails[0]['s_title'],
-                    's_content' => $contentDetails[0]['s_content'],
-                    's_meta_title' => $contentDetails[0]['s_meta_title'],
-                    's_meta_description' => $contentDetails[0]['s_meta_description'],
-                ];
-                $this->cacheService->set(
-                    $this->runData['ms']['name'],
-                    'content',
-                    $cacheId,
-                    $cacheVariant,
-                    $payload,
-                    $this->cacheService->defaultTtl('content'),
-                    [
-                        'space_id' => $this->runData['route']['space_id'] ?? 0,
-                        'ms_id' => $this->runData['ms']['id'] ?? null,
-                        'route_id' => $this->runData['route']['id'] ?? null,
-                    ]
-                );
-            }
-            // print '<pre>';print_r($this->runData['route']);print '</pre>';die('here');
-        }
-        // else {
-        //     $this->errorHandler->handleException('Content not found.');
-        // }
-    }
-
     private function enforcePermissionBindings(bool $routeBindings, bool $msBindings): void {
         if (!$this->runData['entity']['is_logged_in']) {
             $this->redirectToLogin();
@@ -598,28 +386,6 @@ class GenericController {
     private function isSuperAdmin(): bool {
         $entity = $this->runData['entity'] ?? [];
         return !empty($entity['id']) && (int)$entity['id'] === 1;
-    }
-
-    private function extractContentBranch(array $contentRow): array {
-        $infoRaw = $contentRow['s_additional_info'] ?? '';
-        if (!$infoRaw) {
-            return [];
-        }
-        $info = is_array($infoRaw) ? $infoRaw : json_decode((string)$infoRaw, true);
-        if (!is_array($info)) {
-            return [];
-        }
-        $beta = $info['branch_beta'] ?? [];
-        return is_array($beta) ? $beta : [];
-    }
-
-    private function applyContentBranch(array $contentRow, array $beta): array {
-        foreach ($beta as $key => $value) {
-            if (array_key_exists($key, $contentRow)) {
-                $contentRow[$key] = $value;
-            }
-        }
-        return $contentRow;
     }
 
     private function handleSpaceBinding(?string $slug): void {
@@ -724,10 +490,6 @@ class GenericController {
     }
 
     private function enforceIpAccessRules(?array $spaceRow = null): void {
-        if (strtoupper((string)($this->runData['ms']['type'] ?? '')) !== 'DYN') {
-            return;
-        }
-
         $entityId = (int)($this->runData['entity']['id'] ?? $this->session->get('entity_id') ?? 0);
         $clientIp = $this->ipAccessService->getClientIp();
         $msRule = $this->ipAccessService->extractRuleFromDefinition($this->runData['ms']['definition'] ?? []);

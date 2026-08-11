@@ -145,7 +145,7 @@ RAD applications are organized around microservice-style modules and route defin
 - A microservice definition identifies the application module being requested.
 - A route definition determines how the request is handled.
 - Route fragments can support pre-processing, page rendering, and post-processing.
-- Static pages, slug routes, UID-based lookups, and dynamic PHP route handlers are supported.
+- DYN microservicelets use named routes and dynamic PHP route handlers; legacy static, ID, and UID routing models are not supported.
 - API requests follow the same broad routing model while using API-specific request validation and response handling.
 
 The API gateway accepts structured requests and routes them to application or system-level handlers based on payload type and configured allowlists. Public API documentation should describe the contract without exposing private keys, private endpoint inventories, or environment-specific service details.

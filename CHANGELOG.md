@@ -11,6 +11,11 @@ All notable changes to Batoi RAD will be documented here.
 - Added `composer ci` as the one-command contributor verification workflow.
 - Added shared JSON request/response and CSRF-token boundary utilities, with the
   code-assist and file-manager APIs migrated off duplicated HTTP handling.
+- Breaking: DYN is now the only microservicelet type. Static, ID, and UID route
+  models, their RAD Admin controls, and their runtime branches were removed.
+  Upgrades refuse to narrow the schema while non-DYN records remain.
+- Updated `league/commonmark` to 2.9.2 to resolve the August 2026 parser and
+  unsafe-link security advisories.
 
 ## [1.0.0] - 2026-07-16
 

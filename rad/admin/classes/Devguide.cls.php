@@ -353,7 +353,7 @@ class Devguide {
                 'items' => [
                     ['key' => "route.space_id", 'code' => "\$this->runData['route']['space_id']", 'desc' => 'Workspace ID resolved from the URL segment.'],
                     ['key' => "route.space_uid", 'code' => "\$this->runData['route']['space_uid']", 'desc' => 'Workspace UID resolved from the URL segment.'],
-                    ['key' => "route.space_slug", 'code' => "\$this->runData['route']['space_slug']", 'desc' => 'Workspace slug resolved from the URL segment (STA/DYN).'],
+                    ['key' => "route.space_slug", 'code' => "\$this->runData['route']['space_slug']", 'desc' => 'Workspace slug resolved from the DYN URL prefix.'],
                     ['key' => "route.space_role_id", 'code' => "\$this->runData['route']['space_role_id']", 'desc' => 'Workspace role for the current space (resolved by membership).'],
                     ['key' => "route.ms_role_id", 'code' => "\$this->runData['route']['ms_role_id']", 'desc' => 'MS-scoped role for the current space+microservicelet (if any).'],
                     ['key' => "route.access_scope", 'code' => "\$this->runData['route']['access_scope']", 'desc' => 'public/private access scope derived from ms scope.'],

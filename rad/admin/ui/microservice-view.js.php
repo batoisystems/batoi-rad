@@ -8,7 +8,6 @@
     const rows = Array.from(table.querySelectorAll('tbody tr'));
     const searchInput = document.getElementById('ms-filter-search');
     const statusSelect = document.getElementById('ms-filter-status');
-    const typeSelect = document.getElementById('ms-filter-type');
     const scopeSelect = document.getElementById('ms-filter-scope');
     const saasSelect = document.getElementById('ms-filter-saas');
     const bindingSelect = document.getElementById('ms-filter-binding');
@@ -25,7 +24,6 @@
     function applyFilters(resetPage = true) {
         const query = (searchInput.value || '').toLowerCase();
         const status = statusSelect.value;
-        const type = typeSelect.value;
         const scope = scopeSelect.value;
         const saas = saasSelect.value;
         const binding = bindingSelect.value;
@@ -35,7 +33,6 @@
             const matches =
                 (!query || (row.dataset.search || '').includes(query)) &&
                 (!status || row.dataset.status === status) &&
-                (!type || row.dataset.type === type) &&
                 (!scope || row.dataset.scope === scope) &&
                 (!saas || row.dataset.saas === saas) &&
                 (!binding || row.dataset.binding === binding);
@@ -59,7 +56,6 @@
     function resetFilters() {
         searchInput.value = '';
         statusSelect.value = '';
-        typeSelect.value = '';
         scopeSelect.value = '';
         saasSelect.value = '';
         bindingSelect.value = '';
@@ -96,7 +92,7 @@
     }
 
     searchInput.addEventListener('input', () => applyFilters(true));
-    [statusSelect, typeSelect, scopeSelect, saasSelect, bindingSelect].forEach(select => {
+    [statusSelect, scopeSelect, saasSelect, bindingSelect].forEach(select => {
         select.addEventListener('change', () => applyFilters(true));
     });
     resetButton.addEventListener('click', resetFilters);

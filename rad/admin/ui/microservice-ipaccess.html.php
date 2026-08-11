@@ -4,7 +4,7 @@ $ipRule = $this->runData['data']['ip_access_rule'] ?? ['enabled' => false, 'raw'
 $posted = $this->runData['request']->post ?? [];
 $ipEnabled = isset($posted['ip_access_enabled']) ? !empty($posted['ip_access_enabled']) : !empty($ipRule['enabled']);
 $ipRaw = isset($posted['ip_access_ips']) ? (string)$posted['ip_access_ips'] : (string)($ipRule['raw'] ?? '');
-$ipEditable = strtoupper((string)($ms['s_type'] ?? '')) === 'DYN' && strtolower((string)($ms['s_scope'] ?? 'platform')) === 'platform';
+$ipEditable = strtolower((string)($ms['s_scope'] ?? 'platform')) === 'platform';
 $detailUrl = $this->runData['route']['rad_admin_url'] . '/microservice/detail/' . ($ms['uid'] ?? '');
 ?>
 
@@ -29,7 +29,7 @@ $detailUrl = $this->runData['route']['rad_admin_url'] . '/microservice/detail/' 
 
                 <?php if (!$ipEditable): ?>
                     <div class="alert alert-light border mb-0">
-                        This page is effective only for <strong>Platform + DYN</strong> microservicelets. Change the type and scope if this restriction should apply here.
+                        This page is effective only for platform-scoped microservicelets. Change the scope if this restriction should apply here.
                     </div>
                 <?php else: ?>
                     <form method="post" action="<?php echo htmlspecialchars($this->runData['route']['url'], ENT_QUOTES); ?>">

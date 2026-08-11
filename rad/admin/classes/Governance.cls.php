@@ -720,8 +720,7 @@ class Governance {
         $entries = [];
         foreach ($this->listMsDirectories($msDir) as $msName => $path) {
             $msMeta = $msByName[$msName] ?? ['id' => 0, 'uid' => '', 'name' => $msName];
-            $includeIdKeys = strtoupper((string)($msMeta['type'] ?? '')) !== 'DYN';
-            $routesInDb = $this->loadMsRoutesByMs((int)$msMeta['id'], $includeIdKeys);
+            $routesInDb = $this->loadMsRoutesByMs((int)$msMeta['id'], false);
             $routesList = $this->loadMsRoutesListByMs((int)$msMeta['id']);
             $controllersInDb = $this->loadMsControllersByMs((int)$msMeta['id']);
 
@@ -760,11 +759,9 @@ class Governance {
                 ];
             }
 
-            $msType = strtoupper((string)($msMeta['type'] ?? ''));
             foreach ($routesList as $routeMeta) {
                 $routeName = (string)($routeMeta['s_name'] ?? '');
-                $routeId = (string)($routeMeta['id'] ?? '');
-                $fileKey = ($msType === 'DYN' && $routeName !== '') ? $routeName : $routeId;
+                $fileKey = $routeName;
                 if ($fileKey === '' || $this->routeKeyHasFile($fileKey, $routeFiles)) {
                     continue;
                 }

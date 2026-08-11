@@ -90,7 +90,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
                     </tr>
                     <tr>
                         <th scope="row">SaaS routing</th>
-                        <td>Workspace scope routes require a space identifier: UID/ID use space UID as the 3rd segment; STA uses space slug as the 3rd segment; DYN uses space slug as the 1st segment (/{space_slug}/{ms_name}/{route_name}/...). Missing identifier renders a workspace-required error (superuser included).</td>
+                        <td>Workspace scope routes require the space slug before the DYN microservicelet (/{workspace_prefix}/{space_slug}/{ms_name}/{route_name}/...). Missing identifiers render a workspace-required error (superuser included).</td>
                     </tr>
                 </tbody>
             </table>
@@ -99,7 +99,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
         <h5 class="fw-semibold">Request-time enforcement</h5>
         <ul class="mb-4">
             <li><strong>GenericController</strong>: Uses <code>PermissionService::canAccess</code> against <code>s_permission_binding</code>; legacy CSV is ignored.</li>
-            <li><strong>Space binding (SaaS)</strong>: Requires space identifier (UID for UID/ID; slug for STA; slug as first segment for DYN). Membership roles resolve via <code>PermissionService</code>; superuser still needs the identifier but bypasses membership.</li>
+            <li><strong>Space binding (SaaS)</strong>: Requires the space slug before the DYN microservicelet segment. Membership roles resolve via <code>PermissionService</code>; superuser still needs the identifier but bypasses membership.</li>
             <li><strong>Nav</strong>: Access evaluated via bindings (nav object type) when present.</li>
         </ul>
 

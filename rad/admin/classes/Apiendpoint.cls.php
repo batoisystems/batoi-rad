@@ -632,15 +632,7 @@ class Apiendpoint {
     }
 
     private function buildRoutePath(array $ms, array $route): string {
-        switch ($ms['s_type']) {
-            case 'STA':
-            case 'DYN':
-                return $route['s_name'] ?? '';
-            case 'UID':
-                return $route['uid'] ?? '';
-            default:
-                return $route['s_name'] ?? (string) $route['id'];
-        }
+        return $route['s_name'] ?? '';
     }
 
     private function executeGatewayRequest(string $url, array $payload): array {

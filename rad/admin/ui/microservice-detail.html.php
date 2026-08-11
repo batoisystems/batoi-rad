@@ -68,13 +68,6 @@ $ipRule = $this->runData['data']['ip_access_rule'] ?? ['enabled' => false, 'ips'
                 <?php if ((int)($this->runData['entity']['id'] ?? 0) === 1) { ?>
                     <li><hr class="dropdown-divider"></li>
                     <li><h6 class="dropdown-header">Maintenance</h6></li>
-                    <?php if (strtoupper($ms['s_type'] ?? '') !== 'DYN') { ?>
-                        <li>
-                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#upgradeToDynModal">
-                                <i class="bi bi-arrow-up-circle me-2"></i> Upgrade to DYN
-                            </button>
-                        </li>
-                    <?php } ?>
                     <li>
                         <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#overwriteBindingsModal">
                             <i class="bi bi-shield-check me-2"></i> Overwrite Route Permission Bindings
@@ -100,45 +93,6 @@ $ipRule = $this->runData['data']['ip_access_rule'] ?? ['enabled' => false, 'ips'
         </div>
     </div>
 </div>
-
-<?php if ((int)($this->runData['entity']['id'] ?? 0) === 1 && strtoupper($ms['s_type'] ?? '') !== 'DYN') { ?>
-<div class="modal fade" id="upgradeToDynModal" tabindex="-1" aria-labelledby="upgradeToDynLabel" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <form method="post" action="<?php echo $this->runData['route']['rad_admin_url'] . '/microservice/upgradetodyn/' . $ms['uid']; ?>">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($this->runData['request']->csrf_token ?? '', ENT_QUOTES); ?>">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="upgradeToDynLabel">Upgrade Microservicelet to DYN</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-2">This will convert <strong><?php echo htmlspecialchars($ms['s_name']); ?></strong> to DYN and rename route files to <code>route.{route_name}.*</code>.</p>
-                    <div class="alert alert-light border mb-3">
-                        <div class="fw-semibold mb-1">Link rewrite rules (optional)</div>
-                        <div class="small text-muted">
-                            Global/Platform: <code>/{ms_name}/{route_id}/...</code> → <code>/{ms_name}/{route_name}/...</code><br>
-                            Workspace: <code>/{ms_name}/{route_id}/{spaceUid}/...</code> → <code>/{prefix}/{space_name}/{ms_name}/{route_name}/...</code>
-                        </div>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" value="1" id="rewriteRoutesDyn" name="rewrite_routes">
-                        <label class="form-check-label" for="rewriteRoutesDyn">Rewrite links inside route code (optional)</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" value="1" id="rewriteThemeDyn" name="rewrite_theme">
-                        <label class="form-check-label" for="rewriteThemeDyn">Rewrite links inside the linked theme file (optional)</label>
-                    </div>
-                    <div class="small text-muted">Tip: This operation does not change route names or database records.</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">Upgrade to DYN</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<?php } ?>
 
 <?php if ((int)($this->runData['entity']['id'] ?? 0) === 1) { ?>
 <div class="modal fade" id="overwriteBindingsModal" tabindex="-1" aria-labelledby="overwriteBindingsLabel" aria-hidden="true" data-bs-backdrop="false">
@@ -465,7 +419,7 @@ $ipRule = $this->runData['data']['ip_access_rule'] ?? ['enabled' => false, 'ips'
                     Expected route files: <code><?php echo htmlspecialchars($filesystemAudit['expected_route_pattern'] ?? ''); ?></code>
                 </div>
                 <div class="small text-muted mb-3">
-                    DYN uses <code>route.{route_name}.*.php</code>; all other types use <code>route.{route_id}.*.php</code>.
+                    Routes use <code>route.{route_name}.*.php</code>.
                 </div>
                 <?php if (!$filesystemAudit['directory_exists']) { ?>
                     <p class="mb-0 text-muted">The microservicelet folder does not exist yet.</p>
