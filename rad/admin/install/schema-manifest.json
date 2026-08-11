@@ -3,8 +3,8 @@
   "database": "mysql",
   "supported_versions": ["8.0", "8.4"],
   "files": {
-    "schema.sql": "3bff554083177643e6a8fa417f085d1c671fd35455eaa626d0881d003fbc49be",
+    "schema.sql": "1c34f52697428f991c6cccdfa2e06e2dc6ba9b3601f3b3592b54699792aa0c2e",
     "seed.community.sql": "4ffd36c0cb0c1c9901dba57ec5cfd5c8bc0303ad8ffb110a4a717cace1789ce3",
-    "sys_core.sql": "d3ade11d3242df6c0d1a2eda8e3c69a3ec434ab55a113c0e539257d0d414508c"
+    "sys_core.sql": "98839b066286b80ea915a89bfe2c4d45240a83489c9bc7cf1bcec40a8eae1b03"
   }
 }

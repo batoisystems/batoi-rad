@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 $radRoot = dirname(__DIR__);
 $repositoryRoot = dirname($radRoot);
-$contractPath = $radRoot . '/contracts/v1.json';
+$version = trim((string)file_get_contents($repositoryRoot . '/VERSION'));
+$major = (int)explode('.', $version)[0];
+$contractPath = $radRoot . '/contracts/v' . $major . '.json';
 $contract = json_decode((string) file_get_contents($contractPath), true, 512, JSON_THROW_ON_ERROR);
 
-if (($contract['major'] ?? null) !== 1 || ($contract['schema'] ?? null) !== 1) {
-    throw new RuntimeException('The v1 compatibility contract header is invalid.');
+if (($contract['major'] ?? null) !== $major || ($contract['schema'] ?? null) !== 1) {
+    throw new RuntimeException('The current compatibility contract header is invalid.');
 }
 
 $frontController = (string) file_get_contents($repositoryRoot . '/public_html/index.php');

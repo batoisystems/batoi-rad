@@ -91,15 +91,11 @@ foreach ($routes as $route) {
                         <div class="form-text">Summarize the purpose of this microservicelet for other admins.</div>
                     </div>
 
+                    <input type="hidden" name="s_type" value="DYN">
                     <div class="mb-3">
-                        <label for="s_type" class="form-label">Type</label>
-                        <select class="form-control" name="s_type" id="s_type">
-                            <option value="STA" <?php echo ($ms['s_type'] == 'STA') ? 'selected': ''; ?>>Static Route</option>
-                            <option value="DYN" <?php echo ($ms['s_type'] == 'DYN') ? 'selected': ''; ?>>Dynamic Route</option>
-                            <option value="ID" <?php echo ($ms['s_type'] == 'ID') ? 'selected': ''; ?>>ID-based Route</option>
-                            <option value="UID" <?php echo ($ms['s_type'] == 'UID') ? 'selected': ''; ?>>UID-based Route</option>
-                        </select>
-                        <div class="form-text">Choose the routing model used by this microservicelet.</div>
+                        <label class="form-label">Type</label>
+                        <div class="form-control-plaintext fw-semibold">Dynamic Route (DYN)</div>
+                        <div class="form-text">DYN is the only supported microservicelet routing model.</div>
                     </div>
 
                     <div class="mb-3">

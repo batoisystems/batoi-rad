@@ -31,7 +31,7 @@ $routeListUrl = $this->runData['route']['rad_admin_url'] . '/route/view/' . $ms[
                 <div class="d-flex flex-wrap gap-2">
                     <span class="badge bg-light text-dark"><?php echo htmlspecialchars($ms['s_name']); ?></span>
                     <span class="badge bg-light text-dark"><?php echo htmlspecialchars($route['s_entity_scope'] ?? 'U'); ?></span>
-                    <span class="badge bg-info-subtle text-info"><?php echo htmlspecialchars($ms['s_type'] ?? 'STA'); ?></span>
+                    <span class="badge bg-info-subtle text-info">DYN</span>
                 </div>
             </div>
             <div class="text-end">

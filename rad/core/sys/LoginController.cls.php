@@ -1994,49 +1994,28 @@ class LoginController {
             }
             $sMicroservice = $aRouteMicroserviceRows[0]['s_name'];
             $this->runData['route']['ms']['name'] = $sMicroservice;
-            $microserviceType = $aRouteMicroserviceRows[0]['s_type'];
+            if (strtoupper((string)($aRouteMicroserviceRows[0]['s_type'] ?? '')) !== 'DYN') {
+                $this->redirectToDefaultUrl();
+            }
             $msScope = strtolower($aRouteMicroserviceRows[0]['s_scope'] ?? '');
-            $spaceSegment = '';
+            $routeName = $aDefaultRouteRows[0]['s_name'] ?? '';
+            if ($routeName === '') {
+                $this->redirectToDefaultUrl();
+            }
             if ($msScope === 'workspace') {
                 if (!$space) {
                     return '';
                 }
-                $spaceSegment = ($microserviceType === 'UID' || $microserviceType === 'ID')
-                    ? ($space['uid'] ?? '')
-                    : ($space['s_slug'] ?? '');
-                if ($spaceSegment === '') {
+                $spaceSlug = (string)($space['s_slug'] ?? '');
+                if ($spaceSlug === '') {
                     return '';
                 }
-            }
-
-            if ($microserviceType == 'STA') {
-                $defaultRoutePath = $sMicroservice . '/' . $aDefaultRouteRows[0]['s_name'];
-                if ($spaceSegment !== '') {
-                    $defaultRoutePath .= '/' . $spaceSegment;
-                }
-            } elseif ($microserviceType == 'UID') {
-                $defaultRoutePath = $sMicroservice . '/' . $aDefaultRouteRows[0]['uid'];
-                if ($spaceSegment !== '') {
-                    $defaultRoutePath .= '/' . $spaceSegment;
-                }
-            } elseif ($microserviceType == 'ID') {
-                $defaultRoutePath = $sMicroservice . '/' . $aDefaultRouteRows[0]['id'];
-                if ($spaceSegment !== '') {
-                    $defaultRoutePath .= '/' . $spaceSegment;
-                }
-            } elseif ($microserviceType == 'DYN') {
-                $routeName = $aDefaultRouteRows[0]['s_name'] ?? '';
-                if ($routeName === '') {
-                    $this->redirectToDefaultUrl();
-                }
-                if ($spaceSegment !== '') {
-                    $defaultRoutePath = $sMicroservice . '/' . $routeName . '/' . $spaceSegment;
-                } else {
-                    $defaultRoutePath = $sMicroservice . '/' . $routeName;
-                }
+                $prefix = trim((string)($this->runData['config']['sys']['workspace_slug_prefix'] ?? ''), '/');
+                $segments = array_filter([$prefix, $spaceSlug, $sMicroservice, $routeName], static fn(string $value): bool => $value !== '');
+                $defaultRoutePath = implode('/', $segments);
             } else {
-                $this->redirectToDefaultUrl();
-            }
+                $defaultRoutePath = $sMicroservice . '/' . $routeName;
+                }
             // print 'Default Route Path: ' . $defaultRoutePath; die;
         }
         return $defaultRoutePath;

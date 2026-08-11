@@ -69,7 +69,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
             <div class="col-md-6">
                 <h6>Routes & Controllers (code)</h6>
                 <ul>
-                    <li>Live files stay in place (e.g., <code>rad/ms/{ms}/route.{id}.php</code>).</li>
+                    <li>Live files stay in place (e.g., <code>rad/ms/{ms}/route.{route_name}.php</code>).</li>
                     <li>Beta files live under <code>rad/ms/{ms}/_beta/</code>.</li>
                     <li>Version history is kept separately for live and beta.</li>
                 </ul>

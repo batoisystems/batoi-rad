@@ -47,8 +47,8 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
                         <td>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>platform</strong>: non-SaaS; no space UID required.<br>
-                                    <strong>workspace</strong>: SaaS; space UID segment is mandatory in routes (regardless of user, including superuser).
+                                    <strong>platform</strong>: non-SaaS; no workspace slug required.<br>
+                                    <strong>workspace</strong>: SaaS; the workspace slug segment is mandatory in routes (regardless of user, including superuser).
                                 </div>
                                 <div class="col-md-6">
                                     <strong>global</strong>: treated as public (maps to access_scope = public). All other scopes imply private + binding checks.
@@ -86,11 +86,11 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
                     </tr>
                     <tr>
                         <th scope="row">Superuser</th>
-                        <td><strong>entity_id = 1</strong>: bypasses permission checks but still requires a space UID on SaaS routes.</td>
+                        <td><strong>entity_id = 1</strong>: bypasses permission checks but still requires a workspace slug on SaaS routes.</td>
                     </tr>
                     <tr>
                         <th scope="row">SaaS routing</th>
-                        <td>Workspace scope routes require a space identifier: UID/ID use space UID as the 3rd segment; STA uses space slug as the 3rd segment; DYN uses space slug as the 1st segment (/{space_slug}/{ms_name}/{route_name}/...). Missing identifier renders a workspace-required error (superuser included).</td>
+                        <td>Workspace scope routes require the space slug before the DYN microservicelet (/{workspace_prefix}/{space_slug}/{ms_name}/{route_name}/...). Missing identifiers render a workspace-required error (superuser included).</td>
                     </tr>
                 </tbody>
             </table>
@@ -99,7 +99,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
         <h5 class="fw-semibold">Request-time enforcement</h5>
         <ul class="mb-4">
             <li><strong>GenericController</strong>: Uses <code>PermissionService::canAccess</code> against <code>s_permission_binding</code>; legacy CSV is ignored.</li>
-            <li><strong>Space binding (SaaS)</strong>: Requires space identifier (UID for UID/ID; slug for STA; slug as first segment for DYN). Membership roles resolve via <code>PermissionService</code>; superuser still needs the identifier but bypasses membership.</li>
+            <li><strong>Space binding (SaaS)</strong>: Requires the space slug before the DYN microservicelet segment. Membership roles resolve via <code>PermissionService</code>; superuser still needs the identifier but bypasses membership.</li>
             <li><strong>Nav</strong>: Access evaluated via bindings (nav object type) when present.</li>
         </ul>
 
@@ -115,7 +115,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
             <li>Create roles with correct <code>s_scope</code> (platform = non-SaaS; workspace = SaaS) and default route if needed.</li>
             <li>Assign users a primary non-SaaS role; for SaaS access, add memberships with SaaS roles (one per workspace).</li>
             <li>Add permission bindings on microservicelets (<code>ms</code>) and routes (<code>route</code>) with the desired roles and access level (use/admin). For navigation gating, add bindings on <code>nav</code> objects.</li>
-            <li>For SaaS routes, ensure URLs carry the space UID segment; missing UID renders a workspace-required error.</li>
+            <li>For SaaS routes, ensure URLs carry the workspace slug segment; a missing slug renders a workspace-required error.</li>
         </ol>
 
         <h5 class="fw-semibold">Troubleshooting tips</h5>
@@ -123,7 +123,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
             <li>If access is denied, inspect <code>s_permission_binding</code> (authoritative).</li>
             <li>Ensure memberships exist for the space and include the intended SaaS role; superuser is only <code>entity_id=1</code>.</li>
             <li>Verify <code>s_role.s_scope</code> is set; latest upgrade normalizes invalid values to platform.</li>
-            <li>For SaaS routes, confirm the space UID segment is present.</li>
+            <li>For SaaS routes, confirm the workspace slug segment is present.</li>
         </ul>
     </div>
 </div>
@@ -133,7 +133,7 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
         <h3 class="h6 mb-0">RBAC Matrix</h3>
     </div>
     <div class="card-body">
-        <p class="text-muted small">Scopes vs. objects. Superuser (entity_id=1) bypasses checks but still needs space UID on SaaS routes.</p>
+        <p class="text-muted small">Scopes vs. objects. Superuser (entity_id=1) bypasses checks but still needs a workspace slug on SaaS routes.</p>
         <div class="table-responsive">
             <table class="table table-sm table-bordered align-middle">
                 <thead class="table-light">
@@ -155,14 +155,14 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
                     </tr>
                     <tr>
                         <th class="text-nowrap">Workspace / App / Member Org (SaaS)</th>
-                        <td>SaaS ms requires space UID and bindings; roles must be SaaS-scoped.</td>
-                        <td>SaaS routes require space UID; bindings evaluated with workspace role.</td>
+                        <td>SaaS ms requires a workspace slug and bindings; roles must be SaaS-scoped.</td>
+                        <td>SaaS routes require a workspace slug; bindings are evaluated with the workspace role.</td>
                         <td>Nav bindings can include SaaS roles; space context may apply in app UX.</td>
                         <td>Workspace memberships hold SaaS roles (one per workspace).</td>
                     </tr>
                     <tr>
                         <th class="text-nowrap">Superuser (entity_id=1)</th>
-                        <td colspan="4">Bypasses permission checks but must include space UID on SaaS routes.</td>
+                        <td colspan="4">Bypasses permission checks but must include a workspace slug on SaaS routes.</td>
                     </tr>
                 </tbody>
             </table>

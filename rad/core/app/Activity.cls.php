@@ -5,7 +5,7 @@ namespace Core\App;
  * Activity log reader for applications.
  * Fetches recent activity (from s_activity if present) or returns empty when table missing.
  *
- * Usage in a route (rad/ms/{ms}/route.{id}.php):
+ * Usage in a route (rad/ms/{ms}/route.{route_name}.php):
  * $activity = new \Core\App\Activity($db);
      * $activity->logRoute([
  *     'route_id' => 12,          // or 'route_uid' => '...'

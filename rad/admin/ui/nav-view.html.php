@@ -297,7 +297,7 @@ $radUrl = $this->runData['route']['rad_admin_url'];
                             <input type="text" class="form-control" name="s_href" id="navitem-href" required maxlength="512">
                             <div class="form-text">Supports absolute URLs or RAD routes. For SaaS, include the slug segment at runtime.</div>
                             <div class="form-text small text-muted">
-                                Examples: Non-SaaS UID/ID: <code>/ms_name/route</code> • SaaS: <code>/ms_name/route/{spaceUid}</code>
+                                Examples: Platform DYN: <code>/ms_name/route_name</code> • Workspace DYN: <code>/{workspace_prefix}/{space_slug}/ms_name/route_name</code>
                             </div>
                         </div>
                         <div class="col-md-4">

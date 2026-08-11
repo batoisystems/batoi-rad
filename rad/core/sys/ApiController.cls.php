@@ -245,12 +245,15 @@ class ApiController {
         }
 
         $ms = $msRows[0];
+        if (strtoupper((string)($ms['s_type'] ?? '')) !== 'DYN') {
+            $this->respondError(422, 'Unsupported Microservicelet type. Only DYN is supported.');
+        }
         $this->runData['ms'] = [
             'id' => $ms['id'],
             'uid' => $ms['uid'],
             'parent_id' => 0,
             'name' => $ms['s_name'],
-            'type' => $ms['s_type'],
+            'type' => 'DYN',
             'version_number' => $ms['s_version_number'],
             'version_type' => $ms['version_type'],
             'scope' => $ms['s_scope'],
@@ -267,49 +270,7 @@ class ApiController {
     }
 
     private function resolveRoute(array $ms): array {
-        if (count($this->routeIndex) === 0) {
-            $routeRows = $this->db->select('s_msroute', [
-                'livestatus' => '1',
-                'id' => $ms['s_default_route_id'],
-                's_ms_id' => $ms['id']
-            ], true);
-            if (count($routeRows) !== 1) {
-                $this->respondError(404, 'Default route not found for the microservice.', ['ms' => $ms['s_name']]);
-            }
-            $this->runData['route']['path'] = '';
-            return $routeRows[0];
-        }
-
-        switch ($ms['s_type']) {
-            case 'STA':
-                return $this->resolveStaticRoute($ms);
-            case 'DYN':
-                return $this->resolveDynamicRoute($ms);
-            case 'UID':
-                return $this->resolveUidRoute($ms);
-            case 'ID':
-            default:
-                return $this->resolveIdRoute($ms);
-        }
-    }
-
-    private function resolveStaticRoute(array $ms): array {
-        $degree = $ms['s_definition'] !== '' ? json_decode($ms['s_definition'], true)['degree'] ?? 1 : 1;
-        $routeParts = array_slice($this->routeIndex, 0, $degree);
-        $routeName = implode('/', $routeParts);
-
-        $routeRows = $this->db->select('s_msroute', [
-            'livestatus' => '1',
-            's_name' => $routeName,
-            's_ms_id' => $ms['id']
-        ], true);
-
-        if (count($routeRows) !== 1) {
-            $this->respondError(404, 'Static route not found.', ['route' => $routeName]);
-        }
-
-        $this->runData['route']['path'] = $routeName;
-        return $routeRows[0];
+        return $this->resolveDynamicRoute($ms);
     }
 
     private function resolveDynamicRoute(array $ms): array {
@@ -327,6 +288,7 @@ class ApiController {
                 $this->respondError(404, 'Default route not found for the microservice.', ['ms' => $ms['s_name']]);
             }
             $routeName = $routeRows[0]['s_name'] ?? '';
+            $this->serviceName = $routeName;
             $this->runData['route']['path'] = $routeName;
             $this->runData['route']['dyn_default'] = 'Y';
             return $routeRows[0];
@@ -344,54 +306,6 @@ class ApiController {
         }
 
         $this->runData['route']['path'] = $routeName;
-        return $routeRows[0];
-    }
-
-    private function resolveUidRoute(array $ms): array {
-        $uid = $this->routeIndex[0];
-        $routeRows = $this->db->select('s_msroute', [
-            'livestatus' => '1',
-            'uid' => $uid,
-            's_ms_id' => $ms['id']
-        ], true);
-
-        if (count($routeRows) !== 1) {
-            $this->respondError(404, 'UID route not found.', ['uid' => $uid]);
-        }
-
-        $this->runData['route']['path'] = $uid;
-        return $routeRows[0];
-    }
-
-    private function resolveIdRoute(array $ms): array {
-        $identifier = $this->routeIndex[0] ?? '';
-        if ($identifier === '') {
-            $this->respondError(400, 'Route identifier cannot be empty.');
-        }
-
-        $routeRows = [];
-
-        if (ctype_digit($identifier)) {
-            $routeRows = $this->db->select('s_msroute', [
-                'livestatus' => '1',
-                'id' => $identifier,
-                's_ms_id' => $ms['id']
-            ], true);
-        }
-
-        if (count($routeRows) !== 1) {
-            $routeRows = $this->db->select('s_msroute', [
-                'livestatus' => '1',
-                's_name' => $identifier,
-                's_ms_id' => $ms['id']
-            ], true);
-        }
-
-        if (count($routeRows) !== 1) {
-            $this->respondError(404, 'Route not found.', ['identifier' => $identifier]);
-        }
-
-        $this->runData['route']['path'] = $identifier;
         return $routeRows[0];
     }
 
@@ -440,43 +354,10 @@ class ApiController {
             'params' => $this->payload['params'] ?? [],
         ];
 
-        switch ($this->runData['ms']['type']) {
-            case 'STA':
-                $response['content'] = $this->executeStaticRouteData($routeDefinition);
-                break;
-            case 'DYN':
-                $this->serviceMethod = $routeDefinition['method'] ?? 'index';
-                $response['result'] = $this->executeDynamicRouteData();
-                break;
-            default:
-                $response['route'] = [
-                    'id' => $routeDetails['id'],
-                    'uid' => $routeDetails['uid'],
-                ];
-                break;
-        }
+        $this->serviceMethod = $routeDefinition['method'] ?? 'index';
+        $response['result'] = $this->executeDynamicRouteData();
 
         return $response;
-    }
-
-    private function executeStaticRouteData(array $routeDefinition): array {
-        if (isset($routeDefinition['content_id'])) {
-            $content = $this->getContent($routeDefinition['content_id'], 'id');
-            if ($content) {
-                return $content;
-            }
-        }
-
-        if ($this->runData['route']['path'] !== '') {
-            $content = $this->getContent($this->runData['route']['path'], 'slug');
-            if ($content) {
-                return $content;
-            }
-        }
-
-        return [
-            'message' => 'No static content found for the requested route.',
-        ];
     }
 
     private function executeDynamicRouteData() {
@@ -517,43 +398,6 @@ class ApiController {
         return $result ?? ['message' => 'Service executed with no response payload.'];
     }
 
-    private function getContent($identifier, string $refPath): array {
-        $branchService = new BranchService(
-            $this->db,
-            $this->runData['config'] ?? [],
-            $this->runData['entity'] ?? [],
-            $this->runData['request'] ?? null
-        );
-        $branch = $branchService->resolveRuntimeBranch([
-            'ms_name' => (string)($this->runData['ms']['name'] ?? ''),
-            'content_id' => (int)$identifier,
-        ]);
-        if ($refPath === 'slug') {
-            $contentRows = $this->db->select('s_content', ['livestatus' => '1', 's_slug' => $identifier], false);
-        } else {
-            $contentRows = $this->db->select('s_content', ['livestatus' => '1', 'id' => $identifier], false);
-        }
-
-        if (count($contentRows) !== 1) {
-            return [];
-        }
-
-        $content = $contentRows[0];
-        if ($branch === 'beta') {
-            $beta = $this->extractContentBranch($content);
-            if (!empty($beta)) {
-                $content = $this->applyContentBranch($content, $beta);
-            }
-        }
-        return [
-            'id' => $content['id'],
-            'title' => $content['s_title'],
-            'meta_title' => $content['s_meta_title'],
-            'meta_description' => $content['s_meta_description'],
-            'content' => $content['s_content'],
-        ];
-    }
-
     private function parseRouteDefinition(array $routeDetails): array {
         if (!empty($routeDetails['s_service_definition'])) {
             $decoded = json_decode($routeDetails['s_service_definition'], true);
@@ -585,28 +429,6 @@ class ApiController {
         }
         echo json_encode($payload, JSON_UNESCAPED_UNICODE);
         exit();
-    }
-
-    private function extractContentBranch(array $contentRow): array {
-        $infoRaw = $contentRow['s_additional_info'] ?? '';
-        if (!$infoRaw) {
-            return [];
-        }
-        $info = is_array($infoRaw) ? $infoRaw : json_decode((string)$infoRaw, true);
-        if (!is_array($info)) {
-            return [];
-        }
-        $beta = $info['branch_beta'] ?? [];
-        return is_array($beta) ? $beta : [];
-    }
-
-    private function applyContentBranch(array $contentRow, array $beta): array {
-        foreach ($beta as $key => $value) {
-            if (array_key_exists($key, $contentRow)) {
-                $contentRow[$key] = $value;
-            }
-        }
-        return $contentRow;
     }
 
     private function respondError(int $statusCode, string $message, array $details = []): void {

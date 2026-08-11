@@ -211,7 +211,7 @@ class Content{
             'Content Blocks' => $radAdminUrl . '/content/view',
             'Add' => '',
         ];
-        $this->runData['data']['content_ms'] = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'STA'], true));
+        $this->runData['data']['content_ms'] = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'DYN'], true));
         // If post parameters are set by form submission, then add the content
         if (isset($this->runData['request']->post['s_title'])) {
             // print '<pre>';print_r($this->runData['request']->post);print '</pre>';die('here');
@@ -226,7 +226,7 @@ class Content{
             }
 
             // Validate s_group_id
-            $contentMS = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'STA'], true));
+            $contentMS = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'DYN'], true));
             if (empty($contentMS)) {
                 $this->runData['route']['alert'] = 'danger';
         $this->runData['route']['alert_message'] = 'Please create a Content Microservicelet before adding content.';
@@ -317,7 +317,7 @@ class Content{
         $this->runData['data']['branch'] = $branch;
         $this->runData['data']['branch_can_manage'] = $this->branchService->canUseBeta();
         $this->runData['data']['branch_can_merge'] = $this->branchService->canMerge();
-        $this->runData['data']['content_ms'] = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'STA'], true));
+        $this->runData['data']['content_ms'] = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'DYN'], true));
         // If post parameters are set by form submission, then update the content
         if (isset($this->runData['request']->post['s_title'])) {
             // print '<pre>';print_r($this->runData['request']->post);print '</pre>';die('here');
@@ -332,7 +332,7 @@ class Content{
             }
 
             // Validate s_ms_id
-            $contentMS = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'STA'], true));
+            $contentMS = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'DYN'], true));
             if (empty($contentMS)) {
                 $this->runData['route']['alert'] = 'danger';
         $this->runData['route']['alert_message'] = 'Please create a Content Microservicelet before adding content.';
@@ -482,7 +482,7 @@ class Content{
                 // print '<pre>';print_r($this->runData['data']['content']);print '</pre>';die('here');
                 $this->runData['route']['h1'] = 'Edit Content Block';
                 $this->runData['route']['meta_title'] = 'Edit Content Block';
-                $this->runData['data']['content_ms'] = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'STA'], true));
+                $this->runData['data']['content_ms'] = $this->filterRestrictedMs($this->runData['db']->select('s_ms', ['livestatus'=>'1','s_type'=>'DYN'], true));
                 // Select config parameters from s_config table
                 // $this->runData['data']['configParams'] = $this->runData['db']->select('s_config', [], true);
                 return $this->runData;
