@@ -428,10 +428,7 @@ class Microservice{
                             if ($routeId) {
                                 $routeIds[] = (int)$routeId;
                                 $created['routes']++;
-                                $routeKey = $this->getRouteFileKey(
-                                    ['id' => $routeId, 's_name' => $name],
-                                    'DYN'
-                                );
+                                $routeKey = $this->getRouteFileKey(['id' => $routeId, 's_name' => $name]);
                                 $this->ensureRouteFiles($ms['s_name'], $routeKey);
                                 $this->inheritMsBindingsToRoute($newMSId, (int)$routeId);
                             } else {
@@ -449,10 +446,7 @@ class Microservice{
                         if ($defaultRouteId) {
                             $routeIds[] = (int)$defaultRouteId;
                             $created['routes']++;
-                            $routeKey = $this->getRouteFileKey(
-                                ['id' => $defaultRouteId, 's_name' => 'default'],
-                                'DYN'
-                            );
+                            $routeKey = $this->getRouteFileKey(['id' => $defaultRouteId, 's_name' => 'default']);
                             $this->ensureRouteFiles($ms['s_name'], $routeKey);
                             $this->inheritMsBindingsToRoute($newMSId, (int)$defaultRouteId);
                         } else {
@@ -1251,12 +1245,11 @@ class Microservice{
 
     private function inspectMicroserviceFilesystem(array $ms): array {
         $msName = (string)($ms['s_name'] ?? '');
-        $msType = 'DYN';
         $msDir = rtrim((string)($this->runData['config']['dir']['ms'] ?? ''), '/') . '/' . $msName;
         $audit = [
             'directory' => $msDir,
             'directory_exists' => is_dir($msDir),
-            'expected_route_pattern' => strtoupper($msType) === 'DYN' ? 'route.{route_name}.*.php' : 'route.{route_id}.*.php',
+            'expected_route_pattern' => 'route.{route_name}.*.php',
             'registered_class_files' => [],
             'unregistered_class_files' => [],
             'cleanup_candidates' => [],
@@ -1265,7 +1258,7 @@ class Microservice{
         $routes = $this->runData['db']->select('s_msroute', ['s_ms_id' => (int)($ms['id'] ?? 0)], true);
         $expectedRouteFiles = [];
         foreach ($routes as $routeRow) {
-            $routeKey = $this->getRouteFileKey($routeRow, $msType);
+            $routeKey = $this->getRouteFileKey($routeRow);
             if ($routeKey === '') {
                 continue;
             }
@@ -2014,7 +2007,7 @@ class Microservice{
             if (empty($routeRow[0])) {
                 return ['status' => true, 'message' => 'Microservicelet folder recreated but default route could not be resolved for file generation.'];
             }
-            $routeKey = $this->getRouteFileKey($routeRow[0], 'DYN');
+            $routeKey = $this->getRouteFileKey($routeRow[0]);
             $routeLabel = $routeRow[0]['s_name'] ?? $routeKey;
             $fileTemplates = [
                 'route.%s.php' => "<?php\n// Auto-generated placeholder for %s route %s.\n",
@@ -2223,12 +2216,11 @@ class Microservice{
             $msName = $this->generateUniqueName($msName);
         }
 
-        $msType = 'DYN';
         $msScope = $this->sanitizeMsScope($ms['scope'] ?? '');
         $msId = $this->db->insert('s_ms', [
             's_name' => $msName,
             's_description' => $ms['description'] ?? '',
-            's_type' => $msType,
+            's_type' => 'DYN',
             's_scope' => $msScope,
             's_default_route_id' => 0,
             's_tpl_name' => $ms['template'] ?? 'default.tpl.php',
@@ -2268,7 +2260,7 @@ class Microservice{
             ]);
             if ($rid) {
                 $routeIds[] = $rid;
-                $routeKey = $this->getRouteFileKey(['id' => $rid, 's_name' => $path], $msType);
+                $routeKey = $this->getRouteFileKey(['id' => $rid, 's_name' => $path]);
                 $this->ensureRouteFiles($msName, $routeKey);
                 $this->inheritMsBindingsToRoute($msId, (int)$rid);
             }
@@ -2353,8 +2345,8 @@ class Microservice{
         return $this->truncate($path, 255);
     }
 
-    private function getRouteFileKey(array $routeRow, string $msType): string {
-        return (string)($routeRow['s_name'] ?? $routeRow['id'] ?? '');
+    private function getRouteFileKey(array $routeRow): string {
+        return (string)($routeRow['s_name'] ?? '');
     }
 
     private function ensureRouteFiles(string $msName, string $routeKey): void {
@@ -2738,6 +2730,22 @@ class Microservice{
             throw new \Exception('Unsupported package: only DYN microservicelets can be imported.');
         }
 
+        $routes = $data['routes'] ?? [];
+        if (!is_array($routes)) {
+            throw new \Exception('Invalid route list in package.');
+        }
+        $routeNames = [];
+        foreach ($routes as $index => $route) {
+            $routeName = trim((string)($route['s_name'] ?? ''));
+            if ($routeName === '') {
+                throw new \Exception('DYN route name missing in package at index ' . $index . '.');
+            }
+            if (isset($routeNames[$routeName])) {
+                throw new \Exception('Duplicate DYN route name in package: ' . $routeName . '.');
+            }
+            $routeNames[$routeName] = true;
+        }
+
         $strategy = $this->runData['request']->post['collision_strategy'] ?? 'abort';
         $msName = $msData['s_name'];
         $existing = $this->runData['db']->select('s_ms', ['s_name' => $msName], true);
@@ -2764,7 +2772,6 @@ class Microservice{
         // Insert routes and map IDs (also map by name)
         $routeMapById = [];
         $routeMapByName = [];
-        $routes = $data['routes'] ?? [];
         foreach ($routes as $route) {
             $oldId = (int)($route['id'] ?? 0);
             $oldName = $route['s_name'] ?? '';
@@ -2776,10 +2783,7 @@ class Microservice{
                 if ($oldName !== '') {
                     $routeMapByName[$oldName] = $newId;
                 }
-                $routeKey = $this->getRouteFileKey(
-                    ['id' => $newId, 's_name' => $oldName],
-                    'DYN'
-                );
+                $routeKey = $this->getRouteFileKey(['id' => $newId, 's_name' => $oldName]);
                 $this->ensureRouteFiles($msName, $routeKey);
                 $this->inheritMsBindingsToRoute($newMsId, (int)$newId);
             }

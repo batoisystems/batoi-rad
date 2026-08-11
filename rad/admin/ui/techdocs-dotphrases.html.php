@@ -21,8 +21,8 @@ $radAdminUrl = $this->runData['route']['rad_admin_url'] ?? '';
     <div class="card-body">
         <ul class="mb-0">
             <li>A dot phrase is a short trigger (e.g., <code>.addr</code>) that expands to predefined content.</li>
-            <li>Scope-aware: <code>platform</code> (non-SaaS) phrases are global; <code>workspace</code> phrases are tied to a workspace and still require space UID on SaaS routes.</li>
-            <li>Visibility: private (owner only) or public within the scope; superuser bypasses permissions but still needs space UID on SaaS routes.</li>
+            <li>Scope-aware: <code>platform</code> (non-SaaS) phrases are global; <code>workspace</code> phrases are tied to a workspace and still require a workspace slug on SaaS routes.</li>
+            <li>Visibility: private (owner only) or public within the scope; superuser bypasses permissions but still needs a workspace slug on SaaS routes.</li>
             <li>Use cases: canned responses, templated notes, address blocks, onboarding steps.</li>
         </ul>
     </div>
@@ -44,7 +44,7 @@ $row = $dp->resolve('.addr', $runData['entity']['id'] ?? null, null, 'platform')
 if ($row) {
     echo $row['s_content'];
 }</code></pre>
-        <pre class="bg-light p-3 small rounded"><code>// Example (SaaS scope with space UID resolved to id)
+        <pre class="bg-light p-3 small rounded"><code>// Example (SaaS scope with workspace slug resolved to id)
 $spaceId = 48; // look up by UID in s_space
 $row = $dp->resolve('.welcome', $runData['entity']['id'] ?? null, $spaceId, 'workspace');</code></pre>
     </div>

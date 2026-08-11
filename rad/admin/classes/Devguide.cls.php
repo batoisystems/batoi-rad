@@ -352,7 +352,7 @@ class Devguide {
                 'note' => 'Only for workspace-scoped microservicelets.',
                 'items' => [
                     ['key' => "route.space_id", 'code' => "\$this->runData['route']['space_id']", 'desc' => 'Workspace ID resolved from the URL segment.'],
-                    ['key' => "route.space_uid", 'code' => "\$this->runData['route']['space_uid']", 'desc' => 'Workspace UID resolved from the URL segment.'],
+                    ['key' => "route.space_uid", 'code' => "\$this->runData['route']['space_uid']", 'desc' => 'Workspace UID loaded after resolving the URL slug.'],
                     ['key' => "route.space_slug", 'code' => "\$this->runData['route']['space_slug']", 'desc' => 'Workspace slug resolved from the DYN URL prefix.'],
                     ['key' => "route.space_role_id", 'code' => "\$this->runData['route']['space_role_id']", 'desc' => 'Workspace role for the current space (resolved by membership).'],
                     ['key' => "route.ms_role_id", 'code' => "\$this->runData['route']['ms_role_id']", 'desc' => 'MS-scoped role for the current space+microservicelet (if any).'],
@@ -1397,7 +1397,7 @@ class Devguide {
                         ['id' => 'request', 'label' => 'Request Context', 'file' => 'rad/core/sys/Request.cls.php', 'detail' => 'Sanitizes input, request method, query/post data, and CSRF token.'],
                         ['id' => 'session', 'label' => 'Session Resolve', 'file' => 'rad/core/sys/SessionManager.cls.php', 'detail' => 'Loads session, enforces timeout, resolves entity if logged in.'],
                         ['id' => 'dispatch', 'label' => 'Dispatch', 'file' => 'rad/core/sys/GenericController.cls.php', 'detail' => 'Resolves microservice and route, validates scope and access.'],
-                        ['id' => 'routeexec', 'label' => 'Route Execution', 'file' => 'rad/ms/<ms>/route.<id>.(pre|page|post)part.php', 'detail' => 'Runs route pre/page/post parts with runData.'],
+                        ['id' => 'routeexec', 'label' => 'Route Execution', 'file' => 'rad/ms/<ms>/route.<route_name>.(pre|page|post)part.php', 'detail' => 'Runs route pre/page/post parts with runData.'],
                         ['id' => 'render', 'label' => 'Render', 'file' => 'rad/core/sys/View.cls.php', 'detail' => 'Renders theme template and injects route/page data.'],
                     ],
                     'edges' => [
