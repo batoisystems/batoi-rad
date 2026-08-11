@@ -14,3 +14,6 @@
 /.gitattributes export-ignore
 /.github export-ignore
 /specs export-ignore
+/test-results export-ignore
+/batoi-rad-*.zip export-ignore
+/batoi-rad-*.zip.sha256 export-ignore

@@ -10,7 +10,7 @@ $required = [
     'rad/bin/install.php', 'rad/bin/doctor.php', 'rad/composer.json', 'rad/composer.lock',
     'rad/config/sys.inc.php.example', 'rad/vendor/batoi/aif/autoload.php',
     'rad/vendor/batoi/distributions.json',
-    'rad/contracts/v1.json', 'rad/docs/accessibility.md', 'rad/docs/performance.md',
+    'rad/contracts/v1.json', 'rad/contracts/v2.json', 'rad/docs/accessibility.md', 'rad/docs/performance.md',
     'rad/admin/install/schema-manifest.json',
     'rad/tests/browser/package-lock.json',
 ];

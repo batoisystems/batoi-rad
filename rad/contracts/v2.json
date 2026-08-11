@@ -1,6 +1,6 @@
 {
     "schema": 1,
-    "major": 1,
+    "major": 2,
     "runtime": {
         "php": ["8.3", "8.4"],
         "database": ["MySQL 8.0", "MySQL 8.4"],
@@ -14,7 +14,7 @@
         "/fs-store": "FileStorageController",
         "/error-pages": "ErrorController"
     },
-    "microservicelet_types": ["STA", "DYN", "ID", "UID"],
+    "microservicelet_types": ["DYN"],
     "installer_options": [
         "db-host", "db-port", "db-socket", "db-ssl-ca", "db-name", "db-user",
         "db-password", "db-password-file", "base-url", "admin-name", "admin-username",

@@ -108,7 +108,7 @@ final class MigrationService
             [
                 ':id' => $definition['id'],
                 ':checksum' => $definition['checksum'],
-                ':release' => defined('BATOI_RAD_VERSION') ? BATOI_RAD_VERSION : '1.0.0-dev',
+                ':release' => $this->releaseVersion(),
                 ':actor' => $this->actor(),
                 ':checksum_update' => $definition['checksum'],
                 ':actor_update' => $this->actor(),
@@ -153,6 +153,18 @@ final class MigrationService
             ];
         }
         return $definitions;
+    }
+
+    private function releaseVersion(): string
+    {
+        if (defined('BATOI_RAD_VERSION')) {
+            return BATOI_RAD_VERSION;
+        }
+        $radRoot = rtrim((string)($this->config['dir']['rad'] ?? ''), '/');
+        $version = trim((string)@file_get_contents(dirname($radRoot) . '/VERSION'));
+        return preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/', $version)
+            ? $version
+            : '0.0.0-dev';
     }
 
     private function ensureLedger(): bool
