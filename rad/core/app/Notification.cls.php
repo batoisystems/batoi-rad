@@ -5,7 +5,7 @@ namespace Core\App;
  * Notification service for applications.
  * Supports fetching and creating simple notifications.
  *
- * Usage in a route (rad/ms/{ms}/route.{id}.php):
+ * Usage in a route (rad/ms/{ms}/route.{route_name}.php):
  * $notif = new \Core\App\Notification($db);
  * $notif->logRoute([
  *     'route_id' => 12,            // or 'route_uid' => '...'

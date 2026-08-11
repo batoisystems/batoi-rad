@@ -76,17 +76,6 @@ class GenericController {
             }
         }
         if (empty($msDetails)) {
-            if ($workspacePrefix && ($pathparts[0] ?? '') !== $workspacePrefix && isset($pathparts[1])) {
-                $legacyWorkspaceDyn = $this->db->select('s_ms', [
-                    'livestatus' => '1',
-                    's_name' => $pathparts[1],
-                    's_scope' => 'workspace',
-                    's_type' => 'DYN',
-                ], true);
-                if (count($legacyWorkspaceDyn) === 1) {
-                    $this->errorHandler->handleException('Workspace routes must include the prefix: /' . $workspacePrefix . '/{space_name}/{ms_name}/...');
-                }
-            }
             $msDetails = $directMsDetails;
         }
         // print '<pre>';print_r($msDetails);print count($msDetails);print '<br/>';die('here');
@@ -179,7 +168,7 @@ class GenericController {
             // The workspace slug is captured before the DYN microservicelet segment.
 
             if (empty($spaceSlug)) {
-                $this->renderSpaceError('Workspace identifier (space slug/uid) is required for SaaS routes.');
+                $this->renderSpaceError('Workspace space slug is required for SaaS routes.');
             }
 
             $spaceLookup = $this->db->select('s_space', ['s_slug' => $spaceSlug], true);
@@ -392,9 +381,9 @@ class GenericController {
         $spaceId = (int)($this->runData['route']['space_id'] ?? 0);
         if ($spaceId <= 0) {
             if ($slug === null || $slug === '') {
-                $this->renderSpaceError('Workspace identifier (space UID/slug) is required for SaaS routes.');
+                $this->renderSpaceError('Workspace space slug is required for SaaS routes.');
             }
-            $spaceDetails = $this->db->select('s_space', ['livestatus' => '1', 'uid' => $slug], true);
+            $spaceDetails = $this->db->select('s_space', ['livestatus' => '1', 's_slug' => $slug], true);
             if (count($spaceDetails) !== 1) {
                 $this->errorHandler->handleException('Space not found.');
             }
@@ -412,7 +401,7 @@ class GenericController {
         $this->runData['route']['space_slug'] = $spaceDetails[0]['s_slug'] ?? ($this->runData['route']['space_slug'] ?? null);
 
         if ($this->isSuperAdmin()) {
-            // Superuser still needs a space UID, but bypasses membership checks.
+            // Superuser still needs a workspace slug, but bypasses membership checks.
             $this->runData['route']['space_binding'] = 'override';
             $roleSet = $this->permissionService->resolveRoleSet(
                 (int)($this->runData['entity']['id'] ?? 0),

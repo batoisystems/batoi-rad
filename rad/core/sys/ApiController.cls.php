@@ -270,19 +270,6 @@ class ApiController {
     }
 
     private function resolveRoute(array $ms): array {
-        if (count($this->routeIndex) === 0) {
-            $routeRows = $this->db->select('s_msroute', [
-                'livestatus' => '1',
-                'id' => $ms['s_default_route_id'],
-                's_ms_id' => $ms['id']
-            ], true);
-            if (count($routeRows) !== 1) {
-                $this->respondError(404, 'Default route not found for the microservice.', ['ms' => $ms['s_name']]);
-            }
-            $this->runData['route']['path'] = '';
-            return $routeRows[0];
-        }
-
         return $this->resolveDynamicRoute($ms);
     }
 
@@ -301,6 +288,7 @@ class ApiController {
                 $this->respondError(404, 'Default route not found for the microservice.', ['ms' => $ms['s_name']]);
             }
             $routeName = $routeRows[0]['s_name'] ?? '';
+            $this->serviceName = $routeName;
             $this->runData['route']['path'] = $routeName;
             $this->runData['route']['dyn_default'] = 'Y';
             return $routeRows[0];
