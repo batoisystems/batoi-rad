@@ -16,6 +16,17 @@ $allowedRuntimePlaceholders = [
     'rad/log/.gitkeep',
     'rad/ms/.gitkeep',
 ];
+$forbiddenPathPatterns = [
+    '#(^|/)\.env(?:\.|$)#i',
+    '#(^|/)(?:id_(?:rsa|dsa|ecdsa|ed25519)|credentials?|secrets?)(?:\.[^/]*)?$#i',
+    '#\.(?:p12|pfx|pem)$#i',
+];
+$secretPatterns = [
+    'private key' => '#-----BEGIN (?:[A-Z0-9]+ )?PRIVATE KEY-----#',
+    'Mailgun private API key' => '#\bkey-[a-f0-9]{32}\b#i',
+    'Mailgun public validation key' => '#\bpubkey-[a-f0-9]{32}\b#i',
+    'Mailgun webhook signing key' => '#\b[a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8}\b#i',
+];
 
 $tracked = [];
 exec('git -C ' . escapeshellarg($repositoryRoot) . ' ls-files', $tracked, $status);
@@ -32,6 +43,11 @@ foreach ($tracked as $path) {
             throw new RuntimeException('Forbidden path is tracked for publication: ' . $path);
         }
     }
+    foreach ($forbiddenPathPatterns as $pattern) {
+        if (preg_match($pattern, $path)) {
+            throw new RuntimeException('Credential-bearing path is tracked for publication: ' . $path);
+        }
+    }
 
     $absolute = $repositoryRoot . '/' . $path;
     if (!is_file($absolute) || filesize($absolute) > 2 * 1024 * 1024) {
@@ -43,6 +59,17 @@ foreach ($tracked as $path) {
     }
     if (preg_match('#/(?:Users|home)/[A-Za-z0-9._-]+/#', $contents, $matches)) {
         throw new RuntimeException('Local home-directory path is tracked in ' . $path . ': ' . $matches[0]);
+    }
+    foreach ($secretPatterns as $label => $pattern) {
+        if (preg_match($pattern, $contents)) {
+            throw new RuntimeException($label . ' material is tracked in ' . $path . '.');
+        }
+    }
+    if (str_ends_with($path, '.sql') && preg_match(
+        "#'(?:[^']*(?:api_key|smtp_password|account_password|client_secret)[^']*)'\\s*,\\s*'([^']{12,})'#i",
+        $contents
+    )) {
+        throw new RuntimeException('Populated credential configuration is tracked in ' . $path . '.');
     }
 }
 
