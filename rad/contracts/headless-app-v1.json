@@ -1,0 +1,27 @@
+{
+    "schema_version": 1,
+    "profile": "headless-app",
+    "asset": "batoi-rad-headless-app.zip",
+    "repository": "https://github.com/batoisystems/batoi-rad",
+    "compatibility_contract": "batoi-build-rad-foundation/v1",
+    "signing": {
+        "algorithm": "ed25519",
+        "key_id": "batoi-rad-4b3542b75435ea4f",
+        "public_key": "qz4yji9bH2wuibzlYhqQV6biJNrh7AnviQerzYQa1kc=",
+        "message": "Exact headless-app.manifest.json bytes, including trailing newline",
+        "signature_encoding": "base64"
+    },
+    "limits": {"archive_bytes": 33554432, "manifest_bytes": 8388608, "file_bytes": 16777216, "payload_bytes": 268435456, "files": 25000},
+    "required_files": [
+        "VERSION", "SBOM.cdx.json", "public_html/index.php", "rad/autoload.php",
+        "rad/bin/install.php", "rad/bin/doctor.php", "rad/bin/upgrade.php",
+        "rad/config/sys.inc.php.example", "rad/composer.json", "rad/composer.lock",
+        "rad/vendor/autoload.php", "rad/vendor/composer/installed.json",
+        "rad/vendor/batoi/distributions.json", "rad/vendor/batoi/aif/autoload.php",
+        "rad/core/sys/AutoLoader.cls.php", "rad/theme/app.tpl.php",
+        "public_html/assets/uif/uif.esm.js", "public_html/assets/css/rad-theme.css",
+        "public_html/assets/img/welcome.svg", "rad/install/schema.sql",
+        "rad/install/seed.community.sql", "rad/install/sys_core.sql"
+    ],
+    "database_baselines": {"schema_sha256": "rad/install/schema.sql", "seed_sha256": "rad/install/seed.community.sql", "sys_core_sha256": "rad/install/sys_core.sql"}
+}

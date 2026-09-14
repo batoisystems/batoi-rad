@@ -36,12 +36,15 @@ Application microservicelets, RAD Admin, local configuration, credentials,
 platform data, caches, logs, and Git/development metadata are excluded.
 The installer creates mutable directories and credentials only at installation.
 
-### Build consumer contract
+### Headless distribution contract
 
-The authority is `batoi-www/rad/ms/build/BuildRadFoundationService.cls.php`,
-with acquisition and bootstrap in the adjacent `BuildRadFoundationAcquisitionService`
-and `BuildRadAppBootstrapService` classes. The tests load those actual classes;
-they do not reproduce a permissive substitute validator.
+RAD owns the distribution contract in `rad/contracts/headless-app-v1.json` and
+its standalone verifier, `rad/bin/verify-headless-release.php`. These codify the
+existing wire format verified against Build; they do not change its archive,
+manifest, signature, or trust format. RAD builds and releases without a platform
+checkout or platform credentials. Build owns acquisition, trusted-key
+configuration, and application bootstrap. The optional `HeadlessConsumerTest.php`
+loads Build's actual classes for cross-repository compatibility testing.
 
 ZIP layout:
 
@@ -125,39 +128,55 @@ signature and therefore cannot be finalized before production signing.
 
 ### Validation and publication gates
 
-`HeadlessConsumerTest.php` exercises actual catalog registration (with only
-catalog persistence replaced by an in-memory double), manifest revalidation,
-installation file loading, required/forbidden inventory, App overlays, real
-registration-manifest validation, and ten tamper scenarios. `HeadlessRuntimeTest.php`
-installs the extracted package, reruns installation and upgrades, checks doctor,
-applies the real Build registration runner twice to an isolated App database,
-and requests home and the generated health route. Only the disposable fixture's
-module scope becomes public to exercise rendering without workspace login.
-The template supports both existing stems and Build's `.tpl.php` filenames;
-server-rendered App content is preserved by the default JavaScript.
+`HeadlessPackageTest.php` validates the package without another repository:
+source identity, Ed25519 signature, exact inventory, runtime dependencies,
+locked production packages, database baselines, AIF provenance, forbidden
+content, and 21 adversarial cases (including invalid payloads re-signed with an
+ephemeral test key). `HeadlessRuntimeTest.php` installs the extracted runtime,
+reruns installation and upgrades, checks doctor, creates a RAD-owned public DYN
+route fixture, and requests home and health through the real entrypoint.
 
 ```sh
-php rad/tests/HeadlessConsumerTest.php --consumer=/path/to/batoi-www \
+php rad/bin/verify-headless-release.php \
   --archive=/tmp/rad-release/batoi-rad-headless-app.zip \
+  --tag=v2.0.1 --commit=FULL_RESOLVED_TAG_COMMIT \
   --extract=/tmp/new-headless-app
 RAD_TEST_DB_NAME=rad_headless_ci RAD_TEST_DB_PASSWORD=... \
-  php rad/tests/HeadlessRuntimeTest.php --consumer=/path/to/batoi-www \
-  --app=/tmp/new-headless-app
+  php rad/tests/HeadlessRuntimeTest.php --app=/tmp/new-headless-app
 ```
 
 Create an empty, isolated `rad_headless_*` MySQL database first. Optional test
 variables: `RAD_TEST_DB_HOST`, `RAD_TEST_DB_SOCKET`, `RAD_TEST_DB_USER`.
 Never point these tests at Build's database or a customer database.
+`--test-public-key-file` on the verifier accepts an explicit ephemeral test key
+only for packages marked `test_only` with key ID `test-only`. Production mode
+always verifies the existing pinned release key.
 
-CI runs the actual consumer contract and install/HTTP checks on PHP 8.3/8.4 and
-MySQL 8.0/8.4. Canonical pushes require `BUILD_CONSUMER_READ_TOKEN`, scoped to
-read the private consumer checkout. Fork PRs cannot access that token.
-The reviewed consumer pin is `b8403df08d6df811002a7d8c9bd6790bc32b057d`.
-At preparation time GitHub could not resolve this local consumer commit (HTTP
-422); a maintainer must make the reviewed revision accessible or deliberately
-update the pin to an accessible equivalent and rerun the contract tests. Do not
-silently fall back to an arbitrary branch. The local files tested match that
-consumer commit. No consumer files were modified.
+CI runs standalone package and install/HTTP checks on PHP 8.3/8.4 and MySQL
+8.0/8.4, including pull requests. No `batoi-www` checkout, private-consumer token,
+or platform connection is required. Stable publication reruns these checks and
+verifies both the production-signed package and its downloaded release copy.
+
+Optional consumer integration remains available where a Build checkout already
+exists. This checks actual catalog registration (only catalog persistence is
+replaced), manifest revalidation, installation file loading, generated overlays,
+and ten consumer tamper cases. Passing `--consumer` to the runtime test also
+executes Build's registration service against the isolated App database.
+
+```sh
+php rad/tests/HeadlessConsumerTest.php --consumer=/path/to/batoi-www \
+  --archive=/tmp/rad-release/batoi-rad-headless-app.zip \
+  --extract=/tmp/new-build-integration-app
+RAD_TEST_DB_NAME=rad_headless_ci RAD_TEST_DB_PASSWORD=... \
+  php rad/tests/HeadlessRuntimeTest.php --consumer=/path/to/batoi-www \
+  --app=/tmp/new-build-integration-app
+```
+
+Initial integration validation used consumer commit
+`b8403df08d6df811002a7d8c9bd6790bc32b057d`. Its temporary GitHub availability
+issue was resolved; neither that commit nor a private token is a RAD release
+gate. Consumer code remains unmodified. Build should run its own integration
+checks when adopting new RAD releases.
 
 The stable release workflow requires a signed annotated tag, the existing
 maintainer tag verification key in `RAD_RELEASE_TAG_PUBLIC_KEY` (an environment
@@ -166,8 +185,8 @@ Actions secret). Configure required reviewers on the `rad-release` environment.
 There were no repository Actions secrets or release environments at preparation
 time; provisioning them and approving publication remain maintainer actions.
 The workflow reruns release checks, builds both distributions, checks headless
-reproducibility and actual production trust, creates a new draft, downloads and
-compares every asset, revalidates the downloaded ZIP, then publishes it as
+reproducibility and production trust, creates a new draft, downloads and
+compares every asset, revalidates the downloaded ZIP independently, then publishes it as
 latest stable. Existing releases/assets are never replaced; failed drafts are
 retained for inspection. This task does not authorize tag rewrites.
 

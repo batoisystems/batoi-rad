@@ -6,6 +6,9 @@ All notable changes to Batoi RAD will be documented here.
 
 ## [2.0.1] - Pending release
 
+- Made headless CI and release validation standalone; private Build integration
+  is optional and requires no platform token in RAD releases.
+
 - Updated locked `league/commonmark` to 2.10.1 for GHSA-8rr7-cvq3-gmfh.
 - Added the canonical, independently installable headless RAD distribution for
   Batoi Build, with locked runtime dependencies, database baselines, Ed25519

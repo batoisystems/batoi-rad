@@ -11,8 +11,6 @@ permissions:
 jobs:
   checks:
     uses: ./.github/workflows/ci.yml
-    secrets:
-      BUILD_CONSUMER_READ_TOKEN: ${{ secrets.BUILD_CONSUMER_READ_TOKEN }}
 
   publish:
     needs: checks
@@ -26,13 +24,6 @@ jobs:
         with:
           fetch-depth: 0
           path: source
-          persist-credentials: false
-      - uses: actions/checkout@v4
-        with:
-          repository: batoisystems/batoi-www
-          ref: b8403df08d6df811002a7d8c9bd6790bc32b057d
-          token: ${{ secrets.BUILD_CONSUMER_READ_TOKEN }}
-          path: consumer
           persist-credentials: false
       - uses: shivammathur/setup-php@v2
         with:
@@ -80,7 +71,7 @@ jobs:
           php rad/bin/build-release.php --profile=headless-app --signing-key-file="$keyfile" --output="$RUNNER_TEMP/release/batoi-rad-headless-app.zip"
           php rad/bin/build-release.php --profile=headless-app --signing-key-file="$keyfile" --output="$RUNNER_TEMP/repeat/batoi-rad-headless-app.zip"
           cmp "$RUNNER_TEMP/release/batoi-rad-headless-app.zip" "$RUNNER_TEMP/repeat/batoi-rad-headless-app.zip"
-          php rad/tests/HeadlessConsumerTest.php --consumer=../consumer --archive="$RUNNER_TEMP/release/batoi-rad-headless-app.zip"
+          php rad/bin/verify-headless-release.php --tag="$GITHUB_REF_NAME" --commit="$(git rev-parse HEAD)" --archive="$RUNNER_TEMP/release/batoi-rad-headless-app.zip"
       - name: Publish new stable release and verify downloaded bytes
         working-directory: source
         env:
@@ -94,6 +85,6 @@ jobs:
           mkdir "$RUNNER_TEMP/downloaded"
           gh release download "$GITHUB_REF_NAME" --dir "$RUNNER_TEMP/downloaded"
           for asset in "$RUNNER_TEMP/release/"*; do cmp "$asset" "$RUNNER_TEMP/downloaded/$(basename "$asset")"; done
-          php rad/tests/HeadlessConsumerTest.php --consumer=../consumer --archive="$RUNNER_TEMP/downloaded/batoi-rad-headless-app.zip"
+          php rad/bin/verify-headless-release.php --tag="$GITHUB_REF_NAME" --commit="$(git rev-parse HEAD)" --archive="$RUNNER_TEMP/downloaded/batoi-rad-headless-app.zip"
           gh release edit "$GITHUB_REF_NAME" --draft=false --latest
           gh release view "$GITHUB_REF_NAME" --json url,tagName,assets

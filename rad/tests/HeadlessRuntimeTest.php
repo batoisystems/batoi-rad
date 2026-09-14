@@ -23,14 +23,18 @@ foreach ([$install, $install, [PHP_BINARY, $appRoot . '/rad/bin/doctor.php'], [P
     $process = proc_open($command, [STDIN, STDOUT, STDERR], $pipes);
     if (!is_resource($process) || proc_close($process) !== 0) throw new RuntimeException('Headless installation/readiness failed.');
 }
-require_once $consumer . '/rad/ms/build/BuildRadFoundationRegistrationService.cls.php';
-$registration = json_decode((string)file_get_contents($appRoot . '/.build/foundation-registration.json'), true, 512, JSON_THROW_ON_ERROR);
-$apply = new ReflectionMethod('BuildRadFoundationRegistrationService', 'apply');
-$apply->invoke(null, $pdo, [$registration], $registration['app_uid']);
-$apply->invoke(null, $pdo, [$registration], $registration['app_uid']);
-// Make the generated module public only in this disposable fixture to test rendering without workspace login.
-$pdo->exec("UPDATE s_ms SET s_scope='global' WHERE s_name='contract-app'");
-$pdo->exec("UPDATE s_msroute SET s_degree=1 WHERE s_name='health'");
+if ($consumer !== '') {
+    require_once $consumer . '/rad/ms/build/BuildRadFoundationRegistrationService.cls.php';
+    $registration = json_decode((string)file_get_contents($appRoot . '/.build/foundation-registration.json'), true, 512, JSON_THROW_ON_ERROR);
+    $apply = new ReflectionMethod('BuildRadFoundationRegistrationService', 'apply');
+    $apply->invoke(null, $pdo, [$registration], $registration['app_uid']);
+    $apply->invoke(null, $pdo, [$registration], $registration['app_uid']);
+    // Make the generated module public only in this disposable fixture to test rendering without workspace login.
+    $pdo->exec("UPDATE s_ms SET s_scope='global' WHERE s_name='contract-app'");
+    $pdo->exec("UPDATE s_msroute SET s_degree=1 WHERE s_name='health'");
+} else {
+    installStandaloneFixture($pdo, $appRoot);
+}
 $log = $appRoot . '/http-test.log';
 $server = proc_open([PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $appRoot . '/public_html', $appRoot . '/public_html/index.php'], [['pipe', 'r'], ['file', $log, 'a'], ['file', $log, 'a']], $pipes);
 if (!is_resource($server)) throw new RuntimeException('Cannot start test HTTP server.');
@@ -40,7 +44,7 @@ try {
         if (is_resource($connection)) { fclose($connection); break; }
         usleep(100000);
     }
-    foreach (['/' => 'rad-home-page', '/contract-app/health' => 'Application route generated'] as $path => $needle) {
+    foreach (['/' => 'rad-home-page', '/contract-app/health' => ($consumer !== '' ? 'Application route generated' : 'Standalone RAD health')] as $path => $needle) {
         $curl = curl_init('http://127.0.0.1:' . $port . $path);
         curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_USERAGENT => 'RAD headless runtime test']);
         $body = curl_exec($curl);
@@ -57,4 +61,17 @@ try {
     proc_terminate($server);
     proc_close($server);
 }
-echo "Headless install, idempotent rerun, doctor, upgrade, real Build registration and HTTP requests passed.\n";
+echo "Headless install, idempotent rerun, doctor, upgrade and HTTP requests passed.\n";
+
+// RAD-owned fixture: only public runtime tables and a normal DYN route.
+function installStandaloneFixture(PDO $pdo, string $appRoot): void
+{
+    $pdo->exec("INSERT INTO s_ms (uid,livestatus,s_name,s_type,s_definition,s_scope,s_tpl_name) VALUES ('f249df3c-95fa-48fc-b9a4-70ef6fb15e94','1','contract-app','DYN','{\"route_path\":\"manual\"}','global','app.tpl.php') ON DUPLICATE KEY UPDATE s_tpl_name='app.tpl.php'");
+    $msId = (int)$pdo->query("SELECT id FROM s_ms WHERE s_name='contract-app'")->fetchColumn();
+    $statement = $pdo->prepare("INSERT INTO s_msroute (uid,livestatus,s_ms_id,s_name,s_degree,s_entity_scope,s_service_definition) VALUES ('95edb3ef-30f2-41b4-9dba-b4c378d4978e','1',?,'health',1,'U','{}') ON DUPLICATE KEY UPDATE s_degree=1");
+    $statement->execute([$msId]);
+    $directory = $appRoot . '/rad/ms/contract-app';
+    if (!is_dir($directory)) mkdir($directory, 0700, true);
+    file_put_contents($directory . '/route.health.php', "<?php\n\$this->runData['route']['meta_title'] = 'Standalone RAD health';\n");
+    file_put_contents($directory . '/route.health.pagepart.php', '<main><h1>Standalone RAD health</h1></main>');
+}

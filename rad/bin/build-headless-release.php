@@ -22,8 +22,10 @@ if (!$testMode) {
     }
 }
 headlessCommand([PHP_BINARY, $root . '/rad/bin/verify-release.php']);
-$public = base64_decode('qz4yji9bH2wuibzlYhqQV6biJNrh7AnviQerzYQa1kc=', true);
-$keyId = 'batoi-rad-4b3542b75435ea4f';
+require_once $root . '/rad/src/Distribution/HeadlessPackage.php';
+$contract = \Batoi\Rad\Distribution\HeadlessPackage::contract();
+$public = base64_decode($contract['signing']['public_key'], true);
+$keyId = $contract['signing']['key_id'];
 $secret = '';
 if (isset($options['signing-key-file'])) {
     $secret = base64_decode(trim((string)file_get_contents((string)$options['signing-key-file'])), true);
@@ -111,6 +113,7 @@ try {
     headlessZipEntry($zip, 'headless-app.public-key', base64_encode($public) . "\n", $epoch);
     if (!$prepare) headlessZipEntry($zip, 'headless-app.manifest.sig', base64_encode($signature) . "\n", $epoch);
     if (!$zip->close()) throw new RuntimeException('Cannot finish headless ZIP.');
+    if (!$prepare) \Batoi\Rad\Distribution\HeadlessPackage::verify($output, 'v' . $version, $commit, $testMode ? $public : null);
     foreach (['manifest.json' => $raw, 'public-key' => base64_encode($public) . "\n", 'SBOM.cdx.json' => (string)file_get_contents($stage . '/SBOM.cdx.json')] as $suffix => $contents) {
         headlessWrite($output . '.' . $suffix, $contents);
     }
@@ -137,7 +140,7 @@ function headlessIncluded(string $path): bool
     if (str_starts_with($path, 'rad/vendor/batoi/')) return true;
     if (preg_match('#(^|/)(?:\.env(?:\.|$)|\.DS_Store|tests?|docs?|\.git)(?:/|$)#i', $path)) return false;
     if ($path === 'rad/core/sys/RadAdminController.cls.php') return false;
-    if (in_array($path, ['LICENSE', 'NOTICE', 'VERSION', 'rad/autoload.php', 'rad/composer.json', 'rad/composer.lock', 'rad/config/sys.inc.php.example', 'rad/bin/install.php', 'rad/bin/doctor.php', 'rad/bin/upgrade.php'], true)) return true;
+    if (in_array($path, ['LICENSE', 'NOTICE', 'VERSION', 'rad/autoload.php', 'rad/contracts/headless-app-v1.json', 'rad/composer.json', 'rad/composer.lock', 'rad/config/sys.inc.php.example', 'rad/bin/install.php', 'rad/bin/doctor.php', 'rad/bin/upgrade.php'], true)) return true;
     foreach (['public_html/assets/uif/', 'public_html/assets/css/', 'public_html/assets/js/', 'public_html/assets/img/', 'rad/core/', 'rad/src/', 'rad/vendor/batoi/', 'rad/theme/', 'rad/upgrades/'] as $prefix) {
         if (str_starts_with($path, $prefix)) return true;
     }
