@@ -6,8 +6,8 @@
     "compatibility_contract": "batoi-build-rad-foundation/v1",
     "signing": {
         "algorithm": "ed25519",
-        "key_id": "batoi-rad-4b3542b75435ea4f",
-        "public_key": "qz4yji9bH2wuibzlYhqQV6biJNrh7AnviQerzYQa1kc=",
+        "key_id": "batoi-rad-779a3580ce289515",
+        "public_key": "qNpMsihl9q1r3ofk8q/6clh+BMr+/CsmAQUDeuIfGM4=",
         "message": "Exact headless-app.manifest.json bytes, including trailing newline",
         "signature_encoding": "base64"
     },

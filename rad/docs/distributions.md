@@ -77,13 +77,16 @@ The detached signature is base64-encoded, 64-byte Ed25519 over the **exact
 manifest bytes**, including the trailing newline. The public-key file contains
 the base64-encoded 32-byte key. Build pins:
 
-- Key ID: `batoi-rad-4b3542b75435ea4f`
-- Public key: `qz4yji9bH2wuibzlYhqQV6biJNrh7AnviQerzYQa1kc=`
+- Key ID: `batoi-rad-779a3580ce289515`
+- Public key: `qNpMsihl9q1r3ofk8q/6clh+BMr+/CsmAQUDeuIfGM4=`
 
 The bundled public key is not a trust-on-first-use mechanism. Production signing
-must match this existing key. Build can merge explicitly administered keys from
-`config['build']['rad_foundation_trusted_keys']`, but this release does not alter
-that configuration or introduce a replacement trust root. The ZIP is limited
+must match this pinned key. On 2026-09-15 the maintainer explicitly authorized
+a replacement signing key because the previous private key was unavailable.
+Build must adopt the new public key above before acquisition; its previous key
+`batoi-rad-4b3542b75435ea4f` remains trusted for historical releases. Build can also
+merge explicitly administered keys from
+`config['build']['rad_foundation_trusted_keys']`. The ZIP is limited
 to 32 MiB, its manifest to 8 MiB, each payload file to 16 MiB, and the unpacked
 runtime to 256 MiB and 25,000 files. Build rejects symlinks, traversal, duplicate
 manifest paths, executable Admin imports/gateways, and mismatched hashes.
@@ -103,7 +106,7 @@ php rad/bin/build-release.php --profile=headless-app --prepare \
   --output=/tmp/rad-release/batoi-rad-headless-app.zip
 ```
 
-Have the existing key custodian sign
+Have the authorized key custodian sign
 `batoi-rad-headless-app.zip.unsigned.manifest.json` without reformatting it.
 After the reviewed, signed annotated stable tag exists on that same commit:
 
@@ -114,7 +117,7 @@ php rad/bin/build-release.php --profile=headless-app \
 ```
 
 Alternatively, `--signing-key-file` accepts a permission-restricted file holding
-the existing base64 64-byte Sodium Ed25519 secret key. Never put it in Git,
+the authorized base64 64-byte Sodium Ed25519 secret key. Never put it in Git,
 release assets, logs, or an App repository. The builder verifies the signature
 against the pinned public key before producing a signed ZIP. It refuses to
 replace an existing ZIP. `--test-mode` requires an explicit test trust override
@@ -150,7 +153,7 @@ variables: `RAD_TEST_DB_HOST`, `RAD_TEST_DB_SOCKET`, `RAD_TEST_DB_USER`.
 Never point these tests at Build's database or a customer database.
 `--test-public-key-file` on the verifier accepts an explicit ephemeral test key
 only for packages marked `test_only` with key ID `test-only`. Production mode
-always verifies the existing pinned release key.
+always verifies the pinned release key.
 
 CI runs standalone package and install/HTTP checks on PHP 8.3/8.4 and MySQL
 8.0/8.4, including pull requests. No `batoi-www` checkout, private-consumer token,
@@ -175,15 +178,20 @@ RAD_TEST_DB_NAME=rad_headless_ci RAD_TEST_DB_PASSWORD=... \
 Initial integration validation used consumer commit
 `b8403df08d6df811002a7d8c9bd6790bc32b057d`. Its temporary GitHub availability
 issue was resolved; neither that commit nor a private token is a RAD release
-gate. Consumer code remains unmodified. Build should run its own integration
+gate. The separately maintained Build trust list adds the authorized replacement
+public key; no Build code is packaged into RAD. Build should run its own integration
 checks when adopting new RAD releases.
 
-The stable release workflow requires a signed annotated tag, the existing
+The stable release workflow requires a signed annotated tag, the authorized
 maintainer tag verification key in `RAD_RELEASE_TAG_PUBLIC_KEY` (an environment
-variable), and the existing Ed25519 secret in `RAD_HEADLESS_SIGNING_KEY` (an
+variable), and the authorized Ed25519 secret in `RAD_HEADLESS_SIGNING_KEY` (an
 Actions secret). Configure required reviewers on the `rad-release` environment.
-There were no repository Actions secrets or release environments at preparation
-time; provisioning them and approving publication remain maintainer actions.
+The maintainer-authorized release environment stores the headless signing secret
+and public tag key; private tag signing material remains outside GitHub and Git.
+The replacement OpenPGP tag-signing fingerprint is
+`748EF608930702F2CF5FCCFA9892B5CF7A608FAB` (expires 2028-09-13).
+The key custodian must retain a secure backup of both private keys and the
+OpenPGP revocation certificate. Never commit or attach private key material.
 The workflow reruns release checks, builds both distributions, checks headless
 reproducibility and production trust, creates a new draft, downloads and
 compares every asset, revalidates the downloaded ZIP independently, then publishes it as
@@ -192,7 +200,9 @@ retained for inspection. This task does not authorize tag rewrites.
 
 ### Resume SupportFlow after publication
 
-1. Confirm GitHub's latest stable release is `v2.0.1` with exactly one
+1. Deploy Build's updated trusted-key list (or explicitly configure the new key
+   above in `rad_foundation_trusted_keys`). Confirm GitHub's latest stable release
+   is `v2.0.1` with exactly one
    `batoi-rad-headless-app.zip`, signed by the pinned key and naming the tag's
    full resolved commit. Keep the existing `Batoi-ACME-CO/supportflow` connection.
 2. In SupportFlow's **Source settings**, use **Queue Complete Refresh**. Successful

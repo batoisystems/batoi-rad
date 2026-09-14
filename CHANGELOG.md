@@ -4,7 +4,7 @@ All notable changes to Batoi RAD will be documented here.
 
 ## [Unreleased]
 
-## [2.0.1] - Pending release
+## [2.0.1] - 2026-09-15
 
 - Made headless CI and release validation standalone; private Build integration
   is optional and requires no platform token in RAD releases.
@@ -19,7 +19,9 @@ All notable changes to Batoi RAD will be documented here.
   page parts, preserving server-rendered content in the default App JavaScript.
 - Added actual Build consumer/tamper tests, installation and HTTP tests, and
   fail-closed stable publication gates. Production signing and publication
-  require the existing trust-key custodian and release maintainer.
+  require the authorized trust-key custodian and release maintainer.
+- Adopted the maintainer-authorized replacement Ed25519 signing key; Build must
+  add its public key before acquiring this release.
 
 ## [2.0.0] - 2026-08-11
 
