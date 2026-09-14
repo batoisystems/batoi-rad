@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
     var content = document.getElementById('content');
     var menu = document.getElementById('menu');
+    // Server-rendered RAD routes already contain their page part.
+    if (content && content.hasAttribute('data-rad-route-rendered')) {
+        return;
+    }
 
     function setActive(page) {
         if (!menu) {

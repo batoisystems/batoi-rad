@@ -74,7 +74,7 @@ try {
     }
     $freshInstall = false;
     try {
-        $freshInstall = initializeDatabase($pdo, $radDir . '/admin/install/schema.sql', $radDir . '/admin/install/seed.community.sql');
+        $freshInstall = initializeDatabase($pdo, installationDirectory($radDir) . '/schema.sql', installationDirectory($radDir) . '/seed.community.sql');
         if ($freshInstall) {
             baselineBundledMigrations($pdo, $radDir . '/upgrades', releaseVersion($projectRoot));
         }
@@ -102,7 +102,9 @@ try {
 
     echo PHP_EOL . 'Batoi RAD installation completed.' . PHP_EOL;
     echo 'Site: ' . $baseUrl . PHP_EOL;
-    echo 'RAD Admin: ' . $baseUrl . '/rad-admin' . PHP_EOL;
+    if (is_dir($radDir . '/admin')) {
+        echo 'RAD Admin: ' . $baseUrl . '/rad-admin' . PHP_EOL;
+    }
     echo 'Administrator username: ' . $adminUsername . PHP_EOL;
 } catch (Throwable $exception) {
     fwrite(STDERR, 'Installation failed: ' . $exception->getMessage() . PHP_EOL);
@@ -253,7 +255,7 @@ function preflight(string $radDir): void
             throw new RuntimeException('Required PHP extension is missing: ' . $extension);
         }
     }
-    foreach ([$radDir . '/admin/install/schema.sql', $radDir . '/admin/install/seed.community.sql'] as $file) {
+    foreach ([installationDirectory($radDir) . '/schema.sql', installationDirectory($radDir) . '/seed.community.sql'] as $file) {
         if (!is_readable($file)) {
             throw new RuntimeException('Required installation file is not readable: ' . $file);
         }
@@ -504,4 +506,9 @@ function uuidV4(): string
     $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
     $hex = bin2hex($bytes);
     return substr($hex, 0, 8) . '-' . substr($hex, 8, 4) . '-' . substr($hex, 12, 4) . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20);
+}
+
+function installationDirectory(string $radDir): string
+{
+    return is_dir($radDir . '/install') ? $radDir . '/install' : $radDir . '/admin/install';
 }

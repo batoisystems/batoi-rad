@@ -28,7 +28,8 @@
     </div>
   </nav>
 
-  <div class="rad-app-content" id="content">
+  <div class="rad-app-content" id="content"<?php if (!empty($this->runData['route']['id'])) { echo ' data-rad-route-rendered="true"'; } ?>>
+    <?php $this->includePart('page'); ?>
   </div>
 
   <?php echo \Core\Sys\ThemeAssets::renderBody($this->runData); ?>

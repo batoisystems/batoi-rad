@@ -1,0 +1,90 @@
+name: Stable RAD release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: checks
+    runs-on: ubuntu-latest
+    # Configure required reviewers on this environment before enabling publication.
+    environment: rad-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: source
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, fileinfo, mbstring, openssl, pdo_mysql, sodium, zip
+          coverage: none
+      - name: Validate stable source and release checks
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RAD_RELEASE_TAG_PUBLIC_KEY: ${{ vars.RAD_RELEASE_TAG_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          export GNUPGHOME="$RUNNER_TEMP/tag-verification"
+          mkdir -m 700 "$GNUPGHOME"
+          test -n "$RAD_RELEASE_TAG_PUBLIC_KEY"
+          printf '%s' "$RAD_RELEASE_TAG_PUBLIC_KEY" | gpg --import
+          git verify-tag "$GITHUB_REF_NAME"
+          test "$GITHUB_REF_TYPE" = tag
+          test "$GITHUB_REF_NAME" = "v$(cat VERSION)"
+          test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag
+          test "$(git rev-parse "$GITHUB_REF_NAME^{commit}")" = "$(git rev-parse HEAD)"
+          composer install --working-dir=rad --no-interaction --prefer-dist
+          composer validate --working-dir=rad --strict
+          composer audit --working-dir=rad --locked
+          composer test --working-dir=rad
+          composer analyse --working-dir=rad
+          composer quality --working-dir=rad
+          php rad/bin/verify-release.php
+      - name: Build both distributions and sign headless manifest
+        working-directory: source
+        env:
+          RAD_HEADLESS_SIGNING_KEY: ${{ secrets.RAD_HEADLESS_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$RAD_HEADLESS_SIGNING_KEY"
+          umask 077
+          keyfile="$RUNNER_TEMP/rad-signing-key"
+          trap 'rm -f "$keyfile"' EXIT
+          printf '%s' "$RAD_HEADLESS_SIGNING_KEY" > "$keyfile"
+          unset RAD_HEADLESS_SIGNING_KEY
+          mkdir -p "$RUNNER_TEMP/release" "$RUNNER_TEMP/repeat"
+          php rad/bin/build-release.php --output="$RUNNER_TEMP/release/batoi-rad-$(cat VERSION).zip"
+          php rad/bin/build-sbom.php --output="$RUNNER_TEMP/release/batoi-rad-$(cat VERSION)-SBOM.cdx.json"
+          php rad/bin/build-release.php --profile=headless-app --signing-key-file="$keyfile" --output="$RUNNER_TEMP/release/batoi-rad-headless-app.zip"
+          php rad/bin/build-release.php --profile=headless-app --signing-key-file="$keyfile" --output="$RUNNER_TEMP/repeat/batoi-rad-headless-app.zip"
+          cmp "$RUNNER_TEMP/release/batoi-rad-headless-app.zip" "$RUNNER_TEMP/repeat/batoi-rad-headless-app.zip"
+          php rad/bin/verify-headless-release.php --tag="$GITHUB_REF_NAME" --commit="$(git rev-parse HEAD)" --archive="$RUNNER_TEMP/release/batoi-rad-headless-app.zip"
+      - name: Publish new stable release and verify downloaded bytes
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Never upload to an existing release or replace an asset. Fail on API errors too.
+          gh api --paginate repos/batoisystems/batoi-rad/releases --jq '.[].tag_name' > "$RUNNER_TEMP/existing-tags"
+          if grep -Fx "$GITHUB_REF_NAME" "$RUNNER_TEMP/existing-tags"; then exit 1; fi
+          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/release/"* --verify-tag --draft --title "Batoi RAD $GITHUB_REF_NAME" --notes-file rad/docs/distributions.md
+          mkdir "$RUNNER_TEMP/downloaded"
+          gh release download "$GITHUB_REF_NAME" --dir "$RUNNER_TEMP/downloaded"
+          for asset in "$RUNNER_TEMP/release/"*; do cmp "$asset" "$RUNNER_TEMP/downloaded/$(basename "$asset")"; done
+          php rad/bin/verify-headless-release.php --tag="$GITHUB_REF_NAME" --commit="$(git rev-parse HEAD)" --archive="$RUNNER_TEMP/downloaded/batoi-rad-headless-app.zip"
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+          gh release view "$GITHUB_REF_NAME" --json url,tagName,assets
