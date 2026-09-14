@@ -4,6 +4,20 @@ All notable changes to Batoi RAD will be documented here.
 
 ## [Unreleased]
 
+## [2.0.1] - Pending release
+
+- Updated locked `league/commonmark` to 2.10.1 for GHSA-8rr7-cvq3-gmfh.
+- Added the canonical, independently installable headless RAD distribution for
+  Batoi Build, with locked runtime dependencies, database baselines, Ed25519
+  manifest signatures, checksums, and SBOM companion assets.
+- Retained standard RAD Admin packaging; the shared installer also supports
+  headless schema files under `rad/install`.
+- Fixed Build-generated App rendering for full template filenames and route
+  page parts, preserving server-rendered content in the default App JavaScript.
+- Added actual Build consumer/tamper tests, installation and HTTP tests, and
+  fail-closed stable publication gates. Production signing and publication
+  require the existing trust-key custodian and release maintainer.
+
 ## [2.0.0] - 2026-08-11
 
 - Added Composer PSR-4 autoloading for new `Batoi\\Rad\\` classes while

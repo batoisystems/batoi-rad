@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
-$options = getopt('', ['output::', 'allow-dirty']);
+$options = getopt('', ['output::', 'allow-dirty', 'profile:', 'prepare', 'signature-file:', 'signing-key-file:', 'test-mode']);
+if (($options['profile'] ?? '') === 'headless-app') {
+    require __DIR__ . '/build-headless-release.php';
+    exit(0);
+}
 $version = trim((string)file_get_contents($root . '/VERSION'));
 $output = (string)($options['output'] ?? ($root . '/batoi-rad-' . $version . '.zip'));
 if (!str_starts_with($output, '/')) {

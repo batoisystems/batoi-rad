@@ -1,6 +1,10 @@
 name: CI
 
 on:
+  workflow_call:
+    secrets:
+      BUILD_CONSUMER_READ_TOKEN:
+        required: true
   push:
   pull_request:
 
@@ -117,3 +121,10 @@ jobs:
           done
           npm test --prefix rad/tests/browser
           php rad/tests/RuntimePerformanceLogTest.php rad/log
+
+  headless:
+    # Fork PRs cannot read the private consumer. Every canonical push must pass.
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/headless.yml
+    secrets:
+      BUILD_CONSUMER_READ_TOKEN: ${{ secrets.BUILD_CONSUMER_READ_TOKEN }}

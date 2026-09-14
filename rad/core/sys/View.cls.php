@@ -51,7 +51,9 @@ class View {
             $templateFile = $this->runData['config']['dir']['theme'] . '/error-page.tpl.php';
         } else {
             $tplName = $this->runData['ms']['tpl_name'] ?? 'default';
-            $templateFile = rtrim($this->runData['config']['dir']['theme'], '/') . '/' . $tplName . '.tpl.php';
+            // Build registration supplies the filename; existing RAD modules use the stem.
+            $templateName = str_ends_with($tplName, '.tpl.php') ? $tplName : $tplName . '.tpl.php';
+            $templateFile = rtrim($this->runData['config']['dir']['theme'], '/') . '/' . $templateName;
         }
 
         if(file_exists($templateFile)) {

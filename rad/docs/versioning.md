@@ -19,3 +19,14 @@ unless explicitly documented otherwise.
 Database upgrades are forward migrations. Applied migration files are
 immutable and checksum-verified. Back up before upgrading; downgrade support is
 limited to the latest migration that explicitly supplies a rollback handler.
+
+## Headless distribution correction
+
+The missing Build foundation asset requires runtime and packaging changes beyond
+`v2.0.0` (commit `dfc7ad7b41f8b8de08d01965017868c36ae46e21`). These compatible
+correctness fixes are prepared as `2.0.1`. Do not attach a newly modified runtime
+to `v2.0.0`, rewrite that tag, or replace published standard assets. Adding a
+missing artifact to an old release is legitimate only when built from that
+exact reviewed tag and satisfying its source/provenance contract; that is not
+this correction. Complete release gates on the reviewed commit before creating
+the signed annotated `v2.0.1` tag and publishing the new stable release.

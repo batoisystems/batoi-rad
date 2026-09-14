@@ -1,0 +1,60 @@
+<?php
+declare(strict_types=1);
+
+$options = getopt('', ['app:', 'consumer:', 'port::']);
+$appRoot = (string)($options['app'] ?? '');
+$consumer = (string)($options['consumer'] ?? '');
+$port = (int)($options['port'] ?? 18087);
+$name = getenv('RAD_TEST_DB_NAME') ?: 'rad_headless_test';
+if (!preg_match('/^rad_headless_[a-z0-9_]+$/', $name)) throw new RuntimeException('Only disposable rad_headless_* databases are allowed.');
+if (!is_file($appRoot . '/rad/install/schema.sql') || is_dir($appRoot . '/rad/admin')) throw new RuntimeException('Expected an extracted headless App.');
+$host = getenv('RAD_TEST_DB_HOST') ?: '127.0.0.1';
+$socket = getenv('RAD_TEST_DB_SOCKET') ?: '';
+$user = getenv('RAD_TEST_DB_USER') ?: 'root';
+$password = getenv('RAD_TEST_DB_PASSWORD') ?: '';
+$adminPassword = bin2hex(random_bytes(10)) . 'Aa1!';
+$dsn = 'mysql:' . ($socket !== '' ? 'unix_socket=' . $socket : 'host=' . $host) . ';dbname=' . $name;
+$pdo = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$install = [PHP_BINARY, $appRoot . '/rad/bin/install.php', '--db-host=' . $host, '--db-name=' . $name, '--db-user=' . $user, '--base-url=http://127.0.0.1:' . $port, '--non-interactive', '--skip-composer'];
+if ($socket !== '') $install[] = '--db-socket=' . $socket;
+putenv('RAD_DB_PASSWORD=' . $password);
+putenv('RAD_ADMIN_PASSWORD=' . $adminPassword);
+foreach ([$install, $install, [PHP_BINARY, $appRoot . '/rad/bin/doctor.php'], [PHP_BINARY, $appRoot . '/rad/bin/upgrade.php']] as $command) {
+    $process = proc_open($command, [STDIN, STDOUT, STDERR], $pipes);
+    if (!is_resource($process) || proc_close($process) !== 0) throw new RuntimeException('Headless installation/readiness failed.');
+}
+require_once $consumer . '/rad/ms/build/BuildRadFoundationRegistrationService.cls.php';
+$registration = json_decode((string)file_get_contents($appRoot . '/.build/foundation-registration.json'), true, 512, JSON_THROW_ON_ERROR);
+$apply = new ReflectionMethod('BuildRadFoundationRegistrationService', 'apply');
+$apply->invoke(null, $pdo, [$registration], $registration['app_uid']);
+$apply->invoke(null, $pdo, [$registration], $registration['app_uid']);
+// Make the generated module public only in this disposable fixture to test rendering without workspace login.
+$pdo->exec("UPDATE s_ms SET s_scope='global' WHERE s_name='contract-app'");
+$pdo->exec("UPDATE s_msroute SET s_degree=1 WHERE s_name='health'");
+$log = $appRoot . '/http-test.log';
+$server = proc_open([PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $appRoot . '/public_html', $appRoot . '/public_html/index.php'], [['pipe', 'r'], ['file', $log, 'a'], ['file', $log, 'a']], $pipes);
+if (!is_resource($server)) throw new RuntimeException('Cannot start test HTTP server.');
+try {
+    for ($i = 0; $i < 30; $i++) {
+        $connection = @fsockopen('127.0.0.1', $port);
+        if (is_resource($connection)) { fclose($connection); break; }
+        usleep(100000);
+    }
+    foreach (['/' => 'rad-home-page', '/contract-app/health' => 'Application route generated'] as $path => $needle) {
+        $curl = curl_init('http://127.0.0.1:' . $port . $path);
+        curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_USERAGENT => 'RAD headless runtime test']);
+        $body = curl_exec($curl);
+        $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        if ($status !== 200 || !is_string($body) || !str_contains($body, $needle)) {
+            throw new RuntimeException('Application request failed: ' . $path . ' HTTP ' . $status . '; inspect ' . $log);
+        }
+    }
+    $curl = curl_init('http://127.0.0.1:' . $port . '/rad-admin');
+    curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_USERAGENT => 'RAD headless runtime test']);
+    $adminBody = curl_exec($curl);
+    if (curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 404 && $adminBody !== 'No or Multiple Microservicelets found') throw new RuntimeException('Removed Admin gateway must not resolve to an Admin controller.');
+} finally {
+    proc_terminate($server);
+    proc_close($server);
+}
+echo "Headless install, idempotent rerun, doctor, upgrade, real Build registration and HTTP requests passed.\n";

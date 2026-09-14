@@ -1,0 +1,58 @@
+name: Headless foundation contract
+
+on:
+  workflow_call:
+    secrets:
+      BUILD_CONSUMER_READ_TOKEN:
+        required: true
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.3', '8.4']
+        mysql: ['8.0', '8.4']
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: rad_headless_ci
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: batoisystems/batoi-www
+          # Reviewed consumer contract; update this pin deliberately when Build changes.
+          ref: b8403df08d6df811002a7d8c9bd6790bc32b057d
+          token: ${{ secrets.BUILD_CONSUMER_READ_TOKEN }}
+          path: consumer
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, fileinfo, mbstring, openssl, pdo_mysql, sodium, zip
+          coverage: none
+      - name: Reproducible test-signed package
+        run: |
+          mkdir -p /tmp/headless
+          php -r 'file_put_contents("/tmp/headless/key", base64_encode(sodium_crypto_sign_secretkey(sodium_crypto_sign_keypair()))); chmod("/tmp/headless/key",0600);'
+          php rad/bin/build-release.php --profile=headless-app --test-mode --signing-key-file=/tmp/headless/key --output=/tmp/headless/one.zip
+          php rad/bin/build-release.php --profile=headless-app --test-mode --signing-key-file=/tmp/headless/key --output=/tmp/headless/two.zip
+          cmp /tmp/headless/one.zip.test-only /tmp/headless/two.zip.test-only
+      - name: Actual consumer validation and tamper rejection
+        run: php rad/tests/HeadlessConsumerTest.php --consumer=consumer --archive=/tmp/headless/one.zip.test-only --test-trust --extract=/tmp/headless/app
+      - name: Install, register generated App, and request health route
+        env:
+          RAD_TEST_DB_NAME: rad_headless_ci
+          RAD_TEST_DB_PASSWORD: ci-root-password
+        run: php rad/tests/HeadlessRuntimeTest.php --app=/tmp/headless/app --consumer=consumer
