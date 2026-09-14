@@ -41,6 +41,8 @@ jobs:
           mkdir -m 700 "$GNUPGHOME"
           test -n "$RAD_RELEASE_TAG_PUBLIC_KEY"
           printf '%s' "$RAD_RELEASE_TAG_PUBLIC_KEY" | gpg --import
+          # Restore the signed tag object if checkout materialized a commit ref.
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
           git verify-tag "$GITHUB_REF_NAME"
           test "$GITHUB_REF_TYPE" = tag
           test "$GITHUB_REF_NAME" = "v$(cat VERSION)"

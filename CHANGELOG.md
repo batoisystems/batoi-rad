@@ -4,7 +4,13 @@ All notable changes to Batoi RAD will be documented here.
 
 ## [Unreleased]
 
-## [2.0.1] - 2026-09-15
+## [2.0.2] - 2026-09-15
+
+- Fetch the signed tag object explicitly before stable release verification.
+- Publish the canonical headless runtime after v2.0.1 publication stopped before
+  asset upload; the v2.0.1 tag remains unchanged.
+
+## [2.0.1] - 2026-09-15 (tagged; release assets not published)
 
 - Made headless CI and release validation standalone; private Build integration
   is optional and requires no platform token in RAD releases.

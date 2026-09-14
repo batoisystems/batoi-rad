@@ -142,7 +142,7 @@ route fixture, and requests home and health through the real entrypoint.
 ```sh
 php rad/bin/verify-headless-release.php \
   --archive=/tmp/rad-release/batoi-rad-headless-app.zip \
-  --tag=v2.0.1 --commit=FULL_RESOLVED_TAG_COMMIT \
+  --tag=v2.0.2 --commit=FULL_RESOLVED_TAG_COMMIT \
   --extract=/tmp/new-headless-app
 RAD_TEST_DB_NAME=rad_headless_ci RAD_TEST_DB_PASSWORD=... \
   php rad/tests/HeadlessRuntimeTest.php --app=/tmp/new-headless-app
@@ -198,11 +198,16 @@ compares every asset, revalidates the downloaded ZIP independently, then publish
 latest stable. Existing releases/assets are never replaced; failed drafts are
 retained for inspection. This task does not authorize tag rewrites.
 
+The `v2.0.1` tag remains unchanged after its publication workflow failed before
+asset upload: checkout had materialized the tag as a commit ref. Version 2.0.2
+explicitly fetches the signed tag object before verification and retains the
+tag-only release environment boundary.
+
 ### Resume SupportFlow after publication
 
 1. Deploy Build's updated trusted-key list (or explicitly configure the new key
    above in `rad_foundation_trusted_keys`). Confirm GitHub's latest stable release
-   is `v2.0.1` with exactly one
+   is `v2.0.2` with exactly one
    `batoi-rad-headless-app.zip`, signed by the pinned key and naming the tag's
    full resolved commit. Keep the existing `Batoi-ACME-CO/supportflow` connection.
 2. In SupportFlow's **Source settings**, use **Queue Complete Refresh**. Successful
